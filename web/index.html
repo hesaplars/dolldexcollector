@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <script>
+    window.onerror = function (message, source, lineno, colno, error) {
+      var div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.left = '0';
+      div.style.width = '100%';
+      div.style.backgroundColor = '#FF0055';
+      div.style.color = 'white';
+      div.style.zIndex = '999999';
+      div.style.padding = '16px';
+      div.style.fontSize = '13px';
+      div.style.fontFamily = 'monospace';
+      div.style.whiteSpace = 'pre-wrap';
+      div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
+      div.innerHTML = '<strong>JS ERROR DETECTED:</strong>\n' + message + 
+                      '\nSource: ' + source + ':' + lineno + ':' + colno + 
+                      '\nStack: ' + (error ? error.stack : 'N/A');
+      document.body.appendChild(div);
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function (event) {
+      var div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.left = '0';
+      div.style.width = '100%';
+      div.style.backgroundColor = '#FFCC00';
+      div.style.color = 'black';
+      div.style.zIndex = '999999';
+      div.style.padding = '16px';
+      div.style.fontSize = '13px';
+      div.style.fontFamily = 'monospace';
+      div.style.whiteSpace = 'pre-wrap';
+      div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
+      div.innerHTML = '<strong>UNHANDLED REJECTION:</strong>\n' + event.reason +
+                      (event.reason && event.reason.stack ? '\nStack: ' + event.reason.stack : '');
+      document.body.appendChild(div);
+    });
+  </script>
+
+  <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="DollDex Collector is an unofficial doll collection catalog, tracker, and community app.">
+  <meta name="google-signin-client_id" content="98984107875-jntfl74i0tco8i8u78durs6mv2654n3v.apps.googleusercontent.com">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="DollDex Collector">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>DollDex Collector</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
