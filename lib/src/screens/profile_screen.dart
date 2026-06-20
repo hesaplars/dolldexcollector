@@ -176,7 +176,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const SizedBox(height: 12),
                               ProfileSetupCard(userId: user.uid),
                               const SizedBox(height: 16),
+                              FeaturedShowcaseCard(userId: user.uid),
+                              const SizedBox(height: 16),
                               const ProfileStatsCard(),
+                              const SizedBox(height: 16),
+                              CollectionAnalyticsCard(userId: user.uid),
                               const SizedBox(height: 16),
                               const ProfileShowcaseCard(),
                               const SizedBox(height: 24),
@@ -760,6 +764,571 @@ class ProfileShowcaseCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class FeaturedShowcaseCard extends StatelessWidget {
+  const FeaturedShowcaseCard({required this.userId, super.key});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isMe = authService.currentUser?.uid == userId;
+
+    return StreamBuilder<ProfileSetupStatus>(
+      stream: profileSetupRepository.watch(userId),
+      builder: (context, userSnap) {
+        if (!userSnap.hasData) return const SizedBox.shrink();
+        final featuredIds = userSnap.data!.featuredEntryIds;
+
+        if (featuredIds.isEmpty) {
+          if (!isMe) return const SizedBox.shrink();
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr ? 'Öne Çıkan Vitrin' : 'Featured Showcase',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    tr
+                        ? 'Vitrininiz boş. Koleksiyonunuzdaki favori bebeklerinizin detay sayfasından yıldız simgesine tıklayarak vitrinize ekleyebilirsiniz! (Maksimum 5 bebek)'
+                        : 'Your showcase is empty. Tap the star icon on your favorite dolls\' detail pages to feature them here! (Max 5 dolls)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontFamily: 'Outfit',
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return FutureBuilder<List<CollectionEntry>>(
+          future: collectionRepository.listForUser(userId),
+          builder: (context, collectionSnap) {
+            if (!collectionSnap.hasData) {
+              return const SizedBox(
+                height: 160,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final allEntries = collectionSnap.data!;
+            final featuredEntries = allEntries
+                .where((entry) => featuredIds.contains(entry.id))
+                .toList();
+
+            if (featuredEntries.isEmpty) return const SizedBox.shrink();
+
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          tr ? 'Öne Çıkan Vitrin' : 'Featured Showcase',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFFFCC00), width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star_rounded, color: Color(0xFFFFCC00), size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${featuredEntries.length}/5',
+                                style: const TextStyle(
+                                  color: Color(0xFFFFCC00),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Outfit',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 175,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: featuredEntries.length,
+                        itemBuilder: (context, index) {
+                          final entry = featuredEntries[index];
+                          final item = findCatalogEntry(entry.itemId);
+                          return GestureDetector(
+                            onTap: () => context.push('/collection/${entry.id}'),
+                            child: Container(
+                              width: 110,
+                              margin: const EdgeInsets.only(right: 12),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFFFFCC00).withOpacity(0.4),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          DollImage(
+                                            imageUrl: item.primaryImageUrl,
+                                            label: entryName(context, item),
+                                          ),
+                                          Positioned(
+                                            top: 4,
+                                            right: 4,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(2),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.black54,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.star_rounded,
+                                                color: Color(0xFFFFCC00),
+                                                size: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(6.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            entryName(context, item),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11,
+                                              fontFamily: 'Outfit',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            conditionLabel(context, entry.condition),
+                                            style: TextStyle(
+                                              color: isDark ? Colors.white60 : Colors.black54,
+                                              fontSize: 9,
+                                              fontFamily: 'Outfit',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class CollectionAnalyticsCard extends StatelessWidget {
+  const CollectionAnalyticsCard({required this.userId, super.key});
+
+  final String userId;
+
+  String _formatCharName(String id) {
+    return switch (id) {
+      'draculaura' => 'Draculaura',
+      'clawdeen' => 'Clawdeen Wolf',
+      'frankie' => 'Frankie Stein',
+      'cleo' => 'Cleo de Nile',
+      'lagoona' => 'Lagoona Blue',
+      'ghoulia' => 'Ghoulia Yelps',
+      _ => id.isNotEmpty ? '${id[0].toUpperCase()}${id.substring(1)}' : '',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return StreamBuilder<ProfileSetupStatus>(
+      stream: profileSetupRepository.watch(userId),
+      builder: (context, userSnap) {
+        if (!userSnap.hasData) return const SizedBox.shrink();
+        final user = userSnap.data!;
+        final isPro = user.isPro;
+
+        return ValueListenableBuilder<List<CollectionEntry>>(
+          valueListenable: collectionEntriesNotifier,
+          builder: (context, collectionEntries, _) {
+            if (collectionEntries.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            if (!isPro) {
+              // Locked Premium Card
+              return Card(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFEC008C).withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        color: const Color(0xFFEC008C).withOpacity(0.8),
+                        size: 32,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        tr ? 'Koleksiyon İstatistikleri (Pro)' : 'Collection Analytics (Pro)',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Outfit',
+                          color: Color(0xFFEC008C),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        tr
+                            ? 'Kutulu/Kutusuz oranları, set tamamlanma yüzdeleri ve gelişmiş kategori dağılım grafiklerini görmek için DollDex Pro sürümüne yükseltin!'
+                            : 'Upgrade to DollDex Pro to view boxed/unboxed ratios, set completion rates, and advanced category distribution charts!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'Outfit',
+                          color: isDark ? Colors.white54 : Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => showProSubscriptionModal(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEC008C),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        ),
+                        child: Text(
+                          tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Calculations
+            final boxedCount = collectionEntries.where((e) => e.condition == CollectionCondition.boxed).length;
+            final totalCount = collectionEntries.length;
+            final boxedPct = totalCount > 0 ? boxedCount / totalCount : 0.0;
+            final unboxedPct = 1.0 - boxedPct;
+
+            final totalCatalog = catalogEntriesNotifier.value;
+            int dollCount = 0;
+            int petCount = 0;
+            int accCount = 0;
+
+            for (final entry in collectionEntries) {
+              final cat = totalCatalog.firstWhere(
+                (c) => c.id == entry.itemId,
+                orElse: () => const CatalogEntry(
+                  id: '',
+                  name: '',
+                  type: CatalogItemType.doll,
+                  subtitle: '',
+                  imageUrls: [],
+                ),
+              );
+              if (cat.id.isNotEmpty) {
+                if (cat.type == CatalogItemType.doll) dollCount++;
+                if (cat.type == CatalogItemType.pet) petCount++;
+                if (cat.type == CatalogItemType.accessory) accCount++;
+              }
+            }
+
+            final charMap = <String, List<String>>{};
+            for (final cat in totalCatalog) {
+              for (final charId in cat.characterIds) {
+                charMap.putIfAbsent(charId, () => []).add(cat.id);
+              }
+            }
+            final ownedItemIds = collectionEntries.map((e) => e.itemId).toSet();
+            final charProgress = <String, double>{};
+            charMap.forEach((charId, itemIds) {
+              final ownedCount = itemIds.where((id) => ownedItemIds.contains(id)).length;
+              if (ownedCount > 0) {
+                charProgress[charId] = ownedCount / itemIds.length;
+              }
+            });
+
+            final sortedChars = charProgress.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
+            final topChars = sortedChars.take(3).toList();
+
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr ? 'Koleksiyon Analitiği' : 'Collection Analytics',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        NeonPieChart(
+                          percentage: boxedPct,
+                          label: tr ? 'Kutulu (MIB)' : 'Boxed (MIB)',
+                          color: const Color(0xFFEC008C),
+                        ),
+                        NeonPieChart(
+                          percentage: unboxedPct,
+                          label: tr ? 'Açılmış' : 'Unboxed',
+                          color: const Color(0xFF00FFCC),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 32),
+                    Text(
+                      tr ? 'Kategori Dağılımı' : 'Category Distribution',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Outfit'),
+                    ),
+                    const SizedBox(height: 8),
+                    NeonBarChart(
+                      label: tr ? 'Bebekler (Dolls)' : 'Dolls',
+                      count: dollCount,
+                      total: totalCount,
+                      color: const Color(0xFFEC008C),
+                    ),
+                    NeonBarChart(
+                      label: tr ? 'Evcil Hayvanlar (Pets)' : 'Pets',
+                      count: petCount,
+                      total: totalCount,
+                      color: const Color(0xFF00FFCC),
+                    ),
+                    NeonBarChart(
+                      label: tr ? 'Aksesuarlar (Accs)' : 'Accessories',
+                      count: accCount,
+                      total: totalCount,
+                      color: const Color(0xFFFFCC00),
+                    ),
+                    if (topChars.isNotEmpty) ...[
+                      const Divider(height: 32),
+                      Text(
+                        tr ? 'Karakter Tamamlanma Oranları' : 'Character Completion Rates',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Outfit'),
+                      ),
+                      const SizedBox(height: 12),
+                      for (final char in topChars)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _formatCharName(char.key),
+                                    style: const TextStyle(fontSize: 11, fontFamily: 'Outfit'),
+                                  ),
+                                  Text(
+                                    '${(char.value * 100).toStringAsFixed(0)}%',
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: char.value,
+                                  minHeight: 6,
+                                  backgroundColor: Colors.white10,
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8338EC)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class NeonPieChart extends StatelessWidget {
+  const NeonPieChart({
+    required this.percentage,
+    required this.label,
+    required this.color,
+    super.key,
+  });
+
+  final double percentage;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 72,
+          height: 72,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CircularProgressIndicator(
+                value: 1.0,
+                strokeWidth: 5,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isDark ? const Color(0xFF2C1F45) : Colors.black12,
+                ),
+              ),
+              CircularProgressIndicator(
+                value: percentage,
+                strokeWidth: 5,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+              Center(
+                child: Text(
+                  '${(percentage * 100).toStringAsFixed(0)}%',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Outfit',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
+        ),
+      ],
+    );
+  }
+}
+
+class NeonBarChart extends StatelessWidget {
+  const NeonBarChart({
+    required this.label,
+    required this.count,
+    required this.total,
+    required this.color,
+    super.key,
+  });
+
+  final String label;
+  final int count;
+  final int total;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final double pct = total > 0 ? count / total : 0.0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(fontSize: 11, fontFamily: 'Outfit'),
+              ),
+              Text(
+                '$count / $total',
+                style: const TextStyle(fontSize: 11, fontFamily: 'Outfit', color: Colors.white54),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 8,
+              backgroundColor: Colors.white10,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

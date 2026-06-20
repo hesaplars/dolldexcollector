@@ -3354,6 +3354,7 @@ void _openDirectChatWithUser(BuildContext context, String otherUserId) {
 
 
 void showCollectionSheet(BuildContext context, CatalogEntry item) => _showCollectionSheet(context, item);
+void showProSubscriptionModal(BuildContext context) => _showProSubscriptionModal(context);
 void showReportSheet(BuildContext context, ReportTargetType targetType, String targetId) => _showReportSheet(context, targetType, targetId);
 CatalogEntry findCatalogEntry(String id) => _findCatalogEntry(id);
 List<CatalogEntry> filterCatalogEntries(List<CatalogEntry> entries, String query, CatalogItemType? type) => _filterCatalogEntries(entries, query, type);

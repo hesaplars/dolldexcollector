@@ -14,6 +14,7 @@ import '../users/profile_setup_repository.dart';
 import '../users/user_models.dart';
 import '../widgets/doll_widgets.dart';
 import 'collection_screen.dart';
+import 'profile_screen.dart';
 
 class PublicProfileScreen extends StatefulWidget {
   const PublicProfileScreen({
@@ -342,6 +343,8 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                           );
                         },
                       ),
+                      const SizedBox(height: 12),
+                      FeaturedShowcaseCard(userId: widget.userId),
                       const SizedBox(height: 12),
                       FutureBuilder<List<CollectionEntry>>(
                         future: _collectionFuture,

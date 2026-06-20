@@ -12,6 +12,9 @@ import '../moderation/report_models.dart';
 import '../social/social_models.dart';
 import '../users/user_models.dart';
 import '../widgets/doll_widgets.dart';
+import '../catalog/catalog_models.dart';
+import '../comments/comment_models.dart';
+import '../users/profile_setup_repository.dart';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({this.chatUserId, super.key});
@@ -37,6 +40,7 @@ class _SocialScreenState extends State<SocialScreen> {
   Widget build(BuildContext context) {
     final user = authService.currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
 
     if (user == null) {
       return Center(
@@ -49,68 +53,94 @@ class _SocialScreenState extends State<SocialScreen> {
       );
     }
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              t(context, 'social'),
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    height: 1.05,
+    return DefaultTabController(
+      length: 2,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    t(context, 'social'),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          height: 1.05,
+                        ),
                   ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark
-                      ? const Color(0xFF00FFCC).withOpacity(0.25)
-                      : const Color(0xFFEC008C).withOpacity(0.15),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C)).withOpacity(0.08),
-                    blurRadius: 8,
-                    spreadRadius: 1,
+                  const Spacer(),
+                  TabBar(
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    indicatorColor: Theme.of(context).colorScheme.primary,
+                    labelColor: Theme.of(context).colorScheme.primary,
+                    dividerColor: Colors.transparent,
+                    tabs: [
+                      Tab(text: tr ? 'Sohbet' : 'Chat'),
+                      Tab(text: tr ? 'Akış' : 'Feed'),
+                    ],
                   ),
                 ],
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  buildNeonIcon(context, Icons.info_outline_rounded, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      t(context, 'socialSubtitle'),
-                      style: TextStyle(
-                        color: isDark ? const Color(0xFFC4B2D9) : const Color(0xFF6B5885),
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                        height: 1.4,
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF00FFCC).withOpacity(0.25)
+                        : const Color(0xFFEC008C).withOpacity(0.15),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C)).withOpacity(0.08),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildNeonIcon(context, Icons.info_outline_rounded, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        t(context, 'socialSubtitle'),
+                        style: TextStyle(
+                          color: isDark ? const Color(0xFFC4B2D9) : const Color(0xFF6B5885),
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                          height: 1.4,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            _PendingRequestsCard(userId: user.uid),
-            const SizedBox(height: 12),
-            Expanded(
-              child: _GlobalChatCard(
-                userId: user.uid,
+              const SizedBox(height: 8),
+              _PendingRequestsCard(userId: user.uid),
+              const SizedBox(height: 8),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _GlobalChatCard(
+                      userId: user.uid,
+                    ),
+                    _SocialFeedTab(
+                      userId: user.uid,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -693,6 +723,241 @@ class _PendingRequestsCard extends StatelessWidget {
       fromUserId: fromUserId,
       toUserId: userId,
       accept: accept,
+    );
+  }
+}
+
+enum _ActivityType { collectionUpdate, comment }
+
+class _ActivityItem {
+  _ActivityItem({
+    required this.userId,
+    required this.timestamp,
+    required this.type,
+    this.entry,
+    this.comment,
+  });
+
+  final String userId;
+  final DateTime timestamp;
+  final _ActivityType type;
+  final CollectionEntry? entry;
+  final AppComment? comment;
+}
+
+class _SocialFeedTab extends StatelessWidget {
+  const _SocialFeedTab({required this.userId});
+
+  final String userId;
+
+  String _timeAgo(BuildContext context, DateTime dt) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return tr ? 'Az önce' : 'Just now';
+    if (diff.inMinutes < 60) return tr ? '${diff.inMinutes} dk önce' : '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return tr ? '${diff.inHours} saat önce' : '${diff.inHours}h ago';
+    return tr ? '${diff.inDays} gün önce' : '${diff.inDays}d ago';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return StreamBuilder<List<AppUser>>(
+      stream: socialRepository.watchFriendsList(userId),
+      builder: (context, friendsSnap) {
+        final friends = friendsSnap.data ?? [];
+        final friendUids = friends.map((u) => u.id).toSet();
+
+        return StreamBuilder<List<AppUser>>(
+          stream: socialRepository.watchFollowingList(userId),
+          builder: (context, followSnap) {
+            final followings = followSnap.data ?? [];
+            final followingUids = followings.map((u) => u.id).toSet();
+
+            final targetUids = {...friendUids, ...followingUids, userId};
+
+            return StreamBuilder<List<CollectionEntry>>(
+              stream: socialRepository.watchRecentPublicCollectionEntries(),
+              builder: (context, collectionSnap) {
+                final collections = collectionSnap.data ?? [];
+
+                return StreamBuilder<List<AppComment>>(
+                  stream: socialRepository.watchRecentComments(),
+                  builder: (context, commentsSnap) {
+                    final comments = commentsSnap.data ?? [];
+
+                    final List<_ActivityItem> feedItems = [];
+
+                    for (final entry in collections) {
+                      if (targetUids.contains(entry.userId)) {
+                        feedItems.add(_ActivityItem(
+                          userId: entry.userId,
+                          timestamp: entry.updatedAt ?? DateTime.now().subtract(const Duration(minutes: 5)),
+                          type: _ActivityType.collectionUpdate,
+                          entry: entry,
+                        ));
+                      }
+                    }
+
+                    for (final comment in comments) {
+                      if (targetUids.contains(comment.userId)) {
+                        feedItems.add(_ActivityItem(
+                          userId: comment.userId,
+                          timestamp: comment.createdAt,
+                          type: _ActivityType.comment,
+                          comment: comment,
+                        ));
+                      }
+                    }
+
+                    feedItems.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+                    if (feedItems.isEmpty) {
+                      return EmptyState(
+                        icon: Icons.dynamic_feed_rounded,
+                        title: tr ? 'Aktivite Yok' : 'No Activity',
+                        body: tr
+                            ? 'Takip ettiğin kişilerin veya arkadaşlarının koleksiyon güncellemeleri burada görünür.'
+                            : 'Collection updates from friends and followings will appear here.',
+                      );
+                    }
+
+                    return ListView.builder(
+                      itemCount: feedItems.length,
+                      padding: const EdgeInsets.only(top: 8, bottom: 20),
+                      itemBuilder: (context, index) {
+                        final item = feedItems[index];
+
+                        return StreamBuilder<ProfileSetupStatus>(
+                          stream: profileSetupRepository.watch(item.userId),
+                          builder: (context, userSnap) {
+                            if (!userSnap.hasData) return const SizedBox.shrink();
+                            final owner = userSnap.data!;
+                            final username = owner.username.isNotEmpty ? '@${owner.username}' : 'Collector';
+
+                            if (item.type == _ActivityType.collectionUpdate) {
+                              final entry = item.entry!;
+                              final catalogItem = findCatalogEntry(entry.itemId);
+
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                child: ListTile(
+                                  onTap: () => context.push('/collection/${entry.id}'),
+                                  leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
+                                  title: RichText(
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : Colors.black87,
+                                        fontSize: 12.5,
+                                        fontFamily: 'Outfit',
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: '$username ',
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: tr
+                                              ? 'koleksiyonuna yeni bir bebek ekledi: '
+                                              : 'added a new doll to their collection: ',
+                                        ),
+                                        TextSpan(
+                                          text: entryName(context, catalogItem),
+                                          style: TextStyle(
+                                            color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 4.0),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          conditionLabel(context, entry.condition),
+                                          style: const TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _timeAgo(context, item.timestamp),
+                                          style: const TextStyle(fontSize: 10.5, color: Colors.white38),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+                                ),
+                              );
+                            } else {
+                              final comment = item.comment!;
+                              final catalogItem = findCatalogEntry(comment.targetId);
+
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                child: ListTile(
+                                  onTap: () => context.push('/catalog/${catalogItem.id}'),
+                                  leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
+                                  title: RichText(
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : Colors.black87,
+                                        fontSize: 12.5,
+                                        fontFamily: 'Outfit',
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: '$username ',
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: tr ? 'bir bebek altına yorum yaptı: ' : 'commented on a doll: ',
+                                        ),
+                                        TextSpan(
+                                          text: entryName(context, catalogItem),
+                                          style: TextStyle(
+                                            color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 4.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '"${comment.text}"',
+                                          style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.white70),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _timeAgo(context, item.timestamp),
+                                          style: const TextStyle(fontSize: 10, color: Colors.white38),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

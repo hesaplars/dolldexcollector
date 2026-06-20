@@ -14,6 +14,7 @@ class ProfileSetupStatus {
     required this.avatarId,
     required this.avatarFrameColor,
     required this.coverId,
+    this.featuredEntryIds = const [],
   });
 
   final String userId;
@@ -27,6 +28,7 @@ class ProfileSetupStatus {
   final String avatarId;
   final String avatarFrameColor;
   final String coverId;
+  final List<String> featuredEntryIds;
 
   bool get isComplete {
     return username.isNotEmpty &&
@@ -50,6 +52,7 @@ class ProfileSetupStatus {
       avatarId: map['avatarId'] as String? ?? '',
       avatarFrameColor: map['avatarFrameColor'] as String? ?? '',
       coverId: map['coverId'] as String? ?? 'default',
+      featuredEntryIds: List<String>.from(map['featuredEntryIds'] as List? ?? []),
     );
   }
 }
@@ -142,6 +145,21 @@ class ProfileSetupRepository {
 
     await db.collection('users').doc(userId).set({
       'coverId': coverId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateFeaturedEntries({
+    required String userId,
+    required List<String> entryIds,
+  }) async {
+    final db = _db;
+    if (db == null) {
+      return;
+    }
+
+    await db.collection('users').doc(userId).set({
+      'featuredEntryIds': entryIds,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }

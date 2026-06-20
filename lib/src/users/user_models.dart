@@ -10,6 +10,7 @@ class AppUser {
     this.username = '',
     this.avatarId = '',
     this.avatarFrameColor = '',
+    this.featuredEntryIds = const [],
   });
 
   final String id;
@@ -22,6 +23,7 @@ class AppUser {
   final String username;
   final String avatarId;
   final String avatarFrameColor;
+  final List<String> featuredEntryIds;
 
   bool get isAdmin => role == 'admin';
 
@@ -37,21 +39,24 @@ class AppUser {
       'usernameLower': username.toLowerCase(),
       'avatarId': avatarId,
       'avatarFrameColor': avatarFrameColor,
+      'featuredEntryIds': featuredEntryIds,
     };
   }
 
   factory AppUser.fromMap(String id, Map<String, Object?> map) {
+    final roleVal = map['role'] as String? ?? 'user';
     return AppUser(
       id: id,
       displayName: map['displayName'] as String? ?? 'Collector',
       email: map['email'] as String? ?? '',
       photoUrl: map['photoUrl'] as String? ?? '',
-      role: map['role'] as String? ?? 'user',
-      isPro: map['isPro'] as bool? ?? false,
+      role: roleVal,
+      isPro: (map['isPro'] as bool? ?? false) || roleVal == 'admin',
       bio: map['bio'] as String? ?? '',
       username: map['username'] as String? ?? '',
       avatarId: map['avatarId'] as String? ?? '',
       avatarFrameColor: map['avatarFrameColor'] as String? ?? '',
+      featuredEntryIds: List<String>.from(map['featuredEntryIds'] as List? ?? []),
     );
   }
 }

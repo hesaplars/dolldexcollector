@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 
 import '../users/user_models.dart';
 import 'social_models.dart';
+import '../catalog/catalog_models.dart';
+import '../comments/comment_models.dart';
 
 bool _isFirebaseInitialized() {
   try {
@@ -597,6 +599,47 @@ class SocialRepository {
       }
       return users;
     });
+  }
+
+  Stream<List<CollectionEntry>> watchRecentPublicCollectionEntries() {
+    final db = _db;
+    if (db == null) return Stream.value(const []);
+    return db
+        .collection('collectionEntries')
+        .where('visibility', isEqualTo: 'public')
+        .orderBy('updatedAt', descending: true)
+        .limit(45)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) {
+              final data = doc.data();
+              return CollectionEntry(
+                id: doc.id,
+                userId: data['userId'] as String? ?? '',
+                itemId: data['itemId'] as String? ?? '',
+                status: CollectionStatus.values.firstWhere(
+                  (status) => status.name == data['status'],
+                  orElse: () => CollectionStatus.owned,
+                ),
+                condition: CollectionCondition.values.firstWhere(
+                  (condition) => condition.name == data['condition'],
+                  orElse: () => CollectionCondition.complete,
+                ),
+                quantity: data['quantity'] as int? ?? 1,
+                notes: data['notes'] as String? ?? '',
+                isPublic: true,
+              );
+            }).toList());
+  }
+
+  Stream<List<AppComment>> watchRecentComments() {
+    final db = _db;
+    if (db == null) return Stream.value(const []);
+    return db
+        .collection('comments')
+        .orderBy('createdAt', descending: true)
+        .limit(45)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) => AppComment.fromMap(doc.id, doc.data())).toList());
   }
 
   String _pairId(String first, String second) {

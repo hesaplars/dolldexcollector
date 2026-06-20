@@ -352,14 +352,68 @@ class _UserCollectionEntryDetailScreenState
                                 ),
                            ),
                           if ((currentUser != null && entry.userId == currentUser.uid) || (entry.userId == 'local-user'))
-                            buildGothicNeonIconButton(
-                              context: context,
-                              icon: Icons.edit_rounded,
-                              size: 16,
-                              padding: const EdgeInsets.all(8),
-                              activeColor: const Color(0xFF00FFCC),
-                              onPressed: () {
-                                _showEditCollectionSheet(context, item, entry);
+                            StreamBuilder<ProfileSetupStatus>(
+                              stream: profileSetupRepository.watch(currentUser?.uid ?? 'local-user'),
+                              builder: (context, userSnap) {
+                                final isFeatured = userSnap.data?.featuredEntryIds.contains(entry.id) ?? false;
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    buildGothicNeonIconButton(
+                                      context: context,
+                                      icon: isFeatured ? Icons.star_rounded : Icons.star_border_rounded,
+                                      size: 16,
+                                      padding: const EdgeInsets.all(8),
+                                      activeColor: const Color(0xFFFFCC00),
+                                      onPressed: currentUser == null
+                                          ? null
+                                          : () async {
+                                              final currentFeatured = List<String>.from(userSnap.data?.featuredEntryIds ?? []);
+                                              if (isFeatured) {
+                                                currentFeatured.remove(entry.id);
+                                              } else {
+                                                if (currentFeatured.length >= 5) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        tr
+                                                            ? 'En fazla 5 bebek vitrine eklenebilir!'
+                                                            : 'Max 5 dolls can be featured!',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+                                                currentFeatured.add(entry.id);
+                                              }
+                                              await profileSetupRepository.updateFeaturedEntries(
+                                                userId: currentUser.uid,
+                                                entryIds: currentFeatured,
+                                              );
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    isFeatured
+                                                        ? (tr ? 'Vitrinden kaldırıldı.' : 'Removed from showcase.')
+                                                        : (tr ? 'Vitrine eklendi!' : 'Added to showcase!'),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    buildGothicNeonIconButton(
+                                      context: context,
+                                      icon: Icons.edit_rounded,
+                                      size: 16,
+                                      padding: const EdgeInsets.all(8),
+                                      activeColor: const Color(0xFF00FFCC),
+                                      onPressed: () {
+                                        _showEditCollectionSheet(context, item, entry);
+                                      },
+                                    ),
+                                  ],
+                                );
                               },
                             ),
                         ],

@@ -125,6 +125,7 @@ class CollectionEntry {
     required this.quantity,
     this.notes = '',
     this.isPublic = true,
+    this.updatedAt,
   });
 
   final String id;
@@ -135,6 +136,7 @@ class CollectionEntry {
   final int quantity;
   final String notes;
   final bool isPublic;
+  final DateTime? updatedAt;
 
   Map<String, Object?> toMap() {
     return {
@@ -145,6 +147,7 @@ class CollectionEntry {
       'quantity': quantity,
       'notes': notes,
       'visibility': isPublic ? 'public' : 'private',
+      if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
   }
 }

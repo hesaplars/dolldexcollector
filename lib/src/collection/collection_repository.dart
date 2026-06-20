@@ -100,6 +100,7 @@ class FirestoreCollectionRepository implements CollectionRepository {
           quantity: data['quantity'] as int? ?? 1,
           notes: data['notes'] as String? ?? '',
           isPublic: data['visibility'] != 'private',
+          updatedAt: _dateFromValue(data['updatedAt']),
         );
       }).toList(growable: false);
     }
@@ -137,6 +138,7 @@ class FirestoreCollectionRepository implements CollectionRepository {
           quantity: data['quantity'] as int? ?? 1,
           notes: data['notes'] as String? ?? '',
           isPublic: data['visibility'] != 'private',
+          updatedAt: _dateFromValue(data['updatedAt']),
         );
       }).toList(growable: false);
     }
@@ -169,6 +171,7 @@ class FirestoreCollectionRepository implements CollectionRepository {
             quantity: data['quantity'] as int? ?? 1,
             notes: data['notes'] as String? ?? '',
             isPublic: data['visibility'] != 'private',
+            updatedAt: _dateFromValue(data['updatedAt']),
           );
         }
       } catch (e) {
@@ -182,4 +185,11 @@ class FirestoreCollectionRepository implements CollectionRepository {
       return null;
     }
   }
+}
+
+DateTime? _dateFromValue(Object? value) {
+  if (value is DateTime) return value;
+  if (value is Timestamp) return value.toDate();
+  if (value is String) return DateTime.tryParse(value);
+  return null;
 }
