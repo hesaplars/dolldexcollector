@@ -1002,411 +1002,469 @@ class CollectionAnalyticsCard extends StatelessWidget {
         final user = userSnap.data!;
         final isPro = user.isPro;
 
-        return ValueListenableBuilder<List<CollectionEntry>>(
-          valueListenable: collectionEntriesNotifier,
-          builder: (context, collectionEntries, _) {
-            if (collectionEntries.isEmpty) {
-              return const SizedBox.shrink();
-            }
+        final isMe = userId == (authService.currentUser?.uid ?? 'local-user');
 
-            if (!isPro) {
-              // Locked Premium Card
-              return Card(
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFEC008C).withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.lock_outline_rounded,
-                        color: const Color(0xFFEC008C).withOpacity(0.8),
-                        size: 32,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        tr ? 'Koleksiyon İstatistikleri (Pro)' : 'Collection Analytics (Pro)',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Outfit',
-                          color: Color(0xFFEC008C),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        tr
-                            ? 'Kutulu/Kutusuz oranları, set tamamlanma yüzdeleri ve gelişmiş kategori dağılım grafiklerini görmek için DollDex Pro sürümüne yükseltin!'
-                            : 'Upgrade to DollDex Pro to view boxed/unboxed ratios, set completion rates, and advanced category distribution charts!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'Outfit',
-                          color: isDark ? Colors.white54 : Colors.black54,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => showProSubscriptionModal(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEC008C),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        ),
-                        child: Text(
-                          tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            // Calculations
-            final boxedCount = collectionEntries.where((e) => e.condition == CollectionCondition.boxed).length;
-            final totalCount = collectionEntries.length;
-            final boxedPct = totalCount > 0 ? boxedCount / totalCount : 0.0;
-            final unboxedPct = 1.0 - boxedPct;
-
-            final totalCatalog = catalogEntriesNotifier.value;
-            int dollCount = 0;
-            int petCount = 0;
-            int accCount = 0;
-
-            for (final entry in collectionEntries) {
-              final cat = totalCatalog.firstWhere(
-                (c) => c.id == entry.itemId,
-                orElse: () => const CatalogEntry(
-                  id: '',
-                  name: '',
-                  type: CatalogItemType.doll,
-                  subtitle: '',
-                  imageUrls: [],
-                ),
-              );
-              if (cat.id.isNotEmpty) {
-                if (cat.type == CatalogItemType.doll) dollCount++;
-                if (cat.type == CatalogItemType.pet) petCount++;
-                if (cat.type == CatalogItemType.accessory) accCount++;
-              }
-            }
-
-            final charMap = <String, List<String>>{};
-            for (final cat in totalCatalog) {
-              for (final charId in cat.characterIds) {
-                charMap.putIfAbsent(charId, () => []).add(cat.id);
-              }
-            }
-            final ownedItemIds = collectionEntries.map((e) => e.itemId).toSet();
-            final charProgress = <String, double>{};
-            charMap.forEach((charId, itemIds) {
-              final ownedCount = itemIds.where((id) => ownedItemIds.contains(id)).length;
-              if (ownedCount > 0) {
-                charProgress[charId] = ownedCount / itemIds.length;
-              }
-            });
-
-            final sortedChars = charProgress.entries.toList()
-              ..sort((a, b) => b.value.compareTo(a.value));
-            final topChars = sortedChars.take(3).toList();
-
-            final estValue = totalCount * 1250 + boxedCount * 350 + 1500;
-            final formattedVal = '₺' + estValue.toString().replaceAllMapped(
-              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-              (Match m) => '${m[1]}.',
-            );
-
-            String charAnalysisText = '';
-            if (topChars.isNotEmpty) {
-              final topCharName = _formatCharName(topChars.first.key);
-              final topPct = (topChars.first.value * 100).toStringAsFixed(0);
-              charAnalysisText = tr 
-                  ? "Koleksiyonunuzda en baskın karakter $topCharName (%$topPct tamamlanma). "
-                  : "Your most dominant character is $topCharName ($topPct% completed). ";
-            }
-            final conditionText = boxedPct > 0.4 
-                ? (tr ? "Kutulu korumaya (NIB) ağırlık veriyorsunuz." : "You heavily prefer Mint-In-Box (NIB) preservation.")
-                : (tr ? "Bebekleri kutusundan çıkarıp sergilemeyi seviyorsunuz." : "You prefer unboxing and displaying your dolls.");
-            final insights = "$charAnalysisText$conditionText";
-
-            return Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFFEC008C), Color(0xFFFFCC00)],
-                          ).createShader(bounds),
-                          child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          tr ? 'PRO ANALYTICS SUITE' : 'PRO ANALYTICS SUITE',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            fontFamily: 'Cinzel',
-                            letterSpacing: 1.2,
-                            color: Color(0xFFFFCC00),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Estimated Value Gauge
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E1230) : const Color(0xFFFAF2FF),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFFFCC00).withOpacity(0.6),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFFCC00).withOpacity(0.08),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            tr ? 'TAHMİNİ KOLEKSİYON DEĞERİ' : 'ESTIMATED COLLECTION VALUE',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Outfit',
-                              letterSpacing: 1.0,
-                              color: isDark ? Colors.white70 : Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            formattedVal,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              fontFamily: 'Cinzel',
-                              color: Color(0xFFFFCC00),
-                              shadows: [
-                                Shadow(
-                                  color: Color(0xFFFFCC00),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            tr
-                                ? '*Mevcut kondisyon ve katalog ortalamasına göre tahmini hesaptır.'
-                                : '*Estimated value calculated based on current conditions and averages.',
-                            style: TextStyle(
-                              fontSize: 8.5,
-                              fontStyle: FontStyle.italic,
-                              color: isDark ? Colors.white38 : Colors.black45,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // KPI Grid Row 1
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildKPICard(
-                            context,
-                            icon: Icons.inventory_2_outlined,
-                            label: tr ? 'Toplam Öğe' : 'Total Items',
-                            value: '$totalCount ${tr ? 'Adet' : 'Items'}',
-                            color: const Color(0xFF00FFCC),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildKPICard(
-                            context,
-                            icon: Icons.auto_awesome_outlined,
-                            label: tr ? 'Koleksiyoner Skoru' : 'Collector Score',
-                            value: '${totalCount * 125 + boxedCount * 75} XP',
-                            color: const Color(0xFF8338EC),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // KPI Grid Row 2
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildKPICard(
-                            context,
-                            icon: Icons.diamond_outlined,
-                            label: tr ? 'Nadir & Özel' : 'Rare & Special',
-                            value: '${(totalCount * 0.15).ceil()} ${tr ? 'Parça' : 'Pcs'}',
-                            color: const Color(0xFFFFCC00),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildKPICard(
-                            context,
-                            icon: Icons.health_and_safety_outlined,
-                            label: tr ? 'Ort. Kondisyon' : 'Avg. Condition',
-                            value: boxedPct > 0.4 ? (tr ? 'Kutulu (MIB)' : 'MIB / Pristine') : (tr ? 'Çok İyi (EX)' : 'Very Good'),
-                            color: const Color(0xFFEC008C),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 28),
-                    Text(
-                      tr ? 'Koleksiyon Oranları & Sağlığı' : 'Collection Health & Ratios',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        NeonPieChart(
-                          percentage: boxedPct,
-                          label: tr ? 'Kutulu MIB' : 'Boxed MIB',
-                          color: const Color(0xFFEC008C),
-                        ),
-                        NeonPieChart(
-                          percentage: unboxedPct,
-                          label: tr ? 'Açılmış' : 'Unboxed',
-                          color: const Color(0xFF00FFCC),
-                        ),
-                        NeonPieChart(
-                          percentage: totalCatalog.isNotEmpty ? (totalCount / totalCatalog.length).clamp(0.0, 1.0) : 0.0,
-                          label: tr ? 'Katalog Oranı' : 'Catalog Comp.',
-                          color: const Color(0xFFFFCC00),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 28),
-                    Text(
-                      tr ? 'Kategori Dağılımı' : 'Category Distribution',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
-                    ),
-                    const SizedBox(height: 8),
-                    NeonBarChart(
-                      label: tr ? 'Bebekler (Dolls)' : 'Dolls',
-                      count: dollCount,
-                      total: totalCount,
-                      color: const Color(0xFFEC008C),
-                    ),
-                    NeonBarChart(
-                      label: tr ? 'Evcil Hayvanlar (Pets)' : 'Pets',
-                      count: petCount,
-                      total: totalCount,
-                      color: const Color(0xFF00FFCC),
-                    ),
-                    NeonBarChart(
-                      label: tr ? 'Aksesuarlar (Accs)' : 'Accessories',
-                      count: accCount,
-                      total: totalCount,
-                      color: const Color(0xFFFFCC00),
-                    ),
-                    if (topChars.isNotEmpty) ...[
-                      const Divider(height: 28),
-                      Text(
-                        tr ? 'Karakter Tamamlanma Oranları' : 'Character Completion Rates',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
-                      ),
-                      const SizedBox(height: 10),
-                      for (final char in topChars)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    _formatCharName(char.key),
-                                    style: const TextStyle(fontSize: 11, fontFamily: 'Outfit'),
-                                  ),
-                                  Text(
-                                    '${(char.value * 100).toStringAsFixed(0)}%',
-                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: char.value,
-                                  minHeight: 6,
-                                  backgroundColor: Colors.white10,
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8338EC)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                    const Divider(height: 28),
-                    // Collector Insights Box
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF8338EC).withOpacity(0.04),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: const Color(0xFF8338EC).withOpacity(0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.psychology_outlined, color: Color(0xFF8338EC), size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              insights,
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontFamily: 'Outfit',
-                                color: isDark ? Colors.white70 : Colors.black87,
-                                height: 1.3,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        if (!isPro) {
+          // Locked Premium Card
+          return Card(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFEC008C).withOpacity(0.3),
+                  width: 1.5,
                 ),
               ),
-            );
-          },
-        );
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    color: const Color(0xFFEC008C).withOpacity(0.8),
+                    size: 32,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    tr ? 'Koleksiyon İstatistikleri (Pro)' : 'Collection Analytics (Pro)',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Outfit',
+                      color: Color(0xFFEC008C),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    tr
+                        ? 'Kutulu/Kutusuz oranları, set tamamlanma yüzdeleri ve gelişmiş kategori dağılım grafiklerini görmek için DollDex Pro sürümüne yükseltin!'
+                        : 'Upgrade to DollDex Pro to view boxed/unboxed ratios, set completion rates, and advanced category distribution charts!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'Outfit',
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => showProSubscriptionModal(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEC008C),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    ),
+                    child: Text(
+                      tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (isMe) {
+          return ValueListenableBuilder<List<CollectionEntry>>(
+            valueListenable: collectionEntriesNotifier,
+            builder: (context, collectionEntries, _) {
+              return _buildContent(context, collectionEntries, isDark, tr);
+            },
+          );
+        } else {
+          return FutureBuilder<List<CollectionEntry>>(
+            future: collectionRepository.listPublicForUser(userId),
+            builder: (context, collectionSnap) {
+              final collectionEntries = collectionSnap.data ?? [];
+              return _buildContent(context, collectionEntries, isDark, tr);
+            },
+          );
+        }
       },
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    List<CollectionEntry> collectionEntries,
+    bool isDark,
+    bool tr,
+  ) {
+    if (collectionEntries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final boxedCount = collectionEntries.where((e) => e.condition == CollectionCondition.boxed).length;
+    final totalCount = collectionEntries.length;
+    final boxedPct = totalCount > 0 ? boxedCount / totalCount : 0.0;
+    final unboxedPct = 1.0 - boxedPct;
+
+    final totalCatalog = catalogEntriesNotifier.value;
+    int dollCount = 0;
+    int petCount = 0;
+    int accCount = 0;
+
+    for (final entry in collectionEntries) {
+      final cat = totalCatalog.firstWhere(
+        (c) => c.id == entry.itemId,
+        orElse: () => const CatalogEntry(
+          id: '',
+          name: '',
+          type: CatalogItemType.doll,
+          subtitle: '',
+          imageUrls: [],
+          averagePrice: 1200.0,
+        ),
+      );
+      if (cat.id.isNotEmpty) {
+        if (cat.type == CatalogItemType.doll) dollCount++;
+        if (cat.type == CatalogItemType.pet) petCount++;
+        if (cat.type == CatalogItemType.accessory) accCount++;
+      }
+    }
+
+    final charMap = <String, List<String>>{};
+    for (final cat in totalCatalog) {
+      for (final charId in cat.characterIds) {
+        charMap.putIfAbsent(charId, () => []).add(cat.id);
+      }
+    }
+    final ownedItemIds = collectionEntries.map((e) => e.itemId).toSet();
+    final charProgress = <String, double>{};
+    charMap.forEach((charId, itemIds) {
+      final ownedCount = itemIds.where((id) => ownedItemIds.contains(id)).length;
+      if (ownedCount > 0) {
+        charProgress[charId] = ownedCount / itemIds.length;
+      }
+    });
+
+    final sortedChars = charProgress.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topChars = sortedChars.take(3).toList();
+
+    // Realistic Value Calculation
+    double estValue = 0;
+    for (final entry in collectionEntries) {
+      if (entry.status == CollectionStatus.wanted) continue;
+      final cat = totalCatalog.firstWhere(
+        (c) => c.id == entry.itemId,
+        orElse: () => const CatalogEntry(
+          id: '',
+          name: '',
+          type: CatalogItemType.doll,
+          subtitle: '',
+          imageUrls: [],
+          averagePrice: 1200.0,
+        ),
+      );
+      final basePrice = cat.id.isNotEmpty ? cat.averagePrice : 1200.0;
+      
+      double multiplier = 1.0;
+      switch (entry.condition) {
+        case CollectionCondition.boxed:
+          multiplier = 1.5;
+          break;
+        case CollectionCondition.unboxed:
+          multiplier = 0.7;
+          break;
+        case CollectionCondition.complete:
+          multiplier = 1.0;
+          break;
+        case CollectionCondition.incomplete:
+          multiplier = 0.5;
+          break;
+        case CollectionCondition.damaged:
+          multiplier = 0.3;
+          break;
+      }
+      estValue += (basePrice * multiplier * entry.quantity);
+    }
+
+    final formattedVal = '₺' + estValue.toInt().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+
+    String charAnalysisText = '';
+    if (topChars.isNotEmpty) {
+      final topCharName = _formatCharName(topChars.first.key);
+      final topPct = (topChars.first.value * 100).toStringAsFixed(0);
+      charAnalysisText = tr 
+          ? "Koleksiyonunuzda en baskın karakter $topCharName (%$topPct tamamlanma). "
+          : "Your most dominant character is $topCharName ($topPct% completed). ";
+    }
+    final conditionText = boxedPct > 0.4 
+        ? (tr ? "Kutulu korumaya (NIB) ağırlık veriyorsunuz." : "You heavily prefer Mint-In-Box (NIB) preservation.")
+        : (tr ? "Bebekleri kutusundan çıkarıp sergilemeyi seviyorsunuz." : "You prefer unboxing and displaying your dolls.");
+    final insights = "$charAnalysisText$conditionText";
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFFEC008C), Color(0xFFFFCC00)],
+                  ).createShader(bounds),
+                  child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  tr ? 'Profil İstatistiği' : 'Profile Statistics',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'Cinzel',
+                    letterSpacing: 1.2,
+                    color: Color(0xFFFFCC00),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Estimated Value Gauge
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1230) : const Color(0xFFFAF2FF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFFFCC00).withOpacity(0.6),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFCC00).withOpacity(0.08),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    tr ? 'TAHMİNİ KOLEKSİYON DEĞERİ' : 'ESTIMATED COLLECTION VALUE',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Outfit',
+                      letterSpacing: 1.0,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    formattedVal,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      fontFamily: 'Cinzel',
+                      color: Color(0xFFFFCC00),
+                      shadows: [
+                        Shadow(
+                          color: Color(0xFFFFCC00),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    tr
+                        ? '*Mevcut kondisyon ve katalog ortalamasına göre tahmini hesaptır.'
+                        : '*Estimated value calculated based on current conditions and averages.',
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontStyle: FontStyle.italic,
+                      color: isDark ? Colors.white38 : Colors.black45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // KPI Grid Row 1
+            Row(
+              children: [
+                Expanded(
+                  child: _buildKPICard(
+                    context,
+                    icon: Icons.inventory_2_outlined,
+                    label: tr ? 'Toplam Öğe' : 'Total Items',
+                    value: '$totalCount ${tr ? 'Adet' : 'Items'}',
+                    color: const Color(0xFF00FFCC),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildKPICard(
+                    context,
+                    icon: Icons.auto_awesome_outlined,
+                    label: tr ? 'Koleksiyoner Skoru' : 'Collector Score',
+                    value: '${totalCount * 125 + boxedCount * 75} XP',
+                    color: const Color(0xFF8338EC),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // KPI Grid Row 2
+            Row(
+              children: [
+                Expanded(
+                  child: _buildKPICard(
+                    context,
+                    icon: Icons.diamond_outlined,
+                    label: tr ? 'Nadir & Özel' : 'Rare & Special',
+                    value: '${(totalCount * 0.15).ceil()} ${tr ? 'Parça' : 'Pcs'}',
+                    color: const Color(0xFFFFCC00),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildKPICard(
+                    context,
+                    icon: Icons.health_and_safety_outlined,
+                    label: tr ? 'Ort. Kondisyon' : 'Avg. Condition',
+                    value: boxedPct > 0.4 ? (tr ? 'Kutulu (MIB)' : 'MIB / Pristine') : (tr ? 'Çok İyi (EX)' : 'Very Good'),
+                    color: const Color(0xFFEC008C),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 28),
+            Text(
+              tr ? 'Koleksiyon Oranları & Sağlığı' : 'Collection Health & Ratios',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                NeonPieChart(
+                  percentage: boxedPct,
+                  label: tr ? 'Kutulu MIB' : 'Boxed MIB',
+                  color: const Color(0xFFEC008C),
+                ),
+                NeonPieChart(
+                  percentage: unboxedPct,
+                  label: tr ? 'Açılmış' : 'Unboxed',
+                  color: const Color(0xFF00FFCC),
+                ),
+                NeonPieChart(
+                  percentage: totalCatalog.isNotEmpty ? (totalCount / totalCatalog.length).clamp(0.0, 1.0) : 0.0,
+                  label: tr ? 'Katalog Oranı' : 'Catalog Comp.',
+                  color: const Color(0xFFFFCC00),
+                ),
+              ],
+            ),
+            const Divider(height: 28),
+            Text(
+              tr ? 'Kategori Dağılımı' : 'Category Distribution',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
+            ),
+            const SizedBox(height: 8),
+            NeonBarChart(
+              label: tr ? 'Bebekler (Dolls)' : 'Dolls',
+              count: dollCount,
+              total: totalCount,
+              color: const Color(0xFFEC008C),
+            ),
+            NeonBarChart(
+              label: tr ? 'Evcil Hayvanlar (Pets)' : 'Pets',
+              count: petCount,
+              total: totalCount,
+              color: const Color(0xFF00FFCC),
+            ),
+            NeonBarChart(
+              label: tr ? 'Aksesuarlar (Accs)' : 'Accessories',
+              count: accCount,
+              total: totalCount,
+              color: const Color(0xFFFFCC00),
+            ),
+            if (topChars.isNotEmpty) ...[
+              const Divider(height: 28),
+              Text(
+                tr ? 'Karakter Tamamlanma Oranları' : 'Character Completion Rates',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
+              ),
+              const SizedBox(height: 10),
+              for (final char in topChars)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatCharName(char.key),
+                            style: const TextStyle(fontSize: 11, fontFamily: 'Outfit'),
+                          ),
+                          Text(
+                            '${(char.value * 100).toStringAsFixed(0)}%',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: char.value,
+                          minHeight: 6,
+                          backgroundColor: Colors.white10,
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8338EC)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+            const Divider(height: 28),
+            // Collector Insights Box
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF8338EC).withOpacity(0.04),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFF8338EC).withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.psychology_outlined, color: Color(0xFF8338EC), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      insights,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontFamily: 'Outfit',
+                        color: isDark ? Colors.white70 : Colors.black87,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -31,6 +31,7 @@ class PublicProfileScreen extends StatefulWidget {
 class _PublicProfileScreenState extends State<PublicProfileScreen> {
   final _commentController = TextEditingController();
   late Future<List<CollectionEntry>> _collectionFuture;
+  bool _showStats = false;
 
   @override
   void initState() {
@@ -103,6 +104,39 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                         ),
                         icon: const Icon(Icons.more_vert_rounded),
                         onPressed: () => _showPublicProfileActionsMenu(context, widget.userId),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -15,
+                      right: 16,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showStats = !_showStats;
+                          });
+                        },
+                        icon: Icon(
+                          _showStats ? Icons.insights_rounded : Icons.bar_chart_rounded,
+                          color: const Color(0xFFFFCC00),
+                          size: 15,
+                        ),
+                        label: Text(
+                          AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Profil İstatistiği' : 'Profile Stats',
+                          style: const TextStyle(
+                            color: Color(0xFFFFCC00),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Outfit',
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFFFCC00), width: 1.2),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          backgroundColor: Colors.black.withOpacity(0.75),
+                        ),
                       ),
                     ),
                   ],
@@ -343,6 +377,10 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                           );
                         },
                       ),
+                      if (_showStats) ...[
+                        const SizedBox(height: 12),
+                        CollectionAnalyticsCard(userId: widget.userId),
+                      ],
                       const SizedBox(height: 12),
                       FeaturedShowcaseCard(userId: widget.userId),
                       const SizedBox(height: 12),

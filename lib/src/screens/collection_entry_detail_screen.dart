@@ -359,7 +359,7 @@ class _UserCollectionEntryDetailScreenState
                                 return Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    TextButton.icon(
+                                    TextButton(
                                       onPressed: currentUser == null
                                           ? null
                                           : () async {
@@ -395,12 +395,15 @@ class _UserCollectionEntryDetailScreenState
                                                 ),
                                               );
                                             },
-                                      icon: Icon(
-                                        isFeatured ? Icons.star_rounded : Icons.star_border_rounded,
-                                        color: const Color(0xFFFFCC00),
-                                        size: 14,
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        side: const BorderSide(color: Color(0xFFFFCC00), width: 1),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        backgroundColor: const Color(0xFFFFCC00).withOpacity(0.08),
                                       ),
-                                      label: Text(
+                                      child: Text(
                                         isFeatured
                                             ? (tr ? 'Vitrinden Kaldır' : 'Remove from Showcase')
                                             : (tr ? 'Vitrine Ekle' : 'Add to Showcase'),
@@ -410,14 +413,6 @@ class _UserCollectionEntryDetailScreenState
                                           fontWeight: FontWeight.bold,
                                           fontFamily: 'Outfit',
                                         ),
-                                      ),
-                                      style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                        side: const BorderSide(color: Color(0xFFFFCC00), width: 1),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        backgroundColor: const Color(0xFFFFCC00).withOpacity(0.08),
                                       ),
                                     ),
                                     const SizedBox(width: 8),

@@ -143,7 +143,11 @@ class _AppScaffoldState extends State<AppScaffold> {
           backgroundColor: const Color(0xFFEC008C),
           child: Opacity(
             opacity: selectedIndex == 2 ? 1.0 : 0.45,
-            child: _buildNeonTopIcon(Icons.chat_bubble_outline_rounded),
+            child: Image.asset(
+              'assets/icons/nav_messages.png',
+              width: 28,
+              height: 28,
+            ),
           ),
         ),
         label: tr ? 'Mesajlarım' : 'Messages',
@@ -151,7 +155,11 @@ class _AppScaffoldState extends State<AppScaffold> {
       NavigationDestination(
         icon: Opacity(
           opacity: selectedIndex == 3 ? 1.0 : 0.45,
-          child: _buildNeonTopIcon(Icons.people_outline_rounded),
+          child: Image.asset(
+            'assets/icons/nav_social.png',
+            width: 28,
+            height: 28,
+          ),
         ),
         label: tr ? 'Sosyal' : 'Social',
       ),

@@ -540,7 +540,7 @@ class CollectionEntryList extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const columns = 2;
+        const columns = 3;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -548,9 +548,9 @@ class CollectionEntryList extends StatelessWidget {
           itemCount: entries.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 0.66,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            childAspectRatio: 0.58,
           ),
           itemBuilder: (context, index) {
             final entry = entries[index];
@@ -645,50 +645,55 @@ class CollectionGridCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(5),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         entryName(context, item),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.05,
-                            ),
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          height: 1.05,
+                          fontFamily: 'Outfit',
+                        ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Row(
                         children: [
                           Expanded(
                             child: Wrap(
-                              spacing: 4,
+                              spacing: 2,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 _buildStatusIcon(context, entry.status),
                                 Text(
                                   collectionStatusLabel(context, entry.status),
                                   style: TextStyle(
-                                    fontSize: 9,
+                                    fontSize: 8,
                                     color: isDark ? Colors.white70 : Colors.black87,
                                     fontWeight: FontWeight.bold,
+                                    fontFamily: 'Outfit',
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(
                               color: isDark ? const Color(0xFF2C1F45) : const Color(0xFFE9D8FA),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               'x${entry.quantity}',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? Colors.white : Colors.black87,
+                                fontFamily: 'Outfit',
                               ),
                             ),
                           ),
@@ -795,12 +800,12 @@ Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> c
   }
 
   return GridView.builder(
-    padding: const EdgeInsets.all(4),
+    padding: const EdgeInsets.all(3),
     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      crossAxisSpacing: 6,
-      mainAxisSpacing: 6,
-      childAspectRatio: 0.66,
+      crossAxisCount: 3,
+      crossAxisSpacing: 5,
+      mainAxisSpacing: 5,
+      childAspectRatio: 0.58,
     ),
     itemCount: categoryEntries.length,
     itemBuilder: (context, index) {
@@ -826,19 +831,29 @@ Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> c
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(5),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       entryName(context, item),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        height: 1.05,
+                        fontFamily: 'Outfit',
+                      ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       '${tr ? 'Adet' : 'Qty'}: ${entry.quantity}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontFamily: 'Outfit',
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

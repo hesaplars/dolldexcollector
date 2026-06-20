@@ -33,6 +33,7 @@ class CatalogEntry {
     this.setIds = const [],
     this.tags = const [],
     this.description = '',
+    this.averagePrice = 1200.0,
   });
 
   final String id;
@@ -45,6 +46,7 @@ class CatalogEntry {
   final List<String> setIds;
   final List<String> tags;
   final String description;
+  final double averagePrice;
 
   String get primaryImageUrl => imageUrls.isEmpty ? '' : imageUrls.first;
 
@@ -59,6 +61,7 @@ class CatalogEntry {
       'setIds': setIds,
       'tags': tags,
       'description': description,
+      'averagePrice': averagePrice,
     };
   }
 
@@ -97,6 +100,14 @@ class CatalogEntry {
       );
     }
 
+    final rawPrice = map['averagePrice'];
+    double parsedPrice = 1200.0;
+    if (rawPrice is num) {
+      parsedPrice = rawPrice.toDouble();
+    } else if (rawPrice is String) {
+      parsedPrice = double.tryParse(rawPrice.trim()) ?? 1200.0;
+    }
+
     return CatalogEntry(
       id: id,
       name: nameVal?.toString() ?? '',
@@ -111,6 +122,7 @@ class CatalogEntry {
       setIds: _stringList(map['setIds']),
       tags: _stringList(map['tags']),
       description: descVal?.toString() ?? '',
+      averagePrice: parsedPrice,
     );
   }
 }
