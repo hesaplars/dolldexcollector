@@ -274,7 +274,7 @@ class _UserCollectionEntryDetailScreenState
                                         size: 16,
                                         padding: const EdgeInsets.all(8),
                                         activeColor: const Color(0xFF00FFCC),
-                                        onPressed: () => showCommentsSheet(context, entry.id),
+                                        onPressed: () => showCommentsSheet(context, entry.id, catalogEntryId: entry.itemId),
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
@@ -359,12 +359,7 @@ class _UserCollectionEntryDetailScreenState
                                 return Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    buildGothicNeonIconButton(
-                                      context: context,
-                                      icon: isFeatured ? Icons.star_rounded : Icons.star_border_rounded,
-                                      size: 16,
-                                      padding: const EdgeInsets.all(8),
-                                      activeColor: const Color(0xFFFFCC00),
+                                    TextButton.icon(
                                       onPressed: currentUser == null
                                           ? null
                                           : () async {
@@ -400,6 +395,30 @@ class _UserCollectionEntryDetailScreenState
                                                 ),
                                               );
                                             },
+                                      icon: Icon(
+                                        isFeatured ? Icons.star_rounded : Icons.star_border_rounded,
+                                        color: const Color(0xFFFFCC00),
+                                        size: 14,
+                                      ),
+                                      label: Text(
+                                        isFeatured
+                                            ? (tr ? 'Vitrinden Kaldır' : 'Remove from Showcase')
+                                            : (tr ? 'Vitrine Ekle' : 'Add to Showcase'),
+                                        style: const TextStyle(
+                                          color: Color(0xFFFFCC00),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Outfit',
+                                        ),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        side: const BorderSide(color: Color(0xFFFFCC00), width: 1),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        backgroundColor: const Color(0xFFFFCC00).withOpacity(0.08),
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                     buildGothicNeonIconButton(

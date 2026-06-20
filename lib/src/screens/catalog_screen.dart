@@ -290,7 +290,7 @@ class FeaturedGrid extends StatelessWidget {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            const columns = 2;
+            const columns = 3;
 
             return GridView.builder(
               shrinkWrap: true,
@@ -298,9 +298,9 @@ class FeaturedGrid extends StatelessWidget {
               itemCount: items.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columns,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 0.66,
+                mainAxisSpacing: 6,
+                crossAxisSpacing: 6,
+                childAspectRatio: 0.58,
               ),
               itemBuilder: (context, index) => CatalogCard(item: items[index]),
             );
@@ -335,7 +335,7 @@ class CatalogCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+              padding: const EdgeInsets.all(5),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -343,20 +343,24 @@ class CatalogCard extends StatelessWidget {
                     entryName(context, item),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          height: 1.05,
-                        ),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      height: 1.05,
+                      fontFamily: 'Outfit',
+                    ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     entrySubtitle(context, item),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          height: 1.1,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    style: TextStyle(
+                      fontSize: 9.0,
+                      height: 1.1,
+                      fontFamily: 'Outfit',
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   ValueListenableBuilder<List<CollectionEntry>>(
                     valueListenable: collectionEntriesNotifier,

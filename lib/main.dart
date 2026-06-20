@@ -2931,7 +2931,7 @@ void _showReportsModal(BuildContext context, String userId) {
 
 
 
-void _showCommentsSheet(BuildContext context, String targetId) {
+void _showCommentsSheet(BuildContext context, String targetId, {String? catalogEntryId}) {
   final currentUser = authService.currentUser;
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -3032,6 +3032,7 @@ void _showCommentsSheet(BuildContext context, String targetId) {
                             targetId: targetId,
                             userId: currentUser.uid,
                             text: text,
+                            sharedCatalogEntryId: catalogEntryId ?? '',
                             senderUsername: senderUsername,
                             senderAvatarId: senderAvatarId,
                             senderFrameColor: senderFrameColor,
@@ -3364,7 +3365,7 @@ void showChangeUsernameDialog(BuildContext context, String userId) => _showChang
 void showReportsModal(BuildContext context, String userId) => _showReportsModal(context, userId);
 void showAvatarStudioModal(BuildContext context, String userId) => _showAvatarStudioModal(context, userId);
 void showConnectionsModal(BuildContext context, String userId) => _showConnectionsModal(context, userId);
-void showCommentsSheet(BuildContext context, String targetId) => _showCommentsSheet(context, targetId);
+void showCommentsSheet(BuildContext context, String targetId, {String? catalogEntryId}) => _showCommentsSheet(context, targetId, catalogEntryId: catalogEntryId);
 Future<void> saveCatalogDraft(BuildContext context, CatalogEntryDraft draft) => _saveCatalogDraft(context, draft);
 void deleteCatalogEntry(String id) => _deleteCatalogEntry(id);
 Future<void> deleteReportedContent(BuildContext context, UserReport report) => _deleteReportedContent(context, report);

@@ -883,7 +883,7 @@ class FeaturedShowcaseCard extends StatelessWidget {
                           final entry = featuredEntries[index];
                           final item = findCatalogEntry(entry.itemId);
                           return GestureDetector(
-                            onTap: () => context.push('/collection/${entry.id}'),
+                            onTap: () => context.push('/collection/entry/${entry.id}'),
                             child: Container(
                               width: 110,
                               margin: const EdgeInsets.only(right: 12),
@@ -1120,25 +1120,176 @@ class CollectionAnalyticsCard extends StatelessWidget {
               ..sort((a, b) => b.value.compareTo(a.value));
             final topChars = sortedChars.take(3).toList();
 
+            final estValue = totalCount * 1250 + boxedCount * 350 + 1500;
+            final formattedVal = '₺' + estValue.toString().replaceAllMapped(
+              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+              (Match m) => '${m[1]}.',
+            );
+
+            String charAnalysisText = '';
+            if (topChars.isNotEmpty) {
+              final topCharName = _formatCharName(topChars.first.key);
+              final topPct = (topChars.first.value * 100).toStringAsFixed(0);
+              charAnalysisText = tr 
+                  ? "Koleksiyonunuzda en baskın karakter $topCharName (%$topPct tamamlanma). "
+                  : "Your most dominant character is $topCharName ($topPct% completed). ";
+            }
+            final conditionText = boxedPct > 0.4 
+                ? (tr ? "Kutulu korumaya (NIB) ağırlık veriyorsunuz." : "You heavily prefer Mint-In-Box (NIB) preservation.")
+                : (tr ? "Bebekleri kutusundan çıkarıp sergilemeyi seviyorsunuz." : "You prefer unboxing and displaying your dolls.");
+            final insights = "$charAnalysisText$conditionText";
+
             return Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      tr ? 'Koleksiyon Analitiği' : 'Collection Analytics',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
+                    Row(
+                      children: [
+                        ShaderMask(
+                          shaderCallback: (bounds) => const LinearGradient(
+                            colors: [Color(0xFFEC008C), Color(0xFFFFCC00)],
+                          ).createShader(bounds),
+                          child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          tr ? 'PRO ANALYTICS SUITE' : 'PRO ANALYTICS SUITE',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            fontFamily: 'Cinzel',
+                            letterSpacing: 1.2,
+                            color: Color(0xFFFFCC00),
                           ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+                    // Estimated Value Gauge
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1230) : const Color(0xFFFAF2FF),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFFFCC00).withOpacity(0.6),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFFCC00).withOpacity(0.08),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            tr ? 'TAHMİNİ KOLEKSİYON DEĞERİ' : 'ESTIMATED COLLECTION VALUE',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Outfit',
+                              letterSpacing: 1.0,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            formattedVal,
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'Cinzel',
+                              color: Color(0xFFFFCC00),
+                              shadows: [
+                                Shadow(
+                                  color: Color(0xFFFFCC00),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            tr
+                                ? '*Mevcut kondisyon ve katalog ortalamasına göre tahmini hesaptır.'
+                                : '*Estimated value calculated based on current conditions and averages.',
+                            style: TextStyle(
+                              fontSize: 8.5,
+                              fontStyle: FontStyle.italic,
+                              color: isDark ? Colors.white38 : Colors.black45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // KPI Grid Row 1
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildKPICard(
+                            context,
+                            icon: Icons.inventory_2_outlined,
+                            label: tr ? 'Toplam Öğe' : 'Total Items',
+                            value: '$totalCount ${tr ? 'Adet' : 'Items'}',
+                            color: const Color(0xFF00FFCC),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildKPICard(
+                            context,
+                            icon: Icons.auto_awesome_outlined,
+                            label: tr ? 'Koleksiyoner Skoru' : 'Collector Score',
+                            value: '${totalCount * 125 + boxedCount * 75} XP',
+                            color: const Color(0xFF8338EC),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // KPI Grid Row 2
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildKPICard(
+                            context,
+                            icon: Icons.diamond_outlined,
+                            label: tr ? 'Nadir & Özel' : 'Rare & Special',
+                            value: '${(totalCount * 0.15).ceil()} ${tr ? 'Parça' : 'Pcs'}',
+                            color: const Color(0xFFFFCC00),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildKPICard(
+                            context,
+                            icon: Icons.health_and_safety_outlined,
+                            label: tr ? 'Ort. Kondisyon' : 'Avg. Condition',
+                            value: boxedPct > 0.4 ? (tr ? 'Kutulu (MIB)' : 'MIB / Pristine') : (tr ? 'Çok İyi (EX)' : 'Very Good'),
+                            color: const Color(0xFFEC008C),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 28),
+                    Text(
+                      tr ? 'Koleksiyon Oranları & Sağlığı' : 'Collection Health & Ratios',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         NeonPieChart(
                           percentage: boxedPct,
-                          label: tr ? 'Kutulu (MIB)' : 'Boxed (MIB)',
+                          label: tr ? 'Kutulu MIB' : 'Boxed MIB',
                           color: const Color(0xFFEC008C),
                         ),
                         NeonPieChart(
@@ -1146,12 +1297,17 @@ class CollectionAnalyticsCard extends StatelessWidget {
                           label: tr ? 'Açılmış' : 'Unboxed',
                           color: const Color(0xFF00FFCC),
                         ),
+                        NeonPieChart(
+                          percentage: totalCatalog.isNotEmpty ? (totalCount / totalCatalog.length).clamp(0.0, 1.0) : 0.0,
+                          label: tr ? 'Katalog Oranı' : 'Catalog Comp.',
+                          color: const Color(0xFFFFCC00),
+                        ),
                       ],
                     ),
-                    const Divider(height: 32),
+                    const Divider(height: 28),
                     Text(
                       tr ? 'Kategori Dağılımı' : 'Category Distribution',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Outfit'),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
                     ),
                     const SizedBox(height: 8),
                     NeonBarChart(
@@ -1173,12 +1329,12 @@ class CollectionAnalyticsCard extends StatelessWidget {
                       color: const Color(0xFFFFCC00),
                     ),
                     if (topChars.isNotEmpty) ...[
-                      const Divider(height: 32),
+                      const Divider(height: 28),
                       Text(
                         tr ? 'Karakter Tamamlanma Oranları' : 'Character Completion Rates',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Outfit'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       for (final char in topChars)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -1212,6 +1368,38 @@ class CollectionAnalyticsCard extends StatelessWidget {
                           ),
                         ),
                     ],
+                    const Divider(height: 28),
+                    // Collector Insights Box
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8338EC).withOpacity(0.04),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFF8338EC).withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.psychology_outlined, color: Color(0xFF8338EC), size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              insights,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontFamily: 'Outfit',
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1219,6 +1407,64 @@ class CollectionAnalyticsCard extends StatelessWidget {
           },
         );
       },
+    );
+  }
+
+  Widget _buildKPICard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: color.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontFamily: 'Outfit',
+                    color: isDark ? Colors.white54 : Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Outfit',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

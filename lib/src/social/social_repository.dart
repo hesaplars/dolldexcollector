@@ -606,11 +606,11 @@ class SocialRepository {
     if (db == null) return Stream.value(const []);
     return db
         .collection('collectionEntries')
-        .where('visibility', isEqualTo: 'public')
         .orderBy('updatedAt', descending: true)
-        .limit(45)
+        .limit(100)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) {
+        .map((snap) => snap.docs
+            .map((doc) {
               final data = doc.data();
               return CollectionEntry(
                 id: doc.id,
@@ -626,9 +626,13 @@ class SocialRepository {
                 ),
                 quantity: data['quantity'] as int? ?? 1,
                 notes: data['notes'] as String? ?? '',
-                isPublic: true,
+                isPublic: data['visibility'] != 'private',
+                updatedAt: _dateFromValue(data['updatedAt']),
               );
-            }).toList());
+            })
+            .where((entry) => entry.isPublic)
+            .take(45)
+            .toList());
   }
 
   Stream<List<AppComment>> watchRecentComments() {
@@ -640,6 +644,13 @@ class SocialRepository {
         .limit(45)
         .snapshots()
         .map((snap) => snap.docs.map((doc) => AppComment.fromMap(doc.id, doc.data())).toList());
+  }
+
+  DateTime? _dateFromValue(Object? value) {
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 
   String _pairId(String first, String second) {

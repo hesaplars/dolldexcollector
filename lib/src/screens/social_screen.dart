@@ -15,6 +15,7 @@ import '../widgets/doll_widgets.dart';
 import '../catalog/catalog_models.dart';
 import '../comments/comment_models.dart';
 import '../users/profile_setup_repository.dart';
+import '../collection/collection_repository.dart';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({this.chatUserId, super.key});
@@ -844,7 +845,7 @@ class _SocialFeedTab extends StatelessWidget {
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 10),
                                 child: ListTile(
-                                  onTap: () => context.push('/collection/${entry.id}'),
+                                  onTap: () => context.push('/collection/entry/${entry.id}'),
                                   leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
                                   title: RichText(
                                     text: TextSpan(
@@ -894,57 +895,14 @@ class _SocialFeedTab extends StatelessWidget {
                               );
                             } else {
                               final comment = item.comment!;
-                              final catalogItem = findCatalogEntry(comment.targetId);
-
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                child: ListTile(
-                                  onTap: () => context.push('/catalog/${catalogItem.id}'),
-                                  leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
-                                  title: RichText(
-                                    text: TextSpan(
-                                      style: TextStyle(
-                                        color: isDark ? Colors.white : Colors.black87,
-                                        fontSize: 12.5,
-                                        fontFamily: 'Outfit',
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '$username ',
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: tr ? 'bir bebek altına yorum yaptı: ' : 'commented on a doll: ',
-                                        ),
-                                        TextSpan(
-                                          text: entryName(context, catalogItem),
-                                          style: TextStyle(
-                                            color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 4.0),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '"${comment.text}"',
-                                          style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.white70),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _timeAgo(context, item.timestamp),
-                                          style: const TextStyle(fontSize: 10, color: Colors.white38),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-                                ),
+                              return _CommentActivityCard(
+                                comment: comment,
+                                owner: owner,
+                                timestamp: item.timestamp,
+                                username: username,
+                                isDark: isDark,
+                                tr: tr,
+                                timeAgo: _timeAgo(context, item.timestamp),
                               );
                             }
                           },
@@ -958,6 +916,96 @@ class _SocialFeedTab extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _CommentActivityCard extends StatelessWidget {
+  const _CommentActivityCard({
+    required this.comment,
+    required this.owner,
+    required this.timestamp,
+    required this.username,
+    required this.isDark,
+    required this.tr,
+    required this.timeAgo,
+  });
+
+  final AppComment comment;
+  final ProfileSetupStatus owner;
+  final DateTime timestamp;
+  final String username;
+  final bool isDark;
+  final bool tr;
+  final String timeAgo;
+
+  @override
+  Widget build(BuildContext context) {
+    if (comment.sharedCatalogEntryId.isNotEmpty) {
+      final catalogItem = findCatalogEntry(comment.sharedCatalogEntryId);
+      return _buildCard(context, catalogItem);
+    }
+
+    return FutureBuilder<CollectionEntry?>(
+      future: collectionRepository.fetch(comment.targetId),
+      builder: (context, snapshot) {
+        final entry = snapshot.data;
+        final catalogItem = entry != null ? findCatalogEntry(entry.itemId) : findCatalogEntry('missing');
+        return _buildCard(context, catalogItem);
+      },
+    );
+  }
+
+  Widget _buildCard(BuildContext context, CatalogEntry catalogItem) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        onTap: () => context.push('/catalog/${catalogItem.id}'),
+        leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
+        title: RichText(
+          text: TextSpan(
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 12.5,
+              fontFamily: 'Outfit',
+            ),
+            children: [
+              TextSpan(
+                text: '$username ',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(
+                text: tr ? 'bir bebek altına yorum yaptı: ' : 'commented on a doll: ',
+              ),
+              TextSpan(
+                text: entryName(context, catalogItem),
+                style: TextStyle(
+                  color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '"${comment.text}"',
+                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.white70),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                timeAgo,
+                style: const TextStyle(fontSize: 10, color: Colors.white38),
+              ),
+            ],
+          ),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+      ),
     );
   }
 }
