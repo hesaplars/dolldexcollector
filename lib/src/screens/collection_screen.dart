@@ -86,6 +86,9 @@ class _CollectionScreenState extends State<CollectionScreen> {
           );
           await collectionRepository.delete(dummyEntry);
         }
+        collectionEntriesNotifier.value = collectionEntriesNotifier.value
+            .where((entry) => !_selectedEntryIds.contains(entry.id))
+            .toList();
         setState(() {
           _selectedEntryIds.clear();
           _isSelectionMode = false;
