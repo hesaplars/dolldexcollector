@@ -120,9 +120,20 @@ Future<bool> showGothicConfirmDialog(
         backgroundColor: Colors.transparent,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
-          child: GothicIvyContainer(
-            borderRadius: 20,
-            color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                  color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.28 : 0.14),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
             padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -131,16 +142,10 @@ Future<bool> showGothicConfirmDialog(
                   title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Cinzel',
+                    fontFamily: 'Outfit',
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFFEC008C),
-                    shadows: isDark ? [
-                      const Shadow(
-                        color: Color(0xFFEC008C),
-                        blurRadius: 10,
-                      ),
-                    ] : [],
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : DollDexTheme.ink,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -149,7 +154,8 @@ Future<bool> showGothicConfirmDialog(
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? Colors.white70 : Colors.black87,
+                    color: isDark ? Colors.white70 : DollDexTheme.cocoa,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -159,17 +165,22 @@ Future<bool> showGothicConfirmDialog(
                     Expanded(
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFEC008C), width: 1.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          side: BorderSide(
+                              color: isDark
+                                  ? DollDexTheme.darkLine
+                                  : DollDexTheme.line,
+                              width: 1.5),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () => Navigator.of(context).pop(false),
                         child: Text(
                           finalCancelText,
                           style: TextStyle(
-                            color: isDark ? Colors.white : const Color(0xFFEC008C),
+                            color: isDark ? Colors.white : DollDexTheme.cocoa,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'Cinzel',
+                            fontFamily: 'Outfit',
                           ),
                         ),
                       ),
@@ -179,15 +190,16 @@ Future<bool> showGothicConfirmDialog(
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
+                            colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(18),
                         ),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18)),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           onPressed: () => Navigator.of(context).pop(true),
@@ -196,7 +208,7 @@ Future<bool> showGothicConfirmDialog(
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Cinzel',
+                              fontFamily: 'Outfit',
                             ),
                           ),
                         ),

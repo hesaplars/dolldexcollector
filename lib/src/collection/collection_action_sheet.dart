@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../catalog/catalog_models.dart';
 import '../core/app_language.dart';
+import '../widgets/doll_widgets.dart';
 
 class CollectionActionSheet extends StatefulWidget {
   const CollectionActionSheet({
@@ -99,9 +100,10 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
             DropdownButtonFormField<CollectionCondition>(
               initialValue: _condition,
               decoration: InputDecoration(
-                labelText: AppLanguageScope.languageOf(context) == AppLanguage.tr
-                    ? 'Durum'
-                    : 'Condition',
+                labelText:
+                    AppLanguageScope.languageOf(context) == AppLanguage.tr
+                        ? 'Durum'
+                        : 'Condition',
                 prefixIcon: const Icon(Icons.fact_check_outlined),
               ),
               items: CollectionCondition.values
@@ -159,9 +161,10 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
               minLines: 2,
               maxLines: 4,
               decoration: InputDecoration(
-                labelText: AppLanguageScope.languageOf(context) == AppLanguage.tr
-                    ? 'Notlar'
-                    : 'Notes',
+                labelText:
+                    AppLanguageScope.languageOf(context) == AppLanguage.tr
+                        ? 'Notlar'
+                        : 'Notes',
                 alignLabelWithHint: true,
                 prefixIcon: const Icon(Icons.notes_rounded),
               ),
@@ -184,16 +187,19 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.redAccent, width: 1.5),
+                          border:
+                              Border.all(color: Colors.redAccent, width: 1.5),
                           color: Colors.redAccent.withOpacity(0.08),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                            const Icon(Icons.delete_outline_rounded,
+                                color: Colors.redAccent, size: 18),
                             const SizedBox(width: 6),
                             Text(
-                              AppLanguageScope.languageOf(context) == AppLanguage.tr
+                              AppLanguageScope.languageOf(context) ==
+                                      AppLanguage.tr
                                   ? 'Sil'
                                   : 'Delete',
                               style: const TextStyle(
@@ -233,32 +239,34 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                          colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEC008C).withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                            color: DollDexTheme.teal.withOpacity(0.28),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.save_outlined, color: Colors.white, size: 18),
+                          const Icon(Icons.save_outlined,
+                              color: Colors.white, size: 18),
                           const SizedBox(width: 8),
                           Text(
-                            AppLanguageScope.languageOf(context) == AppLanguage.tr
+                            AppLanguageScope.languageOf(context) ==
+                                    AppLanguage.tr
                                 ? 'Koleksiyona kaydet'
                                 : 'Save to collection',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 13.5,
-                              letterSpacing: 0.5,
+                              letterSpacing: 0,
                             ),
                           ),
                         ],

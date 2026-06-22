@@ -106,21 +106,9 @@ class SearchPanel extends StatelessWidget {
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<CatalogItemType?> onTypeChanged;
 
-  Widget _buildNeonIcon(BuildContext context, IconData icon, {double size = 24}) {
-    return SafeShaderMask(
-      shaderCallback: (bounds) {
-        return const LinearGradient(
-          colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bounds);
-      },
-      child: Icon(
-        icon,
-        size: size,
-        color: Colors.white,
-      ),
-    );
+  Widget _buildNeonIcon(BuildContext context, IconData icon,
+      {double size = 24}) {
+    return Icon(icon, size: size, color: DollDexTheme.teal);
   }
 
   Widget _buildFilterChip({
@@ -130,7 +118,7 @@ class SearchPanel extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final finalColor = isSelected ? const Color(0xFFEC008C) : Colors.transparent;
+    final finalColor = isSelected ? DollDexTheme.teal : Colors.transparent;
 
     return InkWell(
       onTap: onTap,
@@ -140,11 +128,11 @@ class SearchPanel extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? finalColor.withOpacity(0.15)
-              : (isDark ? const Color(0xFF160E22) : Colors.white),
+              : (isDark ? DollDexTheme.darkPanel : DollDexTheme.panel),
           border: Border.all(
             color: isSelected
                 ? finalColor
-                : (isDark ? const Color(0xFFEC008C).withOpacity(0.2) : Colors.black12),
+                : (isDark ? DollDexTheme.darkLine : DollDexTheme.line),
             width: 1.2,
           ),
           borderRadius: BorderRadius.circular(20),
@@ -162,8 +150,8 @@ class SearchPanel extends StatelessWidget {
           label,
           style: TextStyle(
             color: isSelected
-                ? (isDark ? Colors.white : const Color(0xFFEC008C))
-                : (isDark ? Colors.white60 : Colors.black87),
+                ? (isDark ? Colors.white : DollDexTheme.teal)
+                : (isDark ? Colors.white60 : DollDexTheme.cocoa),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -177,20 +165,39 @@ class SearchPanel extends StatelessWidget {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GothicIvyContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      borderRadius: 12,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.22 : 0.09),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Expanded(
             child: TextField(
               controller: controller,
               onChanged: onQueryChanged,
-              style: TextStyle(fontSize: 12.5, color: isDark ? Colors.white : Colors.black87, fontFamily: 'Outfit'),
+              style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white : DollDexTheme.ink,
+                  fontFamily: 'Outfit'),
               decoration: InputDecoration(
                 hintText: t(context, 'searchHint'),
-                hintStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12.5, fontFamily: 'Outfit'),
-                prefixIcon: _buildNeonIcon(context, Icons.search_rounded, size: 16),
+                hintStyle: TextStyle(
+                    color: isDark ? Colors.white60 : DollDexTheme.cocoa,
+                    fontSize: 13,
+                    fontFamily: 'Outfit'),
+                prefixIcon:
+                    _buildNeonIcon(context, Icons.search_rounded, size: 16),
                 contentPadding: const EdgeInsets.symmetric(vertical: 6),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -202,17 +209,17 @@ class SearchPanel extends StatelessWidget {
           const SizedBox(width: 6),
           InkWell(
             onTap: () => _showCatalogFilterSheet(context),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
             child: Container(
-              height: 28,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFFEC008C).withOpacity(isDark ? 0.5 : 0.25),
+                  color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
                   width: 1.0,
                 ),
-                color: isDark ? const Color(0xFF160E22) : Colors.white,
+                color: isDark ? DollDexTheme.darkPaper : DollDexTheme.mist,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -220,11 +227,13 @@ class SearchPanel extends StatelessWidget {
                   _buildNeonIcon(context, Icons.tune_rounded, size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    selectedType == null ? (tr ? 'Hepsi' : 'All') : catalogTypeLabel(context, selectedType!),
+                    selectedType == null
+                        ? (tr ? 'Hepsi' : 'All')
+                        : catalogTypeLabel(context, selectedType!),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFFEC008C),
+                      color: isDark ? Colors.white : DollDexTheme.cocoa,
                     ),
                   ),
                 ],
@@ -241,10 +250,12 @@ class SearchPanel extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
+      backgroundColor: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
       shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        side: BorderSide(
+            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+            width: 1.0),
       ),
       builder: (context) {
         final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -257,8 +268,11 @@ class SearchPanel extends StatelessWidget {
           builder: (context, snap) {
             final isPro = snap.data?.isPro == true;
 
-            return GothicIvyContainer(
-              borderRadius: 20,
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+                borderRadius: BorderRadius.circular(28),
+              ),
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -267,7 +281,7 @@ class SearchPanel extends StatelessWidget {
                   Text(
                     tr ? 'Katalog Filtrele' : 'Filter Catalog',
                     style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: isDark ? Colors.white : DollDexTheme.ink,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -299,11 +313,14 @@ class SearchPanel extends StatelessWidget {
                               Navigator.of(context).pop();
                               showGothicConfirmDialog(
                                 context,
-                                title: tr ? 'Pro Filtre Özelliği' : 'Pro Filter Feature',
+                                title: tr
+                                    ? 'Pro Filtre Özelliği'
+                                    : 'Pro Filter Feature',
                                 content: tr
                                     ? 'Set, Pet ve Aksesuar filtreleri DollDex Pro üyelerine özeldir. Avantajları görmek ve Pro\'ya yükseltmek ister misiniz?'
                                     : 'Set, Pet, and Accessory filters are exclusive to DollDex Pro members. Would you like to view the benefits and upgrade to Pro?',
-                                confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                confirmText:
+                                    tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
                                 cancelText: tr ? 'Vazgeç' : 'Cancel',
                               ).then((confirmed) {
                                 if (confirmed && context.mounted) {
@@ -424,7 +441,7 @@ class CatalogCard extends StatelessWidget {
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                       onTap: () => context.go('/i/${item.id}'),
+                      onTap: () => context.go('/i/${item.id}'),
                     ),
                   ),
                 ),
@@ -475,10 +492,14 @@ class CatalogCard extends StatelessWidget {
                       ),
                     );
 
-                    final isOwned = entry.quantity > 0 && entry.status == CollectionStatus.owned;
-                    final isWanted = entry.quantity > 0 && entry.status == CollectionStatus.wanted;
-                    final isTrade = entry.quantity > 0 && entry.status == CollectionStatus.trade;
-                    final isSelling = entry.quantity > 0 && entry.status == CollectionStatus.selling;
+                    final isOwned = entry.quantity > 0 &&
+                        entry.status == CollectionStatus.owned;
+                    final isWanted = entry.quantity > 0 &&
+                        entry.status == CollectionStatus.wanted;
+                    final isTrade = entry.quantity > 0 &&
+                        entry.status == CollectionStatus.trade;
+                    final isSelling = entry.quantity > 0 &&
+                        entry.status == CollectionStatus.selling;
 
                     return SizedBox(
                       height: 30,
@@ -493,15 +514,19 @@ class CatalogCard extends StatelessWidget {
                               icon: Icons.check_rounded,
                               isActive: isOwned,
                               activeColor: DollDexTheme.teal,
-                              onPressed: () => showCollectionSheet(context, item),
+                              onPressed: () =>
+                                  showCollectionSheet(context, item),
                             ),
                             const SizedBox(width: 4),
                             _CardActionButton(
                               tooltip: t(context, 'want'),
-                              icon: isWanted ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              icon: isWanted
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
                               isActive: isWanted,
                               activeColor: DollDexTheme.berry,
-                              onPressed: () => showCollectionSheet(context, item),
+                              onPressed: () =>
+                                  showCollectionSheet(context, item),
                             ),
                             const SizedBox(width: 4),
                             _CardActionButton(
@@ -509,7 +534,8 @@ class CatalogCard extends StatelessWidget {
                               icon: Icons.swap_horiz_rounded,
                               isActive: isTrade,
                               activeColor: Colors.deepPurpleAccent,
-                              onPressed: () => showCollectionSheet(context, item),
+                              onPressed: () =>
+                                  showCollectionSheet(context, item),
                             ),
                             const SizedBox(width: 4),
                             _CardActionButton(
@@ -517,7 +543,8 @@ class CatalogCard extends StatelessWidget {
                               icon: Icons.sell_outlined,
                               isActive: isSelling,
                               activeColor: DollDexTheme.amber,
-                              onPressed: () => showCollectionSheet(context, item),
+                              onPressed: () =>
+                                  showCollectionSheet(context, item),
                             ),
                             const SizedBox(width: 4),
                             _CardActionButton(
@@ -569,7 +596,9 @@ class CatalogCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          tr ? 'Görmek için\nPro olmalısınız' : 'Upgrade to Pro\nto view',
+                          tr
+                              ? 'Görmek için\nPro olmalısınız'
+                              : 'Upgrade to Pro\nto view',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
@@ -637,7 +666,9 @@ class _CardActionButton extends StatelessWidget {
             shape: BoxShape.circle,
             color: isActive
                 ? finalColor.withOpacity(0.25)
-                : (isDark ? const Color(0xFF160E22).withOpacity(0.5) : const Color(0xFFFAF2FF)),
+                : (isDark
+                    ? const Color(0xFF160E22).withOpacity(0.5)
+                    : const Color(0xFFFAF2FF)),
             border: Border.all(
               color: isActive
                   ? finalColor
@@ -664,7 +695,8 @@ class _CardActionButton extends StatelessWidget {
                       ? [finalColor, Colors.white]
                       : [
                           finalColor.withOpacity(isDark ? 0.5 : 0.85),
-                          (activeColor ?? const Color(0xFF00FFCC)).withOpacity(isDark ? 0.5 : 0.85)
+                          (activeColor ?? const Color(0xFF00FFCC))
+                              .withOpacity(isDark ? 0.5 : 0.85)
                         ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

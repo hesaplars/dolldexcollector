@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/app_language.dart';
+import '../widgets/doll_widgets.dart';
 
 class SignInPanel extends StatefulWidget {
   const SignInPanel({
@@ -33,83 +34,72 @@ class _SignInPanelState extends State<SignInPanel> {
 
     return Center(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 310),
+        constraints: const BoxConstraints(maxWidth: 430),
         child: Card(
-          elevation: 4,
-          color: isDark ? const Color(0xFF130B1E) : Colors.white,
+          elevation: 8,
+          color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(28),
             side: BorderSide(
-              color: const Color(0xFFEC008C).withOpacity(0.2),
-              width: 1,
+              color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+              width: 1.2,
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFEC008C),
-                          width: 1.2,
-                        ),
-                        color: const Color(0xFF160E22),
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: DollDexTheme.mist,
+                    border: Border.all(
+                        color:
+                            isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.18 : 0.08),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
                       ),
-                      child: Center(
-                        child: ShaderMask(
-                          shaderCallback: (bounds) {
-                            return const LinearGradient(
-                              colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(bounds);
-                          },
-                          child: const Icon(
-                            Icons.face_3_outlined,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            t(context, 'collectorAccount'),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 12,
-                              fontFamily: 'Outfit',
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            t(context, 'signInBody'),
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.face_3_outlined,
+                    size: 34,
+                    color: DollDexTheme.teal,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
+                Text(
+                  t(context, 'collectorAccount'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
+                    fontFamily: 'Outfit',
+                    color: DollDexTheme.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  t(context, 'signInBody'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.35,
+                    color: isDark ? Colors.white70 : DollDexTheme.cocoa,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 18),
                 Theme(
                   data: Theme.of(context).copyWith(
-                    unselectedWidgetColor: isDark ? Colors.white30 : Colors.black38,
+                    unselectedWidgetColor:
+                        isDark ? Colors.white30 : Colors.black38,
                   ),
                   child: InkWell(
                     onTap: () {
@@ -127,7 +117,7 @@ class _SignInPanelState extends State<SignInPanel> {
                             height: 20,
                             child: Checkbox(
                               value: _acceptedTermsAndPrivacy,
-                              activeColor: const Color(0xFFEC008C),
+                              activeColor: DollDexTheme.teal,
                               checkColor: Colors.white,
                               onChanged: (val) {
                                 setState(() {
@@ -141,15 +131,18 @@ class _SignInPanelState extends State<SignInPanel> {
                             child: Text.rich(
                               TextSpan(
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 12,
                                   fontFamily: 'Outfit',
-                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black87,
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: tr ? 'Gizlilik Sözleşmesi' : 'Privacy Policy',
+                                    text: tr
+                                        ? 'Gizlilik Sözleşmesi'
+                                        : 'Privacy Policy',
                                     style: const TextStyle(
-                                      color: Color(0xFF00FFCC),
+                                      color: DollDexTheme.teal,
                                       decoration: TextDecoration.underline,
                                     ),
                                     recognizer: TapGestureRecognizer()
@@ -157,9 +150,11 @@ class _SignInPanelState extends State<SignInPanel> {
                                   ),
                                   TextSpan(text: tr ? ' ve ' : ' and '),
                                   TextSpan(
-                                    text: tr ? 'Kullanım Koşulları' : 'Terms of Use',
+                                    text: tr
+                                        ? 'Kullanım Koşulları'
+                                        : 'Terms of Use',
                                     style: const TextStyle(
-                                      color: Color(0xFF00FFCC),
+                                      color: DollDexTheme.teal,
                                       decoration: TextDecoration.underline,
                                     ),
                                     recognizer: TapGestureRecognizer()
@@ -179,29 +174,34 @@ class _SignInPanelState extends State<SignInPanel> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 18),
                 Container(
                   width: double.infinity,
+                  height: 52,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
                     gradient: _canContinue
                         ? const LinearGradient(
-                            colors: [Color(0xFFEC008C), Color(0xFF7B2CBF)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                            colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           )
                         : LinearGradient(
                             colors: [
-                              isDark ? Colors.grey.shade800 : Colors.grey.shade300,
-                              isDark ? Colors.grey.shade900 : Colors.grey.shade400
+                              isDark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade300,
+                              isDark
+                                  ? Colors.grey.shade900
+                                  : Colors.grey.shade400,
                             ],
                           ),
                     boxShadow: _canContinue
                         ? [
                             BoxShadow(
-                              color: const Color(0xFFEC008C).withOpacity(0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
+                              color: DollDexTheme.teal.withOpacity(0.28),
+                              blurRadius: 12,
+                              offset: const Offset(0, 5),
                             ),
                           ]
                         : null,
@@ -211,22 +211,27 @@ class _SignInPanelState extends State<SignInPanel> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22)),
                     ),
                     icon: widget.isLoading
                         ? const SizedBox.square(
-                            dimension: 12,
-                            child: CircularProgressIndicator(strokeWidth: 1.2, color: Colors.white),
+                            dimension: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 1.2, color: Colors.white),
                           )
-                        : const Icon(Icons.login_rounded, color: Colors.white, size: 14),
+                        : const Icon(Icons.login_rounded,
+                            color: Colors.white, size: 20),
                     label: Text(
                       t(context, 'continueGoogle'),
                       style: TextStyle(
-                        color: _canContinue ? Colors.white : (isDark ? Colors.white30 : Colors.black26),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                        letterSpacing: 0.5,
+                        color: _canContinue
+                            ? Colors.white
+                            : (isDark ? Colors.white30 : Colors.black26),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                        letterSpacing: 0,
                         fontFamily: 'Outfit',
                       ),
                     ),

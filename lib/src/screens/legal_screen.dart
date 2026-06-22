@@ -24,7 +24,7 @@ class LegalScreen extends StatelessWidget {
           child: Text(
             body,
             style: const TextStyle(
-              fontFamily: 'Cinzel',
+              fontFamily: 'Outfit',
               fontSize: 14,
               height: 1.6,
             ),

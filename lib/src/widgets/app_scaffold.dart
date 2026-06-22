@@ -65,24 +65,10 @@ class _AppScaffoldState extends State<AppScaffold> {
   }
 
   Widget _buildNeonTopIcon(IconData icon) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final secondary = Theme.of(context).colorScheme.secondary;
-    return SafeShaderMask(
-      shaderCallback: (bounds) {
-        return LinearGradient(
-          colors: [
-            primary,
-            secondary,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bounds);
-      },
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 22,
-      ),
+    return Icon(
+      icon,
+      color: DollDexTheme.cocoa,
+      size: 24,
     );
   }
 
@@ -98,23 +84,9 @@ class _AppScaffoldState extends State<AppScaffold> {
     };
   }
 
-  Widget _buildNeonIcon(BuildContext context, IconData icon, {double size = 24}) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final secondary = Theme.of(context).colorScheme.secondary;
-    return SafeShaderMask(
-      shaderCallback: (bounds) {
-        return LinearGradient(
-          colors: [primary, secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ).createShader(bounds);
-      },
-      child: Icon(
-        icon,
-        size: size,
-        color: Colors.white,
-      ),
-    );
+  Widget _buildNeonIcon(BuildContext context, IconData icon,
+      {double size = 24}) {
+    return Icon(icon, size: size, color: Theme.of(context).colorScheme.primary);
   }
 
   bool get _isCurrentlyBanned {
@@ -135,9 +107,9 @@ class _AppScaffoldState extends State<AppScaffold> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
+      backgroundColor: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
         return DraggableScrollableSheet(
@@ -154,16 +126,19 @@ class _AppScaffoldState extends State<AppScaffold> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: Color(0xFFEC008C), size: 28),
+                      const Icon(Icons.info_outline_rounded,
+                          color: DollDexTheme.teal, size: 28),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          tr ? 'DollDex Rehberi & Yasal Bilgiler' : 'DollDex Guide & Legal Info',
+                          tr
+                              ? 'DollDex Rehberi & Yasal Bilgiler'
+                              : 'DollDex Guide & Legal Info',
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Outfit',
-                            color: Color(0xFFEC008C),
+                            color: DollDexTheme.ink,
                           ),
                         ),
                       ),
@@ -173,10 +148,10 @@ class _AppScaffoldState extends State<AppScaffold> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC008C).withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(12),
+                      color: DollDexTheme.mist,
+                      borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: const Color(0xFFEC008C).withOpacity(0.3),
+                        color: DollDexTheme.line,
                         width: 1,
                       ),
                     ),
@@ -188,19 +163,28 @@ class _AppScaffoldState extends State<AppScaffold> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                            letterSpacing: 0.5,
+                            color: isDark ? Colors.white : DollDexTheme.ink,
+                            letterSpacing: 0,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'TR: DollDex, ticari amaç gütmeyen bir hayran sitesidir. Monster High ve ilgili tüm ticari markalar Mattel, Inc. şirketine aittir. Bu site hiçbir şekilde Mattel, Inc. ile ilişkili değildir veya sponsorluğunda değildir.',
-                          style: TextStyle(fontSize: 11, height: 1.4, color: Colors.white70),
+                          style: TextStyle(
+                              fontSize: 11,
+                              height: 1.4,
+                              color:
+                                  isDark ? Colors.white70 : DollDexTheme.cocoa),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
+                        Text(
                           'EN: DollDex is a non-commercial, fan-made site. Monster High and all related trademarks are owned by Mattel, Inc. This site is in no way affiliated with or sponsored by Mattel, Inc.',
-                          style: TextStyle(fontSize: 11, height: 1.4, color: Colors.white60),
+                          style: TextStyle(
+                              fontSize: 11,
+                              height: 1.4,
+                              color: isDark
+                                  ? Colors.white60
+                                  : DollDexTheme.cocoa.withOpacity(0.8)),
                         ),
                       ],
                     ),
@@ -212,48 +196,54 @@ class _AppScaffoldState extends State<AppScaffold> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Outfit',
-                      letterSpacing: 0.5,
-                      color: Color(0xFF00FFCC),
+                      letterSpacing: 0,
+                      color: DollDexTheme.teal,
                     ),
                   ),
                   const SizedBox(height: 12),
                   _buildGuideSection(
                     title: tr ? '1. Katalog ve Arama' : '1. Catalog & Search',
-                    content: tr 
-                      ? 'Geniş Monster High kataloğumuzda dilediğiniz bebeği arayabilir, seriye ve yıla göre filtreleme yapabilirsiniz. Bebeklerin detay sayfalarından çıkış yıllarını, aksesuarlarını, kutu görsellerini ve koleksiyoner yorumlarını inceleyebilirsiniz.'
-                      : 'Search for any doll in our comprehensive Monster High catalog, filter by series and release year. Inspect release years, accessories, box arts, and collector reviews on the detail pages.',
+                    content: tr
+                        ? 'Geniş Monster High kataloğumuzda dilediğiniz bebeği arayabilir, seriye ve yıla göre filtreleme yapabilirsiniz. Bebeklerin detay sayfalarından çıkış yıllarını, aksesuarlarını, kutu görsellerini ve koleksiyoner yorumlarını inceleyebilirsiniz.'
+                        : 'Search for any doll in our comprehensive Monster High catalog, filter by series and release year. Inspect release years, accessories, box arts, and collector reviews on the detail pages.',
                     icon: Icons.search_rounded,
                     isDark: isDark,
                   ),
                   _buildGuideSection(
-                    title: tr ? '2. Koleksiyon & İstek Listesi Yönetimi' : '2. Collection & Wishlist Management',
-                    content: tr 
-                      ? 'Katalogtaki bebeklerin yanındaki butonları kullanarak bunları Koleksiyonunuza ("Sahibim"), İstek Listenize ("Arıyorum") veya "Yolda" statüsüne ekleyebilirsiniz. Koleksiyonunuzdaki bebeklerin durumlarını (Kutulu/Kutusuz) seçebilir ve onlara özel notlar ekleyebilirsiniz.'
-                      : 'Use the action buttons on doll cards to add them to your Collection ("Owned"), Wishlist ("Looking For"), or "On the Way" lists. Track conditions (In Box/Loose) and write custom private notes.',
+                    title: tr
+                        ? '2. Koleksiyon & İstek Listesi Yönetimi'
+                        : '2. Collection & Wishlist Management',
+                    content: tr
+                        ? 'Katalogtaki bebeklerin yanındaki butonları kullanarak bunları Koleksiyonunuza ("Sahibim"), İstek Listenize ("Arıyorum") veya "Yolda" statüsüne ekleyebilirsiniz. Koleksiyonunuzdaki bebeklerin durumlarını (Kutulu/Kutusuz) seçebilir ve onlara özel notlar ekleyebilirsiniz.'
+                        : 'Use the action buttons on doll cards to add them to your Collection ("Owned"), Wishlist ("Looking For"), or "On the Way" lists. Track conditions (In Box/Loose) and write custom private notes.',
                     icon: Icons.auto_awesome_motion_rounded,
                     isDark: isDark,
                   ),
                   _buildGuideSection(
-                    title: tr ? '3. Vitrin Sınırları & PRO Üyelik' : '3. Showcase Limits & PRO Membership',
-                    content: tr 
-                      ? 'Standart üyeler koleksiyonlarında ve istek listelerinde belirli bir sayıda bebek sergileyebilirler. PRO (Premium) üyeliğe geçerek bu sınırları tamamen kaldırabilir, reklamları kapatabilir, özel profil çerçevelerine erişebilir ve her ay ekstra sohbet jetonları kazanabilirsiniz.'
-                      : 'Standard members have limits on how many dolls they can display. Upgrade to PRO (Premium) to unlock unlimited slots, disable ads, access exclusive avatar frames, and receive monthly chat coins.',
+                    title: tr
+                        ? '3. Vitrin Sınırları & PRO Üyelik'
+                        : '3. Showcase Limits & PRO Membership',
+                    content: tr
+                        ? 'Standart üyeler koleksiyonlarında ve istek listelerinde belirli bir sayıda bebek sergileyebilirler. PRO (Premium) üyeliğe geçerek bu sınırları tamamen kaldırabilir, reklamları kapatabilir, özel profil çerçevelerine erişebilir ve her ay ekstra sohbet jetonları kazanabilirsiniz.'
+                        : 'Standard members have limits on how many dolls they can display. Upgrade to PRO (Premium) to unlock unlimited slots, disable ads, access exclusive avatar frames, and receive monthly chat coins.',
                     icon: Icons.stars_rounded,
                     isDark: isDark,
                   ),
                   _buildGuideSection(
-                    title: tr ? '4. Genel Sohbet & Öge Paylaşımı' : '4. Global Chat & Item Sharing',
-                    content: tr 
-                      ? 'Sohbet alanında diğer koleksiyonerler ile gerçek zamanlı yazışabilir, "+" butonuna basarak Katalogtan veya kendi Koleksiyonunuzdan bebekleri minyatür kartlar şeklinde sohbete gönderebilirsiniz. Gönderilen kartlara tıklayan diğer kullanıcılar alttan kayan detay penceresinde bebeği inceleyebilirler.'
-                      : 'Chat with other collectors in real-time, press the "+" button to select dolls from the Catalog or your own Collection, and share them as miniature cards. Others can tap these cards to view details instantly.',
+                    title: tr
+                        ? '4. Genel Sohbet & Öge Paylaşımı'
+                        : '4. Global Chat & Item Sharing',
+                    content: tr
+                        ? 'Sohbet alanında diğer koleksiyonerler ile gerçek zamanlı yazışabilir, "+" butonuna basarak Katalogtan veya kendi Koleksiyonunuzdan bebekleri minyatür kartlar şeklinde sohbete gönderebilirsiniz. Gönderilen kartlara tıklayan diğer kullanıcılar alttan kayan detay penceresinde bebeği inceleyebilirler.'
+                        : 'Chat with other collectors in real-time, press the "+" button to select dolls from the Catalog or your own Collection, and share them as miniature cards. Others can tap these cards to view details instantly.',
                     icon: Icons.chat_bubble_outline_rounded,
                     isDark: isDark,
                   ),
                   _buildGuideSection(
                     title: tr ? '5. Jeton (Coin) Sistemi' : '5. Coin System',
-                    content: tr 
-                      ? 'Genel sohbette mesaj göndermek ve öge paylaşmak için jeton kullanılır. Sol üstteki Hediye Kutusu simgesiyle günlük ücretsiz jetonlarınızı toplayabilir, video reklamları izleyerek jeton kazanabilir ya da Mağazadan PRO paketleri satın alarak jeton bakiyenizi doldurabilirsiniz.'
-                      : 'Coins are used to send messages and share items in global chat. Collect free daily coins from the Gift Box on the top-left, watch short video ads for coins, or top up your balance from the Shop.',
+                    content: tr
+                        ? 'Genel sohbette mesaj göndermek ve öge paylaşmak için jeton kullanılır. Sol üstteki Hediye Kutusu simgesiyle günlük ücretsiz jetonlarınızı toplayabilir, video reklamları izleyerek jeton kazanabilir ya da Mağazadan PRO paketleri satın alarak jeton bakiyenizi doldurabilirsiniz.'
+                        : 'Coins are used to send messages and share items in global chat. Collect free daily coins from the Gift Box on the top-left, watch short video ads for coins, or top up your balance from the Shop.',
                     icon: Icons.monetization_on_rounded,
                     isDark: isDark,
                   ),
@@ -280,10 +270,10 @@ class _AppScaffoldState extends State<AppScaffold> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF00FFCC).withOpacity(0.08),
-              shape: BoxShape.circle,
+              color: DollDexTheme.teal.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: const Color(0xFF00FFCC), size: 18),
+            child: Icon(icon, color: DollDexTheme.teal, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -295,7 +285,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: isDark ? Colors.white : DollDexTheme.ink,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -304,13 +294,55 @@ class _AppScaffoldState extends State<AppScaffold> {
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.45,
-                    color: isDark ? const Color(0xFFB5A7C5) : const Color(0xFF5B4A75),
+                    color:
+                        isDark ? const Color(0xFFE7D2B8) : DollDexTheme.cocoa,
                   ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumNavigationBar(
+    int selectedIndex,
+    List<NavigationDestination> destinations,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: isDark ? DollDexTheme.darkPanel : const Color(0xFFFFF4DC),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+              width: 1.1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.24 : 0.13),
+                blurRadius: 18,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: NavigationBar(
+              selectedIndex: selectedIndex,
+              onDestinationSelected: (index) {
+                final path = _pathForIndex(index);
+                _goGuarded(path);
+              },
+              destinations: destinations,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -333,7 +365,8 @@ class _AppScaffoldState extends State<AppScaffold> {
         !location.startsWith('/i/') &&
         !location.startsWith('/collection/entry/') &&
         !location.startsWith('/c/') &&
-        !(location == '/' && GoRouterState.of(context).uri.queryParameters.containsKey('q'));
+        !(location == '/' &&
+            GoRouterState.of(context).uri.queryParameters.containsKey('q'));
     final selectedIndex = (() {
       var activePath = location;
       if (activePath.startsWith('/consent')) {
@@ -361,6 +394,7 @@ class _AppScaffoldState extends State<AppScaffold> {
             'assets/icons/nav_catalog.png',
             width: 28,
             height: 28,
+            color: selectedIndex == 0 ? DollDexTheme.teal : DollDexTheme.cocoa,
           ),
         ),
         label: t(context, 'catalog'),
@@ -372,6 +406,7 @@ class _AppScaffoldState extends State<AppScaffold> {
             'assets/icons/nav_collection.png',
             width: 28,
             height: 28,
+            color: selectedIndex == 1 ? DollDexTheme.teal : DollDexTheme.cocoa,
           ),
         ),
         label: t(context, 'collection'),
@@ -380,13 +415,15 @@ class _AppScaffoldState extends State<AppScaffold> {
         icon: Badge(
           isLabelVisible: _unreadDMsCount > 0,
           label: Text('$_unreadDMsCount'),
-          backgroundColor: const Color(0xFFEC008C),
+          backgroundColor: DollDexTheme.teal,
           child: Opacity(
             opacity: selectedIndex == 2 ? 1.0 : 0.45,
             child: Image.asset(
               'assets/icons/nav_messages.png',
               width: 28,
               height: 28,
+              color:
+                  selectedIndex == 2 ? DollDexTheme.teal : DollDexTheme.cocoa,
             ),
           ),
         ),
@@ -406,6 +443,7 @@ class _AppScaffoldState extends State<AppScaffold> {
             'assets/icons/nav_social.png',
             width: 28,
             height: 28,
+            color: selectedIndex == 4 ? DollDexTheme.teal : DollDexTheme.cocoa,
           ),
         ),
         label: tr ? 'Sohbet' : 'Chat',
@@ -418,6 +456,8 @@ class _AppScaffoldState extends State<AppScaffold> {
               'assets/icons/nav_admin.png',
               width: 28,
               height: 28,
+              color:
+                  selectedIndex == 5 ? DollDexTheme.teal : DollDexTheme.cocoa,
             ),
           ),
           label: t(context, 'admin'),
@@ -432,7 +472,7 @@ class _AppScaffoldState extends State<AppScaffold> {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(90 + MediaQuery.of(context).padding.top),
         child: Container(
-          color: Theme.of(context).colorScheme.surface,
+          color: Colors.transparent,
           padding: EdgeInsets.only(
             top: MediaQuery.of(context).padding.top + 4,
             bottom: 4,
@@ -448,36 +488,27 @@ class _AppScaffoldState extends State<AppScaffold> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SafeShaderMask(
-                          shaderCallback: (bounds) {
-                            return LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.secondary,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(bounds);
-                          },
-                          child: Text(
-                            t(context, 'appName').toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.cinzel(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 0.8,
-                            ),
+                        Text(
+                          t(context, 'appName').toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: DollDexTheme.ink,
+                            letterSpacing: 0,
                           ),
                         ),
                         Text(
-                          tr ? 'Online Bebek Koleksiyonu' : 'Online Doll Collection',
+                          tr
+                              ? 'Online Bebek Koleksiyonu'
+                              : 'Online Doll Collection',
                           style: TextStyle(
                             fontFamily: 'Outfit',
                             fontSize: 10,
-                            color: Colors.grey.shade400,
-                            letterSpacing: 0.5,
+                            color: DollDexTheme.cocoa.withOpacity(0.72),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0,
                           ),
                         ),
                       ],
@@ -492,11 +523,17 @@ class _AppScaffoldState extends State<AppScaffold> {
                   children: [
                     if (showTopBackButton)
                       IconButton(
-                        tooltip: AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Geri' : 'Back',
-                        icon: _buildNeonTopIcon(Icons.arrow_back_ios_new_rounded),
+                        tooltip: AppLanguageScope.languageOf(context) ==
+                                AppLanguage.tr
+                            ? 'Geri'
+                            : 'Back',
+                        icon:
+                            _buildNeonTopIcon(Icons.arrow_back_ios_new_rounded),
                         onPressed: () {
                           final router = GoRouter.of(context);
-                          final fromPath = GoRouterState.of(context).uri.queryParameters['from'];
+                          final fromPath = GoRouterState.of(context)
+                              .uri
+                              .queryParameters['from'];
                           if (fromPath != null && fromPath.isNotEmpty) {
                             router.go(fromPath);
                             return;
@@ -506,7 +543,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                           } else if (Navigator.of(context).canPop()) {
                             Navigator.of(context).pop();
                           } else {
-                            if (location.startsWith('/u/') || location.startsWith('/users/')) {
+                            if (location.startsWith('/u/') ||
+                                location.startsWith('/users/')) {
                               router.go('/user_search');
                             } else {
                               router.go('/');
@@ -521,7 +559,10 @@ class _AppScaffoldState extends State<AppScaffold> {
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        tooltip: AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Kullanım Rehberi & Bilgi' : 'User Guide & Info',
+                        tooltip: AppLanguageScope.languageOf(context) ==
+                                AppLanguage.tr
+                            ? 'Kullanım Rehberi & Bilgi'
+                            : 'User Guide & Info',
                         icon: _buildNeonTopIcon(Icons.info_outline_rounded),
                         onPressed: () => _showInfoModal(context),
                       ),
@@ -531,10 +572,14 @@ class _AppScaffoldState extends State<AppScaffold> {
                       valueListenable: appLanguageController,
                       builder: (context, language, _) {
                         return IconButton(
-                          tooltip: language == AppLanguage.tr ? 'Change language' : 'Dili değiştir',
+                          tooltip: language == AppLanguage.tr
+                              ? 'Change language'
+                              : 'Dili değiştir',
                           icon: _buildNeonTopIcon(Icons.translate_rounded),
                           onPressed: () {
-                            final nextLang = language == AppLanguage.tr ? AppLanguage.en : AppLanguage.tr;
+                            final nextLang = language == AppLanguage.tr
+                                ? AppLanguage.en
+                                : AppLanguage.tr;
                             appLanguageController.setLanguage(nextLang);
                           },
                         );
@@ -547,11 +592,13 @@ class _AppScaffoldState extends State<AppScaffold> {
                         return IconButton(
                           tooltip: t(context, 'theme'),
                           onPressed: () {
-                            final nextTheme = isDark ? 'goth_light' : 'goth_dark';
+                            final nextTheme =
+                                isDark ? 'goth_light' : 'goth_dark';
                             appThemeKeyController.value = nextTheme;
                             final currentUser = authService.currentUser;
                             if (currentUser != null) {
-                              profileSetupRepository.saveSelectedTheme(currentUser.uid, nextTheme);
+                              profileSetupRepository.saveSelectedTheme(
+                                  currentUser.uid, nextTheme);
                             }
                           },
                           icon: _buildNeonTopIcon(
@@ -562,9 +609,11 @@ class _AppScaffoldState extends State<AppScaffold> {
                         );
                       },
                     ),
-
                     IconButton(
-                      tooltip: AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Mağaza / Jeton Al' : 'Shop / Buy Coins',
+                      tooltip:
+                          AppLanguageScope.languageOf(context) == AppLanguage.tr
+                              ? 'Mağaza / Jeton Al'
+                              : 'Shop / Buy Coins',
                       icon: _buildNeonTopIcon(Icons.storefront),
                       onPressed: () => showProSubscriptionModal(context),
                     ),
@@ -576,17 +625,22 @@ class _AppScaffoldState extends State<AppScaffold> {
                       child: IconButton(
                         tooltip: t(context, 'notifications'),
                         onPressed: () => showNotificationsModal(context),
-                        icon: _buildNeonTopIcon(Icons.notifications_active_rounded),
+                        icon: _buildNeonTopIcon(
+                            Icons.notifications_active_rounded),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8, left: 4),
                       child: InkWell(
-                        onTap: () => _goGuarded('/profile?from=${Uri.encodeComponent(GoRouterState.of(context).uri.toString())}', push: true),
+                        onTap: () => _goGuarded(
+                            '/profile?from=${Uri.encodeComponent(GoRouterState.of(context).uri.toString())}',
+                            push: true),
                         borderRadius: BorderRadius.circular(20),
                         child: buildAvatarHelper(
                           authService.currentUser != null ? _avatarId : '',
-                          authService.currentUser != null ? _avatarFrameColor : '',
+                          authService.currentUser != null
+                              ? _avatarFrameColor
+                              : '',
                           size: 32,
                         ),
                       ),
@@ -612,17 +666,11 @@ class _AppScaffoldState extends State<AppScaffold> {
               children: [
                 if (!_isPro)
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                     child: GothicAdBannerHorizontal(),
                   ),
-                NavigationBar(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) {
-                    final path = _pathForIndex(index);
-                    _goGuarded(path);
-                  },
-                  destinations: destinations,
-                ),
+                _buildPremiumNavigationBar(selectedIndex, destinations),
               ],
             )
           : Column(
@@ -630,17 +678,11 @@ class _AppScaffoldState extends State<AppScaffold> {
               children: [
                 if (!_isPro)
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                     child: GothicAdBannerHorizontal(),
                   ),
-                NavigationBar(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) {
-                    final path = _pathForIndex(index);
-                    _goGuarded(path);
-                  },
-                  destinations: destinations,
-                ),
+                _buildPremiumNavigationBar(selectedIndex, destinations),
               ],
             ),
     );
@@ -704,7 +746,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                         child: GothicAdBannerVertical(
                           title: 'SPONSOR',
                           subtitle: 'DollDex Shop',
-                          description: 'Karanlık ve gizemli gotik bebekler, aksesuarlar ve nadide parçalar burada!',
+                          description:
+                              'Karanlık ve gizemli gotik bebekler, aksesuarlar ve nadide parçalar burada!',
                           promoCode: 'GOTHIC20',
                           icon: Icons.auto_awesome_rounded,
                         ),
@@ -719,7 +762,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                         child: GothicAdBannerVertical(
                           title: 'KULÜP',
                           subtitle: 'Vampire Guild',
-                          description: 'Koleksiyonerler Kulübü\'ne katılın, özel etkinlikleri ve takas fırsatlarını kaçırmayın!',
+                          description:
+                              'Koleksiyonerler Kulübü\'ne katılın, özel etkinlikleri ve takas fırsatlarını kaçırmayın!',
                           promoCode: 'VAMP10',
                           icon: Icons.nights_stay_rounded,
                         ),
@@ -808,7 +852,8 @@ class _AppScaffoldState extends State<AppScaffold> {
       print('AppScaffold: Error watching monetization settings: $err');
     });
 
-    _profileSubscription = profileSetupRepository.watch(user.uid).listen((status) {
+    _profileSubscription =
+        profileSetupRepository.watch(user.uid).listen((status) {
       if (!mounted) {
         return;
       }
@@ -823,7 +868,8 @@ class _AppScaffoldState extends State<AppScaffold> {
         _lastDailyClaim = status.lastDailyClaim;
         _profileLoaded = true;
       });
-      if (status.selectedTheme.isNotEmpty && appThemeKeyController.value != status.selectedTheme) {
+      if (status.selectedTheme.isNotEmpty &&
+          appThemeKeyController.value != status.selectedTheme) {
         appThemeKeyController.value = status.selectedTheme;
       }
     }, onError: (err) {
@@ -835,7 +881,8 @@ class _AppScaffoldState extends State<AppScaffold> {
       }
     });
 
-    _notificationsSubscription = notificationRepository.watchForUser(user.uid).listen((notifications) {
+    _notificationsSubscription =
+        notificationRepository.watchForUser(user.uid).listen((notifications) {
       if (!mounted) {
         return;
       }
@@ -844,14 +891,16 @@ class _AppScaffoldState extends State<AppScaffold> {
       print('AppScaffold: Error watching notifications: $err');
     });
 
-    _chatThreadsSubscription = socialRepository.watchChatThreads(user.uid).listen((threads) {
+    _chatThreadsSubscription =
+        socialRepository.watchChatThreads(user.uid).listen((threads) {
       _currentThreads = threads;
       _recalculateUnreadDMsCount(user.uid);
     }, onError: (err) {
       print('AppScaffold: Error watching chat threads: $err');
     });
 
-    _deletedThreadsSubscription = socialRepository.watchDeletedThreads(user.uid).listen((deletedIds) {
+    _deletedThreadsSubscription =
+        socialRepository.watchDeletedThreads(user.uid).listen((deletedIds) {
       _deletedThreadIds = deletedIds;
       _recalculateUnreadDMsCount(user.uid);
     }, onError: (err) {
@@ -975,7 +1024,9 @@ class _AppScaffoldState extends State<AppScaffold> {
             ),
             child: Row(
               children: [
-                _buildNeonIcon(context, _notificationTypeIcon(notification.type), size: 24),
+                _buildNeonIcon(
+                    context, _notificationTypeIcon(notification.type),
+                    size: 24),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -1002,7 +1053,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 16, color: Colors.white54),
+                  icon:
+                      const Icon(Icons.close, size: 16, color: Colors.white54),
                   onPressed: () {
                     setState(() {
                       _showHudBanner = false;
@@ -1076,12 +1128,14 @@ class _AppScaffoldState extends State<AppScaffold> {
     final user = authService.currentUser;
     if (user == null) return;
 
-    final isGoogleUser = user.providerData.any((p) => p.providerId == 'google.com');
+    final isGoogleUser =
+        user.providerData.any((p) => p.providerId == 'google.com');
     if (!isGoogleUser) return;
 
     final rawCampaignActive = data['isCampaignActive'] as bool? ?? false;
     final campaignEndTimestamp = data['campaignEndTimestamp'] as Timestamp?;
-    final isCampaignExpired = campaignEndTimestamp != null && DateTime.now().isAfter(campaignEndTimestamp.toDate());
+    final isCampaignExpired = campaignEndTimestamp != null &&
+        DateTime.now().isAfter(campaignEndTimestamp.toDate());
     final isCampaignActive = rawCampaignActive && !isCampaignExpired;
     if (!isCampaignActive) return;
 
@@ -1181,11 +1235,13 @@ class _AppScaffoldState extends State<AppScaffold> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEC008C).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFFEC008C), width: 1),
+                    border:
+                        Border.all(color: const Color(0xFFEC008C), width: 1),
                   ),
                   child: Text(
                     '${coinMultiplier.toStringAsFixed(1)}x',
@@ -1228,7 +1284,8 @@ class _AppScaffoldState extends State<AppScaffold> {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Container(
             constraints: BoxConstraints(
               maxWidth: 420,
@@ -1321,7 +1378,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                         ),
                         const SizedBox(height: 20),
                         if (campaignEndTimestamp != null) ...[
-                          GothicCampaignCountdown(endTime: campaignEndTimestamp.toDate()),
+                          GothicCampaignCountdown(
+                              endTime: campaignEndTimestamp.toDate()),
                           const SizedBox(height: 20),
                         ],
                         if (dealsList.isNotEmpty) ...[
@@ -1386,7 +1444,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                   top: 12,
                   right: 12,
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                    icon: const Icon(Icons.close,
+                        color: Colors.white54, size: 20),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -1441,7 +1500,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                     ),
                     const SizedBox(width: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: badgeColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(4),
@@ -1630,8 +1690,10 @@ class GothicAccessDeniedScreen extends StatelessWidget {
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFEC008C),
-                      side: const BorderSide(color: Color(0xFFEC008C), width: 2),
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                      side:
+                          const BorderSide(color: Color(0xFFEC008C), width: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -1814,16 +1876,22 @@ class _DailyRewardGiftWidgetState extends State<DailyRewardGiftWidget> {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isDark ? const Color(0xFF130B1E).withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.4),
+                    color: isDark
+                        ? const Color(0xFF130B1E).withValues(alpha: 0.4)
+                        : Colors.white.withValues(alpha: 0.4),
                     border: Border.all(
-                      color: isDark ? const Color(0xFFC4B2D9).withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.3),
+                      color: isDark
+                          ? const Color(0xFFC4B2D9).withValues(alpha: 0.2)
+                          : Colors.grey.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                   ),
                   child: Center(
                     child: Icon(
                       Icons.card_giftcard_rounded,
-                      color: isDark ? const Color(0xFFC4B2D9).withValues(alpha: 0.35) : Colors.grey.withValues(alpha: 0.45),
+                      color: isDark
+                          ? const Color(0xFFC4B2D9).withValues(alpha: 0.35)
+                          : Colors.grey.withValues(alpha: 0.45),
                       size: 20,
                     ),
                   ),
@@ -1833,7 +1901,9 @@ class _DailyRewardGiftWidgetState extends State<DailyRewardGiftWidget> {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isDark ? const Color(0xFF2A1E00) : const Color(0xFFFFFDE7),
+                    color: isDark
+                        ? const Color(0xFF2A1E00)
+                        : const Color(0xFFFFFDE7),
                     border: Border.all(
                       color: const Color(0xFFFFD700),
                       width: 2.0,

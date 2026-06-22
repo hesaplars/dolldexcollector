@@ -83,9 +83,11 @@ final commentsNotifier = ValueNotifier<Map<String, List<AppComment>>>(
 );
 final notificationsNotifier = ValueNotifier<List<String>>(<String>[]);
 final appThemeController = ValueNotifier<ThemeMode>(ThemeMode.light);
-final ValueNotifier<String> appThemeKeyController = ValueNotifier<String>('goth_dark')..addListener(() {
-  LocalStorage.setString('selected_theme', appThemeKeyController.value);
-});
+final ValueNotifier<String> appThemeKeyController =
+    ValueNotifier<String>('goth_light')
+      ..addListener(() {
+        LocalStorage.setString('selected_theme', appThemeKeyController.value);
+      });
 
 IconData _notificationTypeIcon(AppNotificationType type) {
   return switch (type) {
@@ -150,11 +152,15 @@ Future<void> main() async {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 36),
+                    Icon(Icons.error_outline_rounded,
+                        color: Colors.redAccent, size: 36),
                     SizedBox(width: 8),
                     Text(
                       'RENDER ERROR',
-                      style: TextStyle(color: Colors.redAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -169,11 +175,15 @@ Future<void> main() async {
                   decoration: BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                    border:
+                        Border.all(color: Colors.redAccent.withOpacity(0.3)),
                   ),
                   child: Text(
                     details.stack.toString(),
-                    style: const TextStyle(color: Colors.greenAccent, fontSize: 11, fontFamily: 'monospace'),
+                    style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 11,
+                        fontFamily: 'monospace'),
                   ),
                 ),
               ],
@@ -247,7 +257,8 @@ class DollDexApp extends StatelessWidget {
                 debugShowCheckedModeBanner: false,
                 theme: activeTheme,
                 darkTheme: activeTheme,
-                themeMode: themeKey == 'goth_light' ? ThemeMode.light : ThemeMode.dark,
+                themeMode:
+                    themeKey == 'goth_light' ? ThemeMode.light : ThemeMode.dark,
                 routerConfig: _router,
                 builder: (context, child) {
                   return ValueListenableBuilder<String?>(
@@ -263,14 +274,20 @@ class DollDexApp extends StatelessWidget {
                                 padding: const EdgeInsets.all(16.0),
                                 child: SingleChildScrollView(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 36),
+                                          const Icon(
+                                              Icons.warning_amber_rounded,
+                                              color: Colors.redAccent,
+                                              size: 36),
                                           const SizedBox(width: 8),
                                           Text(
-                                            AppLanguageScope.languageOf(context) == AppLanguage.tr
+                                            AppLanguageScope.languageOf(
+                                                        context) ==
+                                                    AppLanguage.tr
                                                 ? 'KRİTİK HATA TESPİT EDİLDİ'
                                                 : 'CRITICAL ERROR DETECTED',
                                             style: const TextStyle(
@@ -284,10 +301,14 @@ class DollDexApp extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 12),
                                       Text(
-                                        AppLanguageScope.languageOf(context) == AppLanguage.tr
+                                        AppLanguageScope.languageOf(context) ==
+                                                AppLanguage.tr
                                             ? 'Lütfen bu ekranın ekran görüntüsünü (screenshot) alıp geliştiriciye gönderin:'
                                             : 'Please take a screenshot of this screen and send it to the developer:',
-                                        style: const TextStyle(color: Colors.white70, fontSize: 13, fontFamily: 'Outfit'),
+                                        style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 13,
+                                            fontFamily: 'Outfit'),
                                       ),
                                       const SizedBox(height: 16),
                                       Container(
@@ -295,8 +316,11 @@ class DollDexApp extends StatelessWidget {
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
                                           color: Colors.black,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.redAccent
+                                                  .withOpacity(0.3)),
                                         ),
                                         child: Text(
                                           error,
@@ -311,14 +335,17 @@ class DollDexApp extends StatelessWidget {
                                       Center(
                                         child: ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFFEC008C),
+                                            backgroundColor:
+                                                const Color(0xFFEC008C),
                                             foregroundColor: Colors.white,
                                           ),
                                           onPressed: () {
                                             appErrorNotifier.value = null;
                                           },
                                           child: Text(
-                                            AppLanguageScope.languageOf(context) == AppLanguage.tr
+                                            AppLanguageScope.languageOf(
+                                                        context) ==
+                                                    AppLanguage.tr
                                                 ? 'Hata Kaydını Temizle ve Yeniden Dene'
                                                 : 'Clear Error and Retry',
                                           ),
@@ -344,17 +371,6 @@ class DollDexApp extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 final _router = GoRouter(
   initialLocation: '/splash',
@@ -501,7 +517,8 @@ final _router = GoRouter(
   ],
 );
 
-Widget _buildAvatarHelper(String avatarId, String frameColor, {double size = 40}) {
+Widget _buildAvatarHelper(String avatarId, String frameColor,
+    {double size = 40}) {
   String assetPath = '';
   switch (avatarId) {
     case 'avatar-0':
@@ -579,7 +596,8 @@ Widget _buildAvatarHelper(String avatarId, String frameColor, {double size = 40}
   }
 
   final isGothicFrame = frameColor.startsWith('frame-');
-  final parsedColor = !isGothicFrame ? int.tryParse(frameColor, radix: 16) : null;
+  final parsedColor =
+      !isGothicFrame ? int.tryParse(frameColor, radix: 16) : null;
   final Color? borderColor = parsedColor != null ? Color(parsedColor) : null;
 
   return Stack(
@@ -605,7 +623,8 @@ Widget _buildAvatarHelper(String avatarId, String frameColor, {double size = 40}
               : null,
         ),
         child: Padding(
-          padding: EdgeInsets.all(borderColor != null || isGothicFrame ? 2.0 : 0),
+          padding:
+              EdgeInsets.all(borderColor != null || isGothicFrame ? 2.0 : 0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(size),
             child: Image.asset(
@@ -660,70 +679,6 @@ Widget _buildAvatarHelper(String avatarId, String frameColor, {double size = 40}
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Future<void> _loadCollectionForCurrentUser() async {
   final userId = authService.currentUser?.uid;
   if (userId == null) {
@@ -748,24 +703,6 @@ Future<void> _loadReports() async {
 Future<void> loadCollectionForCurrentUser() => _loadCollectionForCurrentUser();
 Future<void> loadReports() => _loadReports();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Widget _buildProfileDirectMessagesCard(BuildContext context, String userId) {
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -777,7 +714,9 @@ Widget _buildProfileDirectMessagesCard(BuildContext context, String userId) {
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
-        tr ? 'Arkadaşlarınızla özel sohbetleri yönetin' : 'Manage direct chats with friends',
+        tr
+            ? 'Arkadaşlarınızla özel sohbetleri yönetin'
+            : 'Manage direct chats with friends',
         style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
       ),
       trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
@@ -785,10 +724,6 @@ Widget _buildProfileDirectMessagesCard(BuildContext context, String userId) {
     ),
   );
 }
-
-
-
-
 
 void _showPurchaseDialog({
   required BuildContext context,
@@ -896,8 +831,8 @@ void _showBadgeDetailDialog({
             const SizedBox(height: 8),
             if (badge.coinsPrice > 0 && !isUnlocked)
               Text(
-                tr 
-                    ? 'Fiyat: ${badge.coinsPrice} Jeton' 
+                tr
+                    ? 'Fiyat: ${badge.coinsPrice} Jeton'
                     : 'Price: ${badge.coinsPrice} Coins',
                 style: const TextStyle(
                   color: Color(0xFFFFCC00),
@@ -910,8 +845,8 @@ void _showBadgeDetailDialog({
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  tr 
-                      ? 'Bu rozeti kullanabilmek için yukarıdaki şartı sağlamalısın.' 
+                  tr
+                      ? 'Bu rozeti kullanabilmek için yukarıdaki şartı sağlamalısın.'
                       : 'You must meet the requirement above to use this badge.',
                   style: const TextStyle(
                     color: Colors.redAccent,
@@ -932,15 +867,17 @@ void _showBadgeDetailDialog({
               onPressed: () async {
                 Navigator.of(context).pop();
                 final nextBadge = isSelected ? '' : badge.id;
-                await profileSetupRepository.saveSelectedBadge(userId, nextBadge);
+                await profileSetupRepository.saveSelectedBadge(
+                    userId, nextBadge);
               },
               child: Text(
-                isSelected 
-                    ? (tr ? 'Rozeti Kaldır' : 'Remove Badge') 
+                isSelected
+                    ? (tr ? 'Rozeti Kaldır' : 'Remove Badge')
                     : (tr ? 'Rozeti Kullan' : 'Equip Badge'),
               ),
             )
-          else if (badge.coinsPrice > 0 && !(status.unlockedBadges.contains(badge.id)))
+          else if (badge.coinsPrice > 0 &&
+              !(status.unlockedBadges.contains(badge.id)))
             FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -951,7 +888,8 @@ void _showBadgeDetailDialog({
                   cost: badge.coinsPrice,
                   userCoins: status.coins,
                   onConfirm: () async {
-                    await profileSetupRepository.unlockBadge(userId, badge.id, badge.coinsPrice);
+                    await profileSetupRepository.unlockBadge(
+                        userId, badge.id, badge.coinsPrice);
                   },
                 );
               },
@@ -1000,15 +938,33 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
               final isPro = status?.isPro == true;
 
               final avatars = [
-                'avatar-0', 'avatar-1', 'avatar-2', 'avatar-3',
-                'avatar-4', 'avatar-5', 'avatar-6', 'avatar-7',
-                'avatar-8', 'avatar-9', 'avatar-10', 'avatar-11',
+                'avatar-0',
+                'avatar-1',
+                'avatar-2',
+                'avatar-3',
+                'avatar-4',
+                'avatar-5',
+                'avatar-6',
+                'avatar-7',
+                'avatar-8',
+                'avatar-9',
+                'avatar-10',
+                'avatar-11',
               ];
 
               final frames = [
-                'frame-0', 'frame-1', 'frame-2', 'frame-3',
-                'frame-4', 'frame-5', 'frame-6', 'frame-7',
-                'frame-8', 'frame-9', 'frame-10', 'frame-11',
+                'frame-0',
+                'frame-1',
+                'frame-2',
+                'frame-3',
+                'frame-4',
+                'frame-5',
+                'frame-6',
+                'frame-7',
+                'frame-8',
+                'frame-9',
+                'frame-10',
+                'frame-11',
               ];
 
               final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -1025,11 +981,9 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                         ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    tr 
-                        ? 'Avatar, çerçeve, rozet ve kapak fotoğraflarını özelleştir.' 
-                        : 'Customize your avatar, frame, badge, and cover photos.'
-                  ),
+                  Text(tr
+                      ? 'Avatar, çerçeve, rozet ve kapak fotoğraflarını özelleştir.'
+                      : 'Customize your avatar, frame, badge, and cover photos.'),
                   const SizedBox(height: 16),
 
                   // Jeton Cüzdanı ve Günlük Ödül (Tıklanabilir Mağaza Entegrasyonu)
@@ -1047,7 +1001,11 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF3A1C71), Color(0xFFD76D77), Color(0xFFFFAF7B)],
+                              colors: [
+                                Color(0xFF3A1C71),
+                                Color(0xFFD76D77),
+                                Color(0xFFFFAF7B)
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -1065,7 +1023,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFCC00), size: 28),
+                                  const Icon(Icons.monetization_on_rounded,
+                                      color: Color(0xFFFFCC00), size: 28),
                                   const SizedBox(width: 10),
                                   Text(
                                     tr ? 'Jeton Cüzdanı' : 'Coin Wallet',
@@ -1078,7 +1037,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                   ),
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: Colors.white24,
                                       borderRadius: BorderRadius.circular(8),
@@ -1095,7 +1055,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                           ),
                                         ),
                                         const SizedBox(width: 2),
-                                        const Icon(Icons.add_circle, color: Color(0xFFFFCC00), size: 10),
+                                        const Icon(Icons.add_circle,
+                                            color: Color(0xFFFFCC00), size: 10),
                                       ],
                                     ),
                                   ),
@@ -1127,7 +1088,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 4,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
@@ -1136,7 +1098,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                     itemBuilder: (context, index) {
                       final avatarId = avatars[index];
                       final isSelected = selectedAvatar == avatarId;
-                      final isUnlocked = isPro || (status?.unlockedAvatars.contains(avatarId) ?? false);
+                      final isUnlocked = isPro ||
+                          (status?.unlockedAvatars.contains(avatarId) ?? false);
                       Widget avatarWidget = AvatarOption(
                         avatarId: avatarId,
                         selected: isSelected,
@@ -1157,7 +1120,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                   cost: 100,
                                   userCoins: status?.coins ?? 0,
                                   onConfirm: () async {
-                                    await profileSetupRepository.unlockAvatar(userId, avatarId, 100);
+                                    await profileSetupRepository.unlockAvatar(
+                                        userId, avatarId, 100);
                                   },
                                 );
                               },
@@ -1205,77 +1169,80 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                     runSpacing: 10,
                     children: [
                       for (final frame in frames)
-                        Builder(
-                          builder: (context) {
-                            final isFrameUnlocked = isPro || (status?.unlockedFrames.contains(frame) ?? false);
-                            final previewAvatar = selectedAvatar.isNotEmpty ? selectedAvatar : 'avatar-0';
-                            return InkWell(
-                              onTap: isFrameUnlocked
-                                  ? () {
-                                      profileSetupRepository.saveAvatar(
-                                        userId: userId,
-                                        avatarId: selectedAvatar,
-                                        avatarFrameColor: frame,
-                                      );
-                                    }
-                                  : () {
-                                      _showPurchaseDialog(
-                                        context: context,
-                                        userId: userId,
-                                        title: tr ? 'Çerçeve Satın Al' : 'Buy Frame',
-                                        cost: 150,
-                                        userCoins: status?.coins ?? 0,
-                                        onConfirm: () async {
-                                          await profileSetupRepository.unlockFrame(userId, frame, 150);
-                                        },
-                                      );
-                                    },
-                              child: Stack(
-                                children: [
-                                  Opacity(
-                                    opacity: isFrameUnlocked ? 1.0 : 0.5,
-                                    child: Container(
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: selectedFrame == frame
-                                              ? const Color(0xFFEC008C)
-                                              : Colors.transparent,
-                                          width: 2.0,
-                                        ),
+                        Builder(builder: (context) {
+                          final isFrameUnlocked = isPro ||
+                              (status?.unlockedFrames.contains(frame) ?? false);
+                          final previewAvatar = selectedAvatar.isNotEmpty
+                              ? selectedAvatar
+                              : 'avatar-0';
+                          return InkWell(
+                            onTap: isFrameUnlocked
+                                ? () {
+                                    profileSetupRepository.saveAvatar(
+                                      userId: userId,
+                                      avatarId: selectedAvatar,
+                                      avatarFrameColor: frame,
+                                    );
+                                  }
+                                : () {
+                                    _showPurchaseDialog(
+                                      context: context,
+                                      userId: userId,
+                                      title:
+                                          tr ? 'Çerçeve Satın Al' : 'Buy Frame',
+                                      cost: 150,
+                                      userCoins: status?.coins ?? 0,
+                                      onConfirm: () async {
+                                        await profileSetupRepository
+                                            .unlockFrame(userId, frame, 150);
+                                      },
+                                    );
+                                  },
+                            child: Stack(
+                              children: [
+                                Opacity(
+                                  opacity: isFrameUnlocked ? 1.0 : 0.5,
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: selectedFrame == frame
+                                            ? const Color(0xFFEC008C)
+                                            : Colors.transparent,
+                                        width: 2.0,
                                       ),
+                                    ),
+                                    padding: const EdgeInsets.all(2),
+                                    child: buildAvatarHelper(
+                                      previewAvatar,
+                                      frame,
+                                      size: 36,
+                                    ),
+                                  ),
+                                ),
+                                if (!isFrameUnlocked)
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Container(
                                       padding: const EdgeInsets.all(2),
-                                      child: buildAvatarHelper(
-                                        previewAvatar,
-                                        frame,
-                                        size: 36,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black87,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.lock,
+                                        size: 10,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),
-                                  if (!isFrameUnlocked)
-                                    Positioned(
-                                      right: 0,
-                                      bottom: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.black87,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.lock,
-                                          size: 10,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }
-                        ),
+                              ],
+                            ),
+                          );
+                        }),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -1292,9 +1259,13 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                       scrollDirection: Axis.horizontal,
                       itemCount: 13,
                       itemBuilder: (context, index) {
-                        final coverId = index == 0 ? 'default' : 'cover-${index - 1}';
-                        final isSelected = selectedCover == coverId || (coverId == 'default' && selectedCover.isEmpty);
-                        final isCoverUnlocked = isPro || coverId == 'default' || (status?.unlockedCovers.contains(coverId) ?? false);
+                        final coverId =
+                            index == 0 ? 'default' : 'cover-${index - 1}';
+                        final isSelected = selectedCover == coverId ||
+                            (coverId == 'default' && selectedCover.isEmpty);
+                        final isCoverUnlocked = isPro ||
+                            coverId == 'default' ||
+                            (status?.unlockedCovers.contains(coverId) ?? false);
                         return InkWell(
                           onTap: isCoverUnlocked
                               ? () {
@@ -1307,11 +1278,14 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                   _showPurchaseDialog(
                                     context: context,
                                     userId: userId,
-                                    title: tr ? 'Kapak Fotoğrafı Satın Al' : 'Buy Cover Photo',
+                                    title: tr
+                                        ? 'Kapak Fotoğrafı Satın Al'
+                                        : 'Buy Cover Photo',
                                     cost: 200,
                                     userCoins: status?.coins ?? 0,
                                     onConfirm: () async {
-                                      await profileSetupRepository.unlockCover(userId, coverId, 200);
+                                      await profileSetupRepository.unlockCover(
+                                          userId, coverId, 200);
                                     },
                                   );
                                 },
@@ -1387,8 +1361,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    tr 
-                        ? 'Rozet detaylarını görmek, kuşanmak veya satın almak için rozete tıkla.' 
+                    tr
+                        ? 'Rozet detaylarını görmek, kuşanmak veya satın almak için rozete tıkla.'
                         : 'Click on a badge to view details, equip it, or buy it with coins.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
@@ -1396,21 +1370,28 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                   FutureBuilder<Map<String, dynamic>>(
                     future: badgeDataFuture,
                     builder: (context, badgeSnapshot) {
-                      if (badgeSnapshot.connectionState == ConnectionState.waiting) {
+                      if (badgeSnapshot.connectionState ==
+                          ConnectionState.waiting) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 20),
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-                      
-                      final data = badgeSnapshot.data ?? {'commentCount': 0, 'collection': <CollectionEntry>[]};
+
+                      final data = badgeSnapshot.data ??
+                          {
+                            'commentCount': 0,
+                            'collection': <CollectionEntry>[]
+                          };
                       final int commentCount = data['commentCount'] as int;
-                      final List<CollectionEntry> collection = data['collection'] as List<CollectionEntry>;
+                      final List<CollectionEntry> collection =
+                          data['collection'] as List<CollectionEntry>;
 
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
@@ -1421,29 +1402,33 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                           final badge = allProfileBadges[index];
                           final isSelected = selectedBadge == badge.id;
                           final isEligible = checkBadgeRequirement(
-                            badge, 
-                            status ?? const ProfileSetupStatus(
-                              userId: '', 
-                              displayName: '', 
-                              username: '', 
-                              birthYear: null, 
-                              privacyVersion: '', 
-                              termsVersion: '', 
-                              role: '', 
-                              isPro: false, 
-                              avatarId: '', 
-                              avatarFrameColor: '', 
-                              coverId: ''
-                            ), 
-                            collection, 
-                            commentCount
-                          );
+                              badge,
+                              status ??
+                                  const ProfileSetupStatus(
+                                      userId: '',
+                                      displayName: '',
+                                      username: '',
+                                      birthYear: null,
+                                      privacyVersion: '',
+                                      termsVersion: '',
+                                      role: '',
+                                      isPro: false,
+                                      avatarId: '',
+                                      avatarFrameColor: '',
+                                      coverId: ''),
+                              collection,
+                              commentCount);
                           final isUnlocked = badge.coinsPrice > 0
                               ? (badge.id == 'star'
-                                  ? ((status?.unlockedBadges.contains(badge.id) ?? false) || isEligible)
-                                  : (status?.unlockedBadges.contains(badge.id) ?? false))
+                                  ? ((status?.unlockedBadges
+                                              .contains(badge.id) ??
+                                          false) ||
+                                      isEligible)
+                                  : (status?.unlockedBadges
+                                          .contains(badge.id) ??
+                                      false))
                               : isEligible;
-                          
+
                           return InkWell(
                             onTap: () {
                               _showBadgeDetailDialog(
@@ -1452,50 +1437,58 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                 badge: badge,
                                 isUnlocked: isUnlocked,
                                 isSelected: isSelected,
-                                status: status ?? const ProfileSetupStatus(
-                                  userId: '',
-                                  displayName: '',
-                                  username: '',
-                                  birthYear: null,
-                                  privacyVersion: '',
-                                  termsVersion: '',
-                                  role: '',
-                                  isPro: false,
-                                  avatarId: '',
-                                  avatarFrameColor: '',
-                                  coverId: ''
-                                ),
+                                status: status ??
+                                    const ProfileSetupStatus(
+                                        userId: '',
+                                        displayName: '',
+                                        username: '',
+                                        birthYear: null,
+                                        privacyVersion: '',
+                                        termsVersion: '',
+                                        role: '',
+                                        isPro: false,
+                                        avatarId: '',
+                                        avatarFrameColor: '',
+                                        coverId: ''),
                               );
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 4),
                               decoration: BoxDecoration(
-                                color: isSelected 
-                                    ? badge.color.withOpacity(0.15) 
-                                    : (isUnlocked ? Colors.grey.shade900.withOpacity(0.5) : Colors.black45),
+                                color: isSelected
+                                    ? badge.color.withOpacity(0.15)
+                                    : (isUnlocked
+                                        ? Colors.grey.shade900.withOpacity(0.5)
+                                        : Colors.black45),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: isSelected 
-                                      ? badge.color 
-                                      : (isUnlocked ? Colors.grey.shade800 : Colors.grey.shade900),
+                                  color: isSelected
+                                      ? badge.color
+                                      : (isUnlocked
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade900),
                                   width: isSelected ? 2.0 : 1.0,
                                 ),
                               ),
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
-                                  ProfileBadgeWidget(badgeId: badge.id, size: 8),
+                                  ProfileBadgeWidget(
+                                      badgeId: badge.id, size: 8),
                                   if (isSelected)
                                     const Positioned(
                                       right: 0,
                                       top: 0,
-                                      child: Icon(Icons.check_circle, color: Colors.green, size: 10),
+                                      child: Icon(Icons.check_circle,
+                                          color: Colors.green, size: 10),
                                     )
                                   else if (!isUnlocked)
                                     const Positioned(
                                       right: 0,
                                       top: 0,
-                                      child: Icon(Icons.lock, color: Colors.grey, size: 10),
+                                      child: Icon(Icons.lock,
+                                          color: Colors.grey, size: 10),
                                     ),
                                 ],
                               ),
@@ -1544,7 +1537,10 @@ void _showProSubscriptionModal(BuildContext context) {
               Text(t(context, 'proSubtitle')),
               const SizedBox(height: 16),
               Card(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.05),
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Column(
@@ -1552,15 +1548,34 @@ void _showProSubscriptionModal(BuildContext context) {
                     children: [
                       Text(
                         t(context, 'proBenefits'),
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 16),
                       ),
                       const SizedBox(height: 10),
-                      FeatureLine(text: tr ? 'Reklamsız Koyu Gotik Deneyim' : 'Ad-Free Dark Gothic Experience'),
-                      FeatureLine(text: tr ? '12 Özel Gotik Bebek Avatarı' : '12 Exclusive Gothic Doll Avatars'),
-                      FeatureLine(text: tr ? '12 Premium Gotik Profil Kapak Fotoğrafı' : '12 Premium Gothic Cover Photos'),
-                      FeatureLine(text: tr ? '12 Gotik Profil Çerçevesi (Sarmaşık, Yarasa, Örümcek Ağı)' : '12 Gothic Profile Frames (Ivy, Bats, Webs)'),
-                      FeatureLine(text: tr ? 'Gelişmiş Koleksiyon İstatistikleri ve Analizler' : 'Advanced Collection Stats & Analytics'),
-                      FeatureLine(text: tr ? 'Daha Geniş Profil Vitrini' : 'Expanded Profile Showcase'),
+                      FeatureLine(
+                          text: tr
+                              ? 'Reklamsız Koyu Gotik Deneyim'
+                              : 'Ad-Free Dark Gothic Experience'),
+                      FeatureLine(
+                          text: tr
+                              ? '12 Özel Gotik Bebek Avatarı'
+                              : '12 Exclusive Gothic Doll Avatars'),
+                      FeatureLine(
+                          text: tr
+                              ? '12 Premium Gotik Profil Kapak Fotoğrafı'
+                              : '12 Premium Gothic Cover Photos'),
+                      FeatureLine(
+                          text: tr
+                              ? '12 Gotik Profil Çerçevesi (Sarmaşık, Yarasa, Örümcek Ağı)'
+                              : '12 Gothic Profile Frames (Ivy, Bats, Webs)'),
+                      FeatureLine(
+                          text: tr
+                              ? 'Gelişmiş Koleksiyon İstatistikleri ve Analizler'
+                              : 'Advanced Collection Stats & Analytics'),
+                      FeatureLine(
+                          text: tr
+                              ? 'Daha Geniş Profil Vitrini'
+                              : 'Expanded Profile Showcase'),
                     ],
                   ),
                 ),
@@ -1590,12 +1605,14 @@ void _showProSubscriptionModal(BuildContext context) {
                 onPressed: () async {
                   try {
                     const billing = BillingService();
-                    await billing.buySubscription(BillingService.proMonthlyProductId);
+                    await billing
+                        .buySubscription(BillingService.proMonthlyProductId);
                   } catch (error) {
                     showDialog<void>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text(tr ? 'Google Play Uyarısı' : 'Google Play Warning'),
+                        title: Text(
+                            tr ? 'Google Play Uyarısı' : 'Google Play Warning'),
                         content: Text(
                           tr
                               ? 'Google Play Billing entegrasyonu Google Play Console kurulumundan sonra aktif olacaktır.'
@@ -1612,7 +1629,8 @@ void _showProSubscriptionModal(BuildContext context) {
                   }
                 },
                 icon: const Icon(Icons.lock_open_rounded),
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48)),
                 label: Text(t(context, 'connectBilling')),
               ),
               const SizedBox(height: 24),
@@ -1641,7 +1659,9 @@ void _showProSubscriptionModal(BuildContext context) {
                 context: context,
                 amount: 150,
                 price: '₺19.99',
-                description: tr ? 'Başlangıç gotik cüzdan paketi' : 'Starter gothic wallet pack',
+                description: tr
+                    ? 'Başlangıç gotik cüzdan paketi'
+                    : 'Starter gothic wallet pack',
                 isPopular: false,
                 onTap: () => _handleBuyCoinPack(context, 150, '₺19.99'),
               ),
@@ -1649,7 +1669,9 @@ void _showProSubscriptionModal(BuildContext context) {
                 context: context,
                 amount: 500,
                 price: '₺49.99',
-                description: tr ? 'Koleksiyoncuların en çok tercih ettiği paket' : 'Most preferred pack by collectors',
+                description: tr
+                    ? 'Koleksiyoncuların en çok tercih ettiği paket'
+                    : 'Most preferred pack by collectors',
                 isPopular: true,
                 onTap: () => _handleBuyCoinPack(context, 500, '₺49.99'),
               ),
@@ -1657,7 +1679,9 @@ void _showProSubscriptionModal(BuildContext context) {
                 context: context,
                 amount: 1200,
                 price: '₺99.99',
-                description: tr ? 'Büyük gotik bebek takas ve vitrin paketi' : 'Large trade and showcase pack',
+                description: tr
+                    ? 'Büyük gotik bebek takas ve vitrin paketi'
+                    : 'Large trade and showcase pack',
                 isPopular: false,
                 onTap: () => _handleBuyCoinPack(context, 1200, '₺99.99'),
               ),
@@ -1683,10 +1707,14 @@ Widget _buildCoinPackItem({
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
-        color: isPopular ? const Color(0xFFFFCC00) : (isDark ? const Color(0xFFEC008C).withOpacity(0.3) : Colors.black12),
+        color: isPopular
+            ? const Color(0xFFFFCC00)
+            : (isDark
+                ? const Color(0xFFEC008C).withOpacity(0.3)
+                : Colors.black12),
         width: isPopular ? 1.8 : 1.0,
       ),
-      color: isPopular 
+      color: isPopular
           ? (isDark ? const Color(0xFF231707) : const Color(0xFFFFFDF5))
           : (isDark ? const Color(0xFF130820) : Colors.white),
     ),
@@ -1699,7 +1727,8 @@ Widget _buildCoinPackItem({
           color: const Color(0xFFFFCC00).withOpacity(0.12),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFCC00), size: 24),
+        child: const Icon(Icons.monetization_on_rounded,
+            color: Color(0xFFFFCC00), size: 24),
       ),
       title: Row(
         children: [
@@ -1716,7 +1745,9 @@ Widget _buildCoinPackItem({
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'POPÜLER' : 'POPULAR',
+                AppLanguageScope.languageOf(context) == AppLanguage.tr
+                    ? 'POPÜLER'
+                    : 'POPULAR',
                 style: const TextStyle(
                   color: Colors.black,
                   fontSize: 7.5,
@@ -1747,25 +1778,28 @@ Widget _buildCoinPackItem({
   );
 }
 
-Future<void> _handleBuyCoinPack(BuildContext context, int amount, String price) async {
+Future<void> _handleBuyCoinPack(
+    BuildContext context, int amount, String price) async {
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
   final user = authService.currentUser;
   if (user == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(tr ? 'Öncelikle giriş yapmalısınız!' : 'Please sign in first!')),
+      SnackBar(
+          content: Text(
+              tr ? 'Öncelikle giriş yapmalısınız!' : 'Please sign in first!')),
     );
     return;
   }
-  
+
   final confirmed = await _showGothicConfirmDialog(
     context,
     title: tr ? 'Jeton Paketini Onayla' : 'Confirm Coin Package',
-    content: tr 
+    content: tr
         ? '$amount jeton paketini $price karşılığında satın almak istediğinize emin misiniz?'
         : 'Are you sure you want to purchase $amount coins for $price?',
     confirmText: tr ? 'Satın Al' : 'Purchase',
   );
-  
+
   if (confirmed == true) {
     try {
       await profileSetupRepository.buyCoinPackage(user.uid, amount);
@@ -1773,7 +1807,9 @@ Future<void> _handleBuyCoinPack(BuildContext context, int amount, String price) 
         Navigator.of(context).pop(); // close the subscription sheet
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr ? 'Tebrikler! $amount Jeton hesabınıza eklendi.' : 'Congratulations! $amount Coins added to your account.'),
+            content: Text(tr
+                ? 'Tebrikler! $amount Jeton hesabınıza eklendi.'
+                : 'Congratulations! $amount Coins added to your account.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -1781,32 +1817,14 @@ Future<void> _handleBuyCoinPack(BuildContext context, int amount, String price) 
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr ? 'İşlem başarısız: $e' : 'Transaction failed: $e')),
+          SnackBar(
+              content:
+                  Text(tr ? 'İşlem başarısız: $e' : 'Transaction failed: $e')),
         );
       }
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
   final currentUserId = authService.currentUser?.uid;
@@ -1822,40 +1840,56 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
           builder: (context, friendSnap) {
             final isFriend = friendSnap.data ?? false;
             return StreamBuilder<bool>(
-              stream: socialRepository.watchHasPendingRequest(currentUserId, targetUserId),
+              stream: socialRepository.watchHasPendingRequest(
+                  currentUserId, targetUserId),
               builder: (context, pendingSnap) {
                 final hasPendingOut = pendingSnap.data ?? false;
                 return StreamBuilder<bool>(
-                  stream: socialRepository.watchHasPendingRequest(targetUserId, currentUserId),
+                  stream: socialRepository.watchHasPendingRequest(
+                      targetUserId, currentUserId),
                   builder: (context, pendingInSnap) {
                     final hasPendingIn = pendingInSnap.data ?? false;
                     return StreamBuilder<List<String>>(
                       stream: socialRepository.watchBlockedUsers(currentUserId),
                       builder: (context, blockedSnap) {
-                        final isBlocked = (blockedSnap.data ?? []).contains(targetUserId);
+                        final isBlocked =
+                            (blockedSnap.data ?? []).contains(targetUserId);
 
                         return Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (isFriend)
                               ListTile(
-                                leading: _buildNeonIcon(context, Icons.forum_rounded, size: 22),
-                                title: Text(tr ? 'Mesaj Gönder' : 'Send Message'),
+                                leading: _buildNeonIcon(
+                                    context, Icons.forum_rounded,
+                                    size: 22),
+                                title:
+                                    Text(tr ? 'Mesaj Gönder' : 'Send Message'),
                                 onTap: () {
                                   Navigator.of(context).pop();
-                                  _openDirectChatWithUser(context, targetUserId);
+                                  _openDirectChatWithUser(
+                                      context, targetUserId);
                                 },
                               )
                             else if (hasPendingOut)
                               ListTile(
-                                leading: _buildNeonIcon(context, Icons.hourglass_empty_rounded, size: 22),
-                                title: Text(tr ? 'Arkadaşlık İsteği Gönderildi' : 'Friend Request Sent'),
-                                subtitle: Text(tr ? 'Yanıt bekleniyor...' : 'Waiting for response...'),
+                                leading: _buildNeonIcon(
+                                    context, Icons.hourglass_empty_rounded,
+                                    size: 22),
+                                title: Text(tr
+                                    ? 'Arkadaşlık İsteği Gönderildi'
+                                    : 'Friend Request Sent'),
+                                subtitle: Text(tr
+                                    ? 'Yanıt bekleniyor...'
+                                    : 'Waiting for response...'),
                                 trailing: TextButton(
                                   onPressed: () async {
-                                    final confirmed = await _showGothicConfirmDialog(
+                                    final confirmed =
+                                        await _showGothicConfirmDialog(
                                       context,
-                                      title: tr ? 'İsteği İptal Et' : 'Cancel Request',
+                                      title: tr
+                                          ? 'İsteği İptal Et'
+                                          : 'Cancel Request',
                                       content: tr
                                           ? 'Arkadaşlık isteğini iptal etmek istediğinize emin misiniz?'
                                           : 'Are you sure you want to cancel the friend request?',
@@ -1865,19 +1899,27 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
                                       userA: currentUserId,
                                       userB: targetUserId,
                                     );
-                                    if (context.mounted) Navigator.of(context).pop();
+                                    if (context.mounted)
+                                      Navigator.of(context).pop();
                                   },
                                   child: Text(t(context, 'cancel')),
                                 ),
                               )
                             else if (hasPendingIn)
                               ListTile(
-                                leading: _buildNeonIcon(context, Icons.person_add_alt_1_rounded, size: 22),
-                                title: Text(tr ? 'Arkadaşlık İsteğini Kabul Et' : 'Accept Friend Request'),
+                                leading: _buildNeonIcon(
+                                    context, Icons.person_add_alt_1_rounded,
+                                    size: 22),
+                                title: Text(tr
+                                    ? 'Arkadaşlık İsteğini Kabul Et'
+                                    : 'Accept Friend Request'),
                                 onTap: () async {
-                                  final confirmed = await _showGothicConfirmDialog(
+                                  final confirmed =
+                                      await _showGothicConfirmDialog(
                                     context,
-                                    title: tr ? 'İsteği Kabul Et' : 'Accept Request',
+                                    title: tr
+                                        ? 'İsteği Kabul Et'
+                                        : 'Accept Request',
                                     content: tr
                                         ? 'Arkadaşlık isteğini kabul etmek istediğinize emin misiniz?'
                                         : 'Are you sure you want to accept the friend request?',
@@ -1888,15 +1930,19 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
                                     toUserId: currentUserId,
                                     accept: true,
                                   );
-                                  if (context.mounted) Navigator.of(context).pop();
+                                  if (context.mounted)
+                                    Navigator.of(context).pop();
                                 },
                               )
                             else
                               ListTile(
-                                leading: _buildNeonIcon(context, Icons.person_add_alt_1_outlined, size: 22),
+                                leading: _buildNeonIcon(
+                                    context, Icons.person_add_alt_1_outlined,
+                                    size: 22),
                                 title: Text(t(context, 'sendFriendRequest')),
                                 onTap: () async {
-                                  final confirmed = await _showGothicConfirmDialog(
+                                  final confirmed =
+                                      await _showGothicConfirmDialog(
                                     context,
                                     title: tr ? 'Arkadaş Ekle' : 'Add Friend',
                                     content: tr
@@ -1911,19 +1957,26 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
                                   if (context.mounted) {
                                     Navigator.of(context).pop();
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(t(context, 'friendRequestSent'))),
+                                      SnackBar(
+                                          content: Text(
+                                              t(context, 'friendRequestSent'))),
                                     );
                                   }
                                 },
                               ),
                             if (isFriend)
                               ListTile(
-                                leading: _buildNeonIcon(context, Icons.person_remove_outlined, size: 22),
-                                title: Text(tr ? 'Arkadaşlıktan Çıkar' : 'Unfriend'),
+                                leading: _buildNeonIcon(
+                                    context, Icons.person_remove_outlined,
+                                    size: 22),
+                                title: Text(
+                                    tr ? 'Arkadaşlıktan Çıkar' : 'Unfriend'),
                                 onTap: () async {
-                                  final confirmed = await _showGothicConfirmDialog(
+                                  final confirmed =
+                                      await _showGothicConfirmDialog(
                                     context,
-                                    title: tr ? 'Arkadaşlıktan Çıkar' : 'Unfriend',
+                                    title:
+                                        tr ? 'Arkadaşlıktan Çıkar' : 'Unfriend',
                                     content: tr
                                         ? 'Bu kullanıcıyı arkadaşlarınızdan çıkarmak istediğinize emin misiniz?'
                                         : 'Are you sure you want to remove this user from friends?',
@@ -1933,7 +1986,8 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
                                     userA: currentUserId,
                                     userB: targetUserId,
                                   );
-                                  if (context.mounted) Navigator.of(context).pop();
+                                  if (context.mounted)
+                                    Navigator.of(context).pop();
                                 },
                               ),
                             ListTile(
@@ -1948,14 +2002,21 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
                                     : (tr ? 'Engelle' : 'Block User'),
                               ),
                               onTap: () async {
-                                final confirmed = await _showGothicConfirmDialog(
+                                final confirmed =
+                                    await _showGothicConfirmDialog(
                                   context,
                                   title: isBlocked
                                       ? (tr ? 'Engeli Kaldır' : 'Unblock User')
-                                      : (tr ? 'Kullanıcıyı Engelle' : 'Block User'),
+                                      : (tr
+                                          ? 'Kullanıcıyı Engelle'
+                                          : 'Block User'),
                                   content: isBlocked
-                                      ? (tr ? 'Bu kullanıcının engelini kaldırmak istediğinize emin misiniz?' : 'Are you sure you want to unblock this user?')
-                                      : (tr ? 'Bu kullanıcıyı engellemek istediğinize emin misiniz?' : 'Are you sure you want to block this user?'),
+                                      ? (tr
+                                          ? 'Bu kullanıcının engelini kaldırmak istediğinize emin misiniz?'
+                                          : 'Are you sure you want to unblock this user?')
+                                      : (tr
+                                          ? 'Bu kullanıcıyı engellemek istediğinize emin misiniz?'
+                                          : 'Are you sure you want to block this user?'),
                                 );
                                 if (!confirmed) return;
 
@@ -1970,7 +2031,8 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
                                     blockedId: targetUserId,
                                   );
                                 }
-                                if (context.mounted) Navigator.of(context).pop();
+                                if (context.mounted)
+                                  Navigator.of(context).pop();
                               },
                             ),
                             ListTile(
@@ -2000,42 +2062,18 @@ void _showPublicProfileActionsMenu(BuildContext context, String targetUserId) {
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserReport report) async {
+Future<ResolvedReportDetails> _resolveReportDetails(
+    BuildContext context, UserReport report) async {
   String reporterName = '...';
   String reportedName = '...';
   String contentText = '...';
 
   // 1. Raporlayan Kullanıcı adını çöz
   try {
-    final repDoc = await FirebaseFirestore.instance.collection('users').doc(report.reporterId).get();
+    final repDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(report.reporterId)
+        .get();
     if (repDoc.exists) {
       reporterName = repDoc.data()?['username'] as String? ?? 'Collector';
     } else {
@@ -2050,12 +2088,15 @@ Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserRe
     switch (report.targetType) {
       case ReportTargetType.user:
       case ReportTargetType.profile:
-        final doc = await FirebaseFirestore.instance.collection('users').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final username = doc.data()?['username'] as String? ?? 'Collector';
           reportedName = username;
-          contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr 
-              ? 'Profil Sayfası (@$username)' 
+          contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
+              ? 'Profil Sayfası (@$username)'
               : 'Profile Page (@$username)';
         } else {
           reportedName = 'ID: ${report.targetId}';
@@ -2063,18 +2104,25 @@ Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserRe
         }
         break;
       case ReportTargetType.comment:
-        final doc = await FirebaseFirestore.instance.collection('comments').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('comments')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final text = doc.data()?['text'] as String? ?? '';
           final authorId = doc.data()?['userId'] as String? ?? '';
           contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
               ? 'Yorum: "$text"'
               : 'Comment: "$text"';
-          
+
           if (authorId.isNotEmpty) {
-            final authDoc = await FirebaseFirestore.instance.collection('users').doc(authorId).get();
+            final authDoc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(authorId)
+                .get();
             if (authDoc.exists) {
-              reportedName = authDoc.data()?['username'] as String? ?? 'Collector';
+              reportedName =
+                  authDoc.data()?['username'] as String? ?? 'Collector';
             } else {
               reportedName = 'ID: $authorId';
             }
@@ -2084,7 +2132,10 @@ Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserRe
         }
         break;
       case ReportTargetType.catalogEntry:
-        final doc = await FirebaseFirestore.instance.collection('items').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('items')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final name = doc.data()?['name'] as String? ?? '';
           contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
@@ -2113,11 +2164,7 @@ Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserRe
   );
 }
 
-
-
 // _buildCompactAdminButton removed since PopUpMenuButton is now used.
-
-
 
 Future<void> _saveCatalogDraft(
   BuildContext context,
@@ -2186,7 +2233,8 @@ void _setupCatalogListener() {
     }
 
     final sortedList = mergedMap.values.toList();
-    sortedList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    sortedList
+        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     catalogEntriesNotifier.value = sortedList;
   }, onError: (error) {
     print('Firestore catalog listener error: $error');
@@ -2341,7 +2389,8 @@ void _deleteCatalogEntry(String id) {
   catalogRepository.delete(id).catchError((_) {});
 }
 
-Future<void> _deleteReportedContent(BuildContext context, UserReport report) async {
+Future<void> _deleteReportedContent(
+    BuildContext context, UserReport report) async {
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
   final confirmed = await _showGothicConfirmDialog(
     context,
@@ -2364,11 +2413,17 @@ Future<void> _deleteReportedContent(BuildContext context, UserReport report) asy
       commentsNotifier.value = newMap;
       _updateReportStatus(report.id, ReportStatus.resolved);
       messenger.showSnackBar(
-        SnackBar(content: Text(tr ? 'Yorum veritabanından imha edildi.' : 'Comment destroyed from database.')),
+        SnackBar(
+            content: Text(tr
+                ? 'Yorum veritabanından imha edildi.'
+                : 'Comment destroyed from database.')),
       );
     }).catchError((err) {
       messenger.showSnackBar(
-        SnackBar(content: Text(tr ? 'Hata: Yorum silinemedi.' : 'Error: Failed to delete comment.')),
+        SnackBar(
+            content: Text(tr
+                ? 'Hata: Yorum silinemedi.'
+                : 'Error: Failed to delete comment.')),
       );
     });
   } else if (report.targetType == ReportTargetType.catalogEntry) {
@@ -2376,19 +2431,21 @@ Future<void> _deleteReportedContent(BuildContext context, UserReport report) asy
       _deleteCatalogEntry(report.targetId);
       _updateReportStatus(report.id, ReportStatus.resolved);
       messenger.showSnackBar(
-        SnackBar(content: Text(tr ? 'Katalog öğesi veritabanından imha edildi.' : 'Catalog item destroyed from database.')),
+        SnackBar(
+            content: Text(tr
+                ? 'Katalog öğesi veritabanından imha edildi.'
+                : 'Catalog item destroyed from database.')),
       );
     }).catchError((err) {
       messenger.showSnackBar(
-        SnackBar(content: Text(tr ? 'Hata: Katalog öğesi silinemedi.' : 'Error: Failed to delete catalog item.')),
+        SnackBar(
+            content: Text(tr
+                ? 'Hata: Katalog öğesi silinemedi.'
+                : 'Error: Failed to delete catalog item.')),
       );
     });
   }
 }
-
-
-
-
 
 void _addAppNotification(String text) {
   notificationsNotifier.value = [
@@ -2567,12 +2624,14 @@ Future<bool> _showGothicConfirmDialog(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : const Color(0xFFEC008C),
-                  shadows: isDark ? [
-                    const Shadow(
-                      color: Color(0xFFEC008C),
-                      blurRadius: 10,
-                    ),
-                  ] : [],
+                  shadows: isDark
+                      ? [
+                          const Shadow(
+                            color: Color(0xFFEC008C),
+                            blurRadius: 10,
+                          ),
+                        ]
+                      : [],
                 ),
               ),
               const SizedBox(height: 16),
@@ -2591,15 +2650,18 @@ Future<bool> _showGothicConfirmDialog(
                   Expanded(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFEC008C), width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(
+                            color: Color(0xFFEC008C), width: 1.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: () => Navigator.of(context).pop(false),
                       child: Text(
                         finalCancelText,
                         style: TextStyle(
-                          color: isDark ? Colors.white : const Color(0xFFEC008C),
+                          color:
+                              isDark ? Colors.white : const Color(0xFFEC008C),
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Cinzel',
                         ),
@@ -2619,7 +2681,8 @@ Future<bool> _showGothicConfirmDialog(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () => Navigator.of(context).pop(true),
@@ -2685,12 +2748,17 @@ void _openReportTarget(BuildContext context, UserReport report) {
   final router = GoRouter.of(context);
   if (report.targetType == ReportTargetType.catalogEntry) {
     router.go('/i/${report.targetId}');
-  } else if (report.targetType == ReportTargetType.profile || report.targetType == ReportTargetType.user) {
+  } else if (report.targetType == ReportTargetType.profile ||
+      report.targetType == ReportTargetType.user) {
     router.go('/users/${report.targetId}');
   } else if (report.targetType == ReportTargetType.collectionEntry) {
     router.go('/c/${report.targetId}');
   } else if (report.targetType == ReportTargetType.comment) {
-    FirebaseFirestore.instance.collection('comments').doc(report.targetId).get().then((doc) {
+    FirebaseFirestore.instance
+        .collection('comments')
+        .doc(report.targetId)
+        .get()
+        .then((doc) {
       if (doc.exists) {
         final targetType = doc.data()?['targetType'] as String?;
         final targetId = doc.data()?['targetId'] as String?;
@@ -2719,7 +2787,10 @@ Future<String> _resolveReportTargetText(UserReport report) async {
     switch (report.targetType) {
       case ReportTargetType.user:
       case ReportTargetType.profile:
-        final doc = await FirebaseFirestore.instance.collection('users').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final username = doc.data()?['username'] as String?;
           if (username != null && username.isNotEmpty) {
@@ -2728,7 +2799,10 @@ Future<String> _resolveReportTargetText(UserReport report) async {
         }
         return 'ID: ${report.targetId}';
       case ReportTargetType.comment:
-        final doc = await FirebaseFirestore.instance.collection('comments').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('comments')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final text = doc.data()?['text'] as String?;
           if (text != null && text.isNotEmpty) {
@@ -2737,7 +2811,10 @@ Future<String> _resolveReportTargetText(UserReport report) async {
         }
         return 'ID: ${report.targetId}';
       case ReportTargetType.catalogEntry:
-        final doc = await FirebaseFirestore.instance.collection('items').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('items')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final name = doc.data()?['name'] as String?;
           if (name != null && name.isNotEmpty) {
@@ -2753,7 +2830,8 @@ Future<String> _resolveReportTargetText(UserReport report) async {
   }
 }
 
-Future<void> _addModerationNotification(String userId, UserReport report, ReportStatus status) async {
+Future<void> _addModerationNotification(
+    String userId, UserReport report, ReportStatus status) async {
   try {
     final db = FirebaseFirestore.instance;
     final statusTextTr = switch (status) {
@@ -2789,25 +2867,14 @@ Future<void> _addModerationNotification(String userId, UserReport report, Report
       'userId': userId,
       'type': 'moderation',
       'title': 'Moderasyon Kararı / Moderation Update',
-      'body': 'Raporladığın $targetLabelTr içeriği hakkında karar verildi: $statusTextTr / The reported $targetLabelEn content was updated to: $statusTextEn',
+      'body':
+          'Raporladığın $targetLabelTr içeriği hakkında karar verildi: $statusTextTr / The reported $targetLabelEn content was updated to: $statusTextEn',
       'isRead': false,
       'deepLink': '/profile',
       'createdAt': FieldValue.serverTimestamp(),
     });
   } catch (_) {}
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 Widget _buildFilterChip({
   required BuildContext context,
@@ -2830,7 +2897,9 @@ Widget _buildFilterChip({
         border: Border.all(
           color: isSelected
               ? const Color(0xFFEC008C)
-              : (isDark ? const Color(0xFF2C1F45) : const Color(0xFFEC008C).withOpacity(0.25)),
+              : (isDark
+                  ? const Color(0xFF2C1F45)
+                  : const Color(0xFFEC008C).withOpacity(0.25)),
           width: 1.5,
         ),
         boxShadow: isSelected
@@ -2976,13 +3045,15 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
                         helperText: t(context, 'usernameRules'),
                         errorText: errorText,
                         labelStyle: const TextStyle(fontFamily: 'Cinzel'),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? const Color(0xFF2C1F45)
-                                : const Color(0xFFE9D8FA),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? const Color(0xFF2C1F45)
+                                    : const Color(0xFFE9D8FA),
                             width: 1.5,
                           ),
                         ),
@@ -3013,7 +3084,8 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+                    onPressed:
+                        isSaving ? null : () => Navigator.of(context).pop(),
                     child: Text(t(context, 'cancel')),
                   ),
                   FilledButton(
@@ -3021,8 +3093,10 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
                         ? null
                         : () async {
                             final input = controller.text.trim();
-                            final normalized = ProfileSetupRepository.normalizeUsername(input);
-                            if (!ProfileSetupRepository.isValidUsername(normalized)) {
+                            final normalized =
+                                ProfileSetupRepository.normalizeUsername(input);
+                            if (!ProfileSetupRepository.isValidUsername(
+                                normalized)) {
                               setState(() {
                                 errorText = t(context, 'usernameInvalid');
                               });
@@ -3041,7 +3115,9 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(t(context, 'profileSaved'))),
+                                  SnackBar(
+                                      content:
+                                          Text(t(context, 'profileSaved'))),
                                 );
                               }
                             } on UsernameTakenException {
@@ -3057,7 +3133,8 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
                             } catch (e) {
                               setState(() {
                                 isSaving = false;
-                                errorText = '${t(context, 'profileSaveFailed')} $e';
+                                errorText =
+                                    '${t(context, 'profileSaveFailed')} $e';
                               });
                             }
                           },
@@ -3065,7 +3142,8 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
                           )
                         : Text(tr ? 'Kaydet' : 'Save'),
                   ),
@@ -3079,17 +3157,17 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
   );
 }
 
-
-
-
-
-Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> categoryEntries) {
+Widget _buildCollectionCategoryTab(
+    BuildContext context, List<CollectionEntry> categoryEntries) {
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
   if (categoryEntries.isEmpty) {
     return Center(
       child: Text(
         tr ? 'Bu kategoride öge yok' : 'No items in this category',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: Colors.grey),
       ),
     );
   }
@@ -3134,11 +3212,15 @@ Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> c
                       _entryName(context, item),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                     Text(
                       '${tr ? 'Adet' : 'Qty'}: ${entry.quantity}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 10),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontSize: 10),
                     ),
                   ],
                 ),
@@ -3151,13 +3233,11 @@ Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> c
   );
 }
 
+Widget _buildCoverPhoto(BuildContext context, String? coverId,
+    {required bool isPro}) {
+  final showDefault =
+      !isPro || coverId == null || coverId.isEmpty || coverId == 'default';
 
-
-
-
-Widget _buildCoverPhoto(BuildContext context, String? coverId, {required bool isPro}) {
-  final showDefault = !isPro || coverId == null || coverId.isEmpty || coverId == 'default';
-  
   if (showDefault) {
     return Container(
       height: 125,
@@ -3172,7 +3252,11 @@ Widget _buildCoverPhoto(BuildContext context, String? coverId, {required bool is
               return Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF130820), Color(0xFF2E0C4C), Color(0xFFEC008C)],
+                    colors: [
+                      Color(0xFF130820),
+                      Color(0xFF2E0C4C),
+                      Color(0xFFEC008C)
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -3244,7 +3328,11 @@ Widget _buildCoverPhotoPreview(String coverId) {
               return Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF130820), Color(0xFF2E0C4C), Color(0xFFEC008C)],
+                    colors: [
+                      Color(0xFF130820),
+                      Color(0xFF2E0C4C),
+                      Color(0xFFEC008C)
+                    ],
                   ),
                 ),
               );
@@ -3283,7 +3371,8 @@ Widget _buildCoverPhotoPreview(String coverId) {
   );
 }
 
-Widget _buildStatItem(BuildContext context, {required String label, required String value}) {
+Widget _buildStatItem(BuildContext context,
+    {required String label, required String value}) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   return Column(
     mainAxisSize: MainAxisSize.min,
@@ -3300,7 +3389,9 @@ Widget _buildStatItem(BuildContext context, {required String label, required Str
       Text(
         label,
         style: TextStyle(
-          color: isDark ? Colors.white60 : const Color(0xFF1C0D2B).withOpacity(0.6),
+          color: isDark
+              ? Colors.white60
+              : const Color(0xFF1C0D2B).withOpacity(0.6),
           fontSize: 11,
           fontWeight: FontWeight.w500,
           fontFamily: 'Cinzel',
@@ -3323,7 +3414,8 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
     backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
     shape: RoundedRectangleBorder(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      side: BorderSide(color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+      side: BorderSide(
+          color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
     ),
     builder: (context) {
       final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -3342,12 +3434,14 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                   tabAlignment: TabAlignment.start,
                   indicatorColor: const Color(0xFFEC008C),
                   labelColor: const Color(0xFFEC008C),
-                  unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
+                  unselectedLabelColor:
+                      isDark ? Colors.white60 : Colors.black54,
                   tabs: [
                     Tab(text: tr ? 'Arkadaşlar' : 'Friends'),
                     Tab(text: tr ? 'Takip Edilenler' : 'Following'),
                     Tab(text: tr ? 'Takipçiler' : 'Followers'),
-                    if (isOwnProfile) Tab(text: tr ? 'Engellenenler' : 'Blocked'),
+                    if (isOwnProfile)
+                      Tab(text: tr ? 'Engellenenler' : 'Blocked'),
                   ],
                 ),
                 Expanded(
@@ -3358,37 +3452,59 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                         stream: socialRepository.watchFriendsList(userId),
                         builder: (context, snap) {
                           if (snap.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                            return const Center(
+                                child: CircularProgressIndicator());
                           }
                           final list = snap.data ?? [];
                           if (list.isEmpty) {
                             return Center(
                               child: Text(
                                 tr ? 'Henüz arkadaş yok' : 'No friends yet',
-                                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                                style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54),
                               ),
                             );
                           }
                           return ListView.builder(
-                            key: const PageStorageKey('messages_friends_scroll'),
+                            key:
+                                const PageStorageKey('messages_friends_scroll'),
                             controller: scrollController,
                             itemCount: list.length,
                             itemBuilder: (context, idx) {
                               final user = list[idx];
                               return ListTile(
-                                leading: _buildAvatarHelper(user.avatarId, user.avatarFrameColor, size: 36),
+                                leading: _buildAvatarHelper(
+                                    user.avatarId, user.avatarFrameColor,
+                                    size: 36),
                                 title: Text(
-                                  user.username.isEmpty ? user.displayName : '@${user.username}',
-                                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                                  user.username.isEmpty
+                                      ? user.displayName
+                                      : '@${user.username}',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontWeight: FontWeight.bold),
                                 ),
-                                subtitle: Text(user.displayName, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+                                subtitle: Text(user.displayName,
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white60
+                                            : Colors.black54)),
                                 onTap: () {
-                                  final currentPath = GoRouterState.of(parentContext).uri.toString();
+                                  final currentPath =
+                                      GoRouterState.of(parentContext)
+                                          .uri
+                                          .toString();
                                   Navigator.of(context).pop();
                                   if (user.username.isNotEmpty) {
-                                    parentContext.go('/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
+                                    parentContext.go(
+                                        '/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
                                   } else {
-                                    parentContext.go('/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
+                                    parentContext.go(
+                                        '/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
                                   }
                                 },
                               );
@@ -3401,14 +3517,20 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                         stream: socialRepository.watchFollowingList(userId),
                         builder: (context, snap) {
                           if (snap.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                            return const Center(
+                                child: CircularProgressIndicator());
                           }
                           final list = snap.data ?? [];
                           if (list.isEmpty) {
                             return Center(
                               child: Text(
-                                tr ? 'Kimse takip edilmiyor' : 'Not following anyone',
-                                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                                tr
+                                    ? 'Kimse takip edilmiyor'
+                                    : 'Not following anyone',
+                                style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54),
                               ),
                             );
                           }
@@ -3418,19 +3540,36 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                             itemBuilder: (context, idx) {
                               final user = list[idx];
                               return ListTile(
-                                leading: _buildAvatarHelper(user.avatarId, user.avatarFrameColor, size: 36),
+                                leading: _buildAvatarHelper(
+                                    user.avatarId, user.avatarFrameColor,
+                                    size: 36),
                                 title: Text(
-                                  user.username.isEmpty ? user.displayName : '@${user.username}',
-                                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                                  user.username.isEmpty
+                                      ? user.displayName
+                                      : '@${user.username}',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontWeight: FontWeight.bold),
                                 ),
-                                subtitle: Text(user.displayName, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+                                subtitle: Text(user.displayName,
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white60
+                                            : Colors.black54)),
                                 onTap: () {
-                                  final currentPath = GoRouterState.of(parentContext).uri.toString();
+                                  final currentPath =
+                                      GoRouterState.of(parentContext)
+                                          .uri
+                                          .toString();
                                   Navigator.of(context).pop();
                                   if (user.username.isNotEmpty) {
-                                    parentContext.go('/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
+                                    parentContext.go(
+                                        '/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
                                   } else {
-                                    parentContext.go('/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
+                                    parentContext.go(
+                                        '/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
                                   }
                                 },
                               );
@@ -3443,14 +3582,18 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                         stream: socialRepository.watchFollowersList(userId),
                         builder: (context, snap) {
                           if (snap.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                            return const Center(
+                                child: CircularProgressIndicator());
                           }
                           final list = snap.data ?? [];
                           if (list.isEmpty) {
                             return Center(
                               child: Text(
                                 tr ? 'Takipçi yok' : 'No followers yet',
-                                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                                style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54),
                               ),
                             );
                           }
@@ -3460,19 +3603,36 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                             itemBuilder: (context, idx) {
                               final user = list[idx];
                               return ListTile(
-                                leading: _buildAvatarHelper(user.avatarId, user.avatarFrameColor, size: 36),
+                                leading: _buildAvatarHelper(
+                                    user.avatarId, user.avatarFrameColor,
+                                    size: 36),
                                 title: Text(
-                                  user.username.isEmpty ? user.displayName : '@${user.username}',
-                                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                                  user.username.isEmpty
+                                      ? user.displayName
+                                      : '@${user.username}',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      fontWeight: FontWeight.bold),
                                 ),
-                                subtitle: Text(user.displayName, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+                                subtitle: Text(user.displayName,
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white60
+                                            : Colors.black54)),
                                 onTap: () {
-                                  final currentPath = GoRouterState.of(parentContext).uri.toString();
+                                  final currentPath =
+                                      GoRouterState.of(parentContext)
+                                          .uri
+                                          .toString();
                                   Navigator.of(context).pop();
                                   if (user.username.isNotEmpty) {
-                                    parentContext.go('/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
+                                    parentContext.go(
+                                        '/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
                                   } else {
-                                    parentContext.go('/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
+                                    parentContext.go(
+                                        '/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
                                   }
                                 },
                               );
@@ -3484,17 +3644,25 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                       if (isOwnProfile)
                         // Blocked Tab
                         StreamBuilder<List<AppUser>>(
-                          stream: socialRepository.watchBlockedUsersList(userId),
+                          stream:
+                              socialRepository.watchBlockedUsersList(userId),
                           builder: (context, snap) {
-                            if (snap.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
+                            if (snap.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
                             }
                             final list = snap.data ?? [];
                             if (list.isEmpty) {
                               return Center(
                                 child: Text(
-                                  tr ? 'Engellenen kimse yok' : 'No blocked users',
-                                  style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                                  tr
+                                      ? 'Engellenen kimse yok'
+                                      : 'No blocked users',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black54),
                                 ),
                               );
                             }
@@ -3504,15 +3672,28 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                               itemBuilder: (context, idx) {
                                 final user = list[idx];
                                 return ListTile(
-                                  leading: _buildAvatarHelper(user.avatarId, user.avatarFrameColor, size: 36),
+                                  leading: _buildAvatarHelper(
+                                      user.avatarId, user.avatarFrameColor,
+                                      size: 36),
                                   title: Text(
-                                    user.username.isEmpty ? user.displayName : '@${user.username}',
-                                    style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                                    user.username.isEmpty
+                                        ? user.displayName
+                                        : '@${user.username}',
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                        fontWeight: FontWeight.bold),
                                   ),
-                                  subtitle: Text(user.displayName, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
+                                  subtitle: Text(user.displayName,
+                                      style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white60
+                                              : Colors.black54)),
                                   trailing: TextButton(
                                     onPressed: () async {
-                                      final confirmed = await _showGothicConfirmDialog(
+                                      final confirmed =
+                                          await _showGothicConfirmDialog(
                                         context,
                                         title: tr ? 'Engeli Kaldır' : 'Unblock',
                                         content: tr
@@ -3525,7 +3706,10 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                                         blockedId: user.id,
                                       );
                                     },
-                                    child: Text(tr ? 'Engeli Kaldır' : 'Unblock', style: const TextStyle(color: Color(0xFFEC008C))),
+                                    child: Text(
+                                        tr ? 'Engeli Kaldır' : 'Unblock',
+                                        style: const TextStyle(
+                                            color: Color(0xFFEC008C))),
                                   ),
                                 );
                               },
@@ -3544,8 +3728,6 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
   );
 }
 
-
-
 void _showReportsModal(BuildContext context, String userId) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   showModalBottomSheet<void>(
@@ -3555,7 +3737,8 @@ void _showReportsModal(BuildContext context, String userId) {
     backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
     shape: RoundedRectangleBorder(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      side: BorderSide(color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+      side: BorderSide(
+          color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
     ),
     builder: (context) {
       final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -3590,8 +3773,12 @@ void _showReportsModal(BuildContext context, String userId) {
                       if (list.isEmpty) {
                         return Center(
                           child: Text(
-                            tr ? 'Henüz bildirilmiş bir şikayet yok.' : 'No reports filed yet.',
-                            style: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
+                            tr
+                                ? 'Henüz bildirilmiş bir şikayet yok.'
+                                : 'No reports filed yet.',
+                            style: TextStyle(
+                                color:
+                                    isDark ? Colors.white60 : Colors.black54),
                           ),
                         );
                       }
@@ -3603,7 +3790,8 @@ void _showReportsModal(BuildContext context, String userId) {
                           return FutureBuilder<String>(
                             future: _resolveReportTargetText(report),
                             builder: (context, targetSnap) {
-                              final targetText = targetSnap.data ?? report.targetId;
+                              final targetText =
+                                  targetSnap.data ?? report.targetId;
                               final statusColor = switch (report.status) {
                                 ReportStatus.open => Colors.orange,
                                 ReportStatus.reviewing => Colors.purpleAccent,
@@ -3618,24 +3806,31 @@ void _showReportsModal(BuildContext context, String userId) {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
                                   ),
                                 ),
                                 subtitle: Text(
-                                  report.details.isNotEmpty ? report.details : (tr ? 'Detay yok' : 'No details'),
+                                  report.details.isNotEmpty
+                                      ? report.details
+                                      : (tr ? 'Detay yok' : 'No details'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: isDark ? Colors.white70 : Colors.black54,
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54,
                                   ),
                                 ),
                                 trailing: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: statusColor.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: statusColor, width: 1),
+                                    border: Border.all(
+                                        color: statusColor, width: 1),
                                   ),
                                   child: Text(
                                     _reportStatusLabel(context, report.status),
@@ -3667,13 +3862,8 @@ void _showReportsModal(BuildContext context, String userId) {
 // Announcement Features
 // ----------------------------------------------------
 
-
-
-
-
-
-
-void _showCommentsSheet(BuildContext context, String targetId, {String? catalogEntryId}) {
+void _showCommentsSheet(BuildContext context, String targetId,
+    {String? catalogEntryId}) {
   final currentUser = authService.currentUser;
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -3686,7 +3876,8 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
     backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
     shape: RoundedRectangleBorder(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      side: BorderSide(color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+      side: BorderSide(
+          color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
     ),
     builder: (context) {
       return Padding(
@@ -3719,7 +3910,9 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                       child: GothicIvyContainer(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         borderRadius: 12,
-                        color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF2FF),
+                        color: isDark
+                            ? const Color(0xFF160E22)
+                            : const Color(0xFFFAF2FF),
                         child: TextField(
                           controller: commentController,
                           maxLines: null,
@@ -3729,7 +3922,9 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                             fontFamily: 'Outfit',
                           ),
                           decoration: InputDecoration(
-                            hintText: tr ? 'Gotik bir yorum bırak...' : 'Leave a gothic comment...',
+                            hintText: tr
+                                ? 'Gotik bir yorum bırak...'
+                                : 'Leave a gothic comment...',
                             hintStyle: TextStyle(
                               color: isDark ? Colors.white54 : Colors.black54,
                               fontSize: 13,
@@ -3748,44 +3943,47 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                       size: 18,
                       padding: const EdgeInsets.all(8),
                       onPressed: () async {
-                          final text = commentController.text.trim();
-                          if (text.isEmpty) return;
+                        final text = commentController.text.trim();
+                        if (text.isEmpty) return;
 
-                          String senderUsername = currentUser.displayName ?? 'Collector';
-                          String senderAvatarId = '';
-                          String senderFrameColor = '';
-                          try {
-                            final doc = await FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(currentUser.uid)
-                                .get();
-                            final data = doc.data();
-                            final customUsername = data?['username'] as String? ?? '';
-                            if (customUsername.isNotEmpty) {
-                              senderUsername = '@$customUsername';
-                            }
-                            senderAvatarId = data?['avatarId'] as String? ?? '';
-                            senderFrameColor = data?['avatarFrameColor'] as String? ?? '';
-                          } catch (_) {}
+                        String senderUsername =
+                            currentUser.displayName ?? 'Collector';
+                        String senderAvatarId = '';
+                        String senderFrameColor = '';
+                        try {
+                          final doc = await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(currentUser.uid)
+                              .get();
+                          final data = doc.data();
+                          final customUsername =
+                              data?['username'] as String? ?? '';
+                          if (customUsername.isNotEmpty) {
+                            senderUsername = '@$customUsername';
+                          }
+                          senderAvatarId = data?['avatarId'] as String? ?? '';
+                          senderFrameColor =
+                              data?['avatarFrameColor'] as String? ?? '';
+                        } catch (_) {}
 
-                          final comment = AppComment(
-                            id: 'comment-${DateTime.now().millisecondsSinceEpoch}',
-                            targetType: 'collectionEntry',
-                            targetId: targetId,
-                            userId: currentUser.uid,
-                            text: text,
-                            sharedCatalogEntryId: catalogEntryId ?? '',
-                            senderUsername: senderUsername,
-                            senderAvatarId: senderAvatarId,
-                            senderFrameColor: senderFrameColor,
-                          );
-                          await commentRepository.add(comment);
-                          commentController.clear();
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                        final comment = AppComment(
+                          id: 'comment-${DateTime.now().millisecondsSinceEpoch}',
+                          targetType: 'collectionEntry',
+                          targetId: targetId,
+                          userId: currentUser.uid,
+                          text: text,
+                          sharedCatalogEntryId: catalogEntryId ?? '',
+                          senderUsername: senderUsername,
+                          senderAvatarId: senderAvatarId,
+                          senderFrameColor: senderFrameColor,
+                        );
+                        await commentRepository.add(comment);
+                        commentController.clear();
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
               ],
               // Yorumlar Listesi
               Flexible(
@@ -3798,7 +3996,8 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
                         ),
                       );
                     }
@@ -3829,8 +4028,10 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                         itemCount: comments.length,
                         itemBuilder: (context, index) {
                           final comment = comments[index];
-                          final formattedTime = '${comment.createdAt.hour.toString().padLeft(2, '0')}:${comment.createdAt.minute.toString().padLeft(2, '0')} - ${comment.createdAt.day}/${comment.createdAt.month}/${comment.createdAt.year}';
-                          final isOwnComment = currentUser?.uid == comment.userId;
+                          final formattedTime =
+                              '${comment.createdAt.hour.toString().padLeft(2, '0')}:${comment.createdAt.minute.toString().padLeft(2, '0')} - ${comment.createdAt.day}/${comment.createdAt.month}/${comment.createdAt.year}';
+                          final isOwnComment =
+                              currentUser?.uid == comment.userId;
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
@@ -3839,9 +4040,11 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.pop(context); // Close comments bottom sheet
+                                    Navigator.pop(
+                                        context); // Close comments bottom sheet
                                     if (comment.senderUsername.isNotEmpty) {
-                                      final uName = comment.senderUsername.replaceAll('@', '');
+                                      final uName = comment.senderUsername
+                                          .replaceAll('@', '');
                                       context.go('/u/$uName');
                                     } else {
                                       context.go('/users/${comment.userId}');
@@ -3856,24 +4059,33 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       GestureDetector(
                                         onTap: () {
-                                          Navigator.pop(context); // Close comments bottom sheet
-                                          if (comment.senderUsername.isNotEmpty) {
-                                            final uName = comment.senderUsername.replaceAll('@', '');
+                                          Navigator.pop(
+                                              context); // Close comments bottom sheet
+                                          if (comment
+                                              .senderUsername.isNotEmpty) {
+                                            final uName = comment.senderUsername
+                                                .replaceAll('@', '');
                                             context.go('/u/$uName');
                                           } else {
-                                            context.go('/users/${comment.userId}');
+                                            context
+                                                .go('/users/${comment.userId}');
                                           }
                                         },
                                         child: Text(
-                                          comment.senderUsername.isEmpty ? 'Collector' : comment.senderUsername,
+                                          comment.senderUsername.isEmpty
+                                              ? 'Collector'
+                                              : comment.senderUsername,
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,
-                                            color: isDark ? const Color(0xDEFFFFFF) : Colors.black87,
+                                            color: isDark
+                                                ? const Color(0xDEFFFFFF)
+                                                : Colors.black87,
                                             fontFamily: 'Outfit',
                                           ),
                                         ),
@@ -3883,7 +4095,9 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                                         comment.text,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: isDark ? Colors.white70 : Colors.black87,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black87,
                                           fontFamily: 'Outfit',
                                         ),
                                       ),
@@ -3892,7 +4106,9 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                                         formattedTime,
                                         style: TextStyle(
                                           fontSize: 9,
-                                          color: isDark ? Colors.white38 : Colors.black38,
+                                          color: isDark
+                                              ? Colors.white38
+                                              : Colors.black38,
                                           fontFamily: 'Outfit',
                                         ),
                                       ),
@@ -3901,59 +4117,78 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                                 ),
                                 // Yorum Silme (Kendi yorumuysa)
                                 if (isOwnComment) ...[
-                                   const SizedBox(width: 4),
-                                   _buildGothicNeonIconButton(
-                                     context: context,
-                                     icon: Icons.delete_forever_rounded,
-                                     size: 14,
-                                     padding: const EdgeInsets.all(6),
-                                     onPressed: () async {
-                                       final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-                                        final confirmed = await _showGothicConfirmDialog(
-                                          context,
-                                          title: tr ? 'Yorumu Sil' : 'Delete Comment',
-                                          content: tr
-                                              ? 'Bu yorumu silmek istediğinize emin misiniz?'
-                                              : 'Are you sure you want to delete this comment?',
-                                        );
-                                        if (confirmed) {
-                                          await commentRepository.delete(comment.id);
-                                        }
-                                     },
-                                   ),
-                                 ],
+                                  const SizedBox(width: 4),
+                                  _buildGothicNeonIconButton(
+                                    context: context,
+                                    icon: Icons.delete_forever_rounded,
+                                    size: 14,
+                                    padding: const EdgeInsets.all(6),
+                                    onPressed: () async {
+                                      final tr = AppLanguageScope.languageOf(
+                                              context) ==
+                                          AppLanguage.tr;
+                                      final confirmed =
+                                          await _showGothicConfirmDialog(
+                                        context,
+                                        title: tr
+                                            ? 'Yorumu Sil'
+                                            : 'Delete Comment',
+                                        content: tr
+                                            ? 'Bu yorumu silmek istediğinize emin misiniz?'
+                                            : 'Are you sure you want to delete this comment?',
+                                      );
+                                      if (confirmed) {
+                                        await commentRepository
+                                            .delete(comment.id);
+                                      }
+                                    },
+                                  ),
+                                ],
                                 const SizedBox(width: 6),
                                 // Beğeni Butonu
                                 StreamBuilder<int>(
-                                  stream: socialRepository.watchLikesCount('comment', comment.id),
+                                  stream: socialRepository.watchLikesCount(
+                                      'comment', comment.id),
                                   builder: (context, commentLikesSnap) {
-                                    final likeCount = commentLikesSnap.data ?? 0;
+                                    final likeCount =
+                                        commentLikesSnap.data ?? 0;
                                     return StreamBuilder<bool>(
                                       stream: currentUser != null
-                                          ? socialRepository.watchIsLiked(currentUser.uid, 'comment', comment.id)
+                                          ? socialRepository.watchIsLiked(
+                                              currentUser.uid,
+                                              'comment',
+                                              comment.id)
                                           : Stream.value(false),
                                       builder: (context, commentIsLikedSnap) {
-                                        final isCommentLiked = commentIsLikedSnap.data ?? false;
+                                        final isCommentLiked =
+                                            commentIsLikedSnap.data ?? false;
                                         return Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             _buildGothicNeonIconButton(
                                               context: context,
-                                              icon: isCommentLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                              icon: isCommentLiked
+                                                  ? Icons.favorite_rounded
+                                                  : Icons
+                                                      .favorite_border_rounded,
                                               size: 12,
                                               padding: const EdgeInsets.all(6),
                                               onPressed: currentUser == null
                                                   ? null
                                                   : () async {
                                                       if (isCommentLiked) {
-                                                        await socialRepository.unlikeTarget(
-                                                          userId: currentUser.uid,
+                                                        await socialRepository
+                                                            .unlikeTarget(
+                                                          userId:
+                                                              currentUser.uid,
                                                           targetType: "comment",
                                                           targetId: comment.id,
                                                         );
                                                       } else {
-                                                        await socialRepository.likeTarget(
-                                                          userId: currentUser.uid,
+                                                        await socialRepository
+                                                            .likeTarget(
+                                                          userId:
+                                                              currentUser.uid,
                                                           targetType: "comment",
                                                           targetId: comment.id,
                                                         );
@@ -3964,7 +4199,9 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                                             Text(
                                               '$likeCount',
                                               style: TextStyle(
-                                                color: isDark ? Colors.white70 : Colors.black87,
+                                                color: isDark
+                                                    ? Colors.white70
+                                                    : Colors.black87,
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -4007,7 +4244,8 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
   );
 }
 
-void _showPhotoGalleryDialog(BuildContext context, List<String> imageUrls, int initialIndex) {
+void _showPhotoGalleryDialog(
+    BuildContext context, List<String> imageUrls, int initialIndex) {
   if (imageUrls.isEmpty) return;
   showDialog(
     context: context,
@@ -4049,7 +4287,8 @@ void _showPhotoGalleryDialog(BuildContext context, List<String> imageUrls, int i
                 child: Container(
                   color: Colors.black54,
                   child: IconButton(
-                    icon: _buildNeonIcon(context, Icons.close_rounded, size: 24),
+                    icon:
+                        _buildNeonIcon(context, Icons.close_rounded, size: 24),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -4062,17 +4301,12 @@ void _showPhotoGalleryDialog(BuildContext context, List<String> imageUrls, int i
   );
 }
 
-
-
-
-
-
-
 // ==========================================
 // DIRECT MESSAGES (DM) MODAL IMPLEMENTATION
 // ==========================================
 
-void _openDirectMessagesModal(BuildContext context, {String? initialChatUserId}) {
+void _openDirectMessagesModal(BuildContext context,
+    {String? initialChatUserId}) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   showModalBottomSheet<void>(
     context: context,
@@ -4094,37 +4328,45 @@ void _openDirectChatWithUser(BuildContext context, String otherUserId) {
   _openDirectMessagesModal(context, initialChatUserId: otherUserId);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-void showCollectionSheet(BuildContext context, CatalogEntry item) => _showCollectionSheet(context, item);
-void showProSubscriptionModal(BuildContext context) => _showProSubscriptionModal(context);
-void showReportSheet(BuildContext context, ReportTargetType targetType, String targetId) => _showReportSheet(context, targetType, targetId);
+void showCollectionSheet(BuildContext context, CatalogEntry item) =>
+    _showCollectionSheet(context, item);
+void showProSubscriptionModal(BuildContext context) =>
+    _showProSubscriptionModal(context);
+void showReportSheet(
+        BuildContext context, ReportTargetType targetType, String targetId) =>
+    _showReportSheet(context, targetType, targetId);
 CatalogEntry findCatalogEntry(String id) => _findCatalogEntry(id);
-List<CatalogEntry> filterCatalogEntries(List<CatalogEntry> entries, String query, CatalogItemType? type) => _filterCatalogEntries(entries, query, type);
-void openDirectMessagesModal(BuildContext context, {String? initialChatUserId}) => _openDirectMessagesModal(context, initialChatUserId: initialChatUserId);
-void openDirectChatWithUser(BuildContext context, String otherUserId) => _openDirectChatWithUser(context, otherUserId);
-void showChangeUsernameDialog(BuildContext context, String userId) => _showChangeUsernameDialog(context, userId);
-void showReportsModal(BuildContext context, String userId) => _showReportsModal(context, userId);
-void showAvatarStudioModal(BuildContext context, String userId) => _showAvatarStudioModal(context, userId);
-void showConnectionsModal(BuildContext context, String userId) => _showConnectionsModal(context, userId);
-void showCommentsSheet(BuildContext context, String targetId, {String? catalogEntryId}) => _showCommentsSheet(context, targetId, catalogEntryId: catalogEntryId);
-Future<void> saveCatalogDraft(BuildContext context, CatalogEntryDraft draft) => _saveCatalogDraft(context, draft);
+List<CatalogEntry> filterCatalogEntries(
+        List<CatalogEntry> entries, String query, CatalogItemType? type) =>
+    _filterCatalogEntries(entries, query, type);
+void openDirectMessagesModal(BuildContext context,
+        {String? initialChatUserId}) =>
+    _openDirectMessagesModal(context, initialChatUserId: initialChatUserId);
+void openDirectChatWithUser(BuildContext context, String otherUserId) =>
+    _openDirectChatWithUser(context, otherUserId);
+void showChangeUsernameDialog(BuildContext context, String userId) =>
+    _showChangeUsernameDialog(context, userId);
+void showReportsModal(BuildContext context, String userId) =>
+    _showReportsModal(context, userId);
+void showAvatarStudioModal(BuildContext context, String userId) =>
+    _showAvatarStudioModal(context, userId);
+void showConnectionsModal(BuildContext context, String userId) =>
+    _showConnectionsModal(context, userId);
+void showCommentsSheet(BuildContext context, String targetId,
+        {String? catalogEntryId}) =>
+    _showCommentsSheet(context, targetId, catalogEntryId: catalogEntryId);
+Future<void> saveCatalogDraft(BuildContext context, CatalogEntryDraft draft) =>
+    _saveCatalogDraft(context, draft);
 void deleteCatalogEntry(String id) => _deleteCatalogEntry(id);
-Future<void> deleteReportedContent(BuildContext context, UserReport report) => _deleteReportedContent(context, report);
-void updateReportStatus(String id, ReportStatus status) => _updateReportStatus(id, status);
+Future<void> deleteReportedContent(BuildContext context, UserReport report) =>
+    _deleteReportedContent(context, report);
+void updateReportStatus(String id, ReportStatus status) =>
+    _updateReportStatus(id, status);
 void deleteReport(String id) => _deleteReport(id);
-void openReportTarget(BuildContext context, UserReport report) => _openReportTarget(context, report);
-Future<String> resolveReportTargetText(UserReport report) => _resolveReportTargetText(report);
+void openReportTarget(BuildContext context, UserReport report) =>
+    _openReportTarget(context, report);
+Future<String> resolveReportTargetText(UserReport report) =>
+    _resolveReportTargetText(report);
 bool isTemplateEntry(CatalogEntry entry) => _isTemplateEntry(entry);
 void addAppNotification(String text) => _addAppNotification(text);
 
@@ -4169,13 +4411,10 @@ Future<void> performGoogleSignIn(BuildContext context) async {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            tr
-                ? 'Giriş yapılamadı: $error'
-                : 'Sign in failed: $error',
+            tr ? 'Giriş yapılamadı: $error' : 'Sign in failed: $error',
           ),
         ),
       );
     }
   }
 }
-
