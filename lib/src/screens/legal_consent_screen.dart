@@ -1,0 +1,319 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../main.dart';
+import '../core/app_helpers.dart';
+import '../core/app_language.dart';
+import '../widgets/doll_widgets.dart';
+import '../catalog/catalog_models.dart';
+import '../auth/auth_service.dart';
+
+class LegalConsentScreen extends StatefulWidget {
+  const LegalConsentScreen({super.key});
+
+  @override
+  State<LegalConsentScreen> createState() => _LegalConsentScreenState();
+}
+
+class _LegalConsentScreenState extends State<LegalConsentScreen> {
+  bool _accepted = false;
+  bool _isLoading = false;
+
+  Future<void> _handleGoogleSignIn(BuildContext context) async {
+    if (!_accepted || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    try {
+      final userCredential = await authService.signInWithGoogle();
+      final newUser = userCredential.user;
+      if (newUser != null) {
+        final localEntries = collectionEntriesNotifier.value
+            .where((entry) => entry.userId == 'local-user')
+            .toList();
+        if (localEntries.isNotEmpty) {
+          for (final localEntry in localEntries) {
+            final migratedEntry = CollectionEntry(
+              id: '${newUser.uid}-${localEntry.itemId}',
+              userId: newUser.uid,
+              itemId: localEntry.itemId,
+              status: localEntry.status,
+              condition: localEntry.condition,
+              quantity: localEntry.quantity,
+              notes: localEntry.notes,
+              isPublic: localEntry.isPublic,
+            );
+            await collectionRepository.save(migratedEntry);
+          }
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  tr
+                      ? '${localEntries.length} parça hesabınıza aktarıldı!'
+                      : '${localEntries.length} items migrated to your account!',
+                ),
+              ),
+            );
+          }
+        }
+      }
+      await loadCollectionForCurrentUser();
+      await loadReports();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t(context, 'signInSuccess'))),
+        );
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/');
+        }
+      }
+    } on AuthCancelledException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t(context, 'signInCancelled'))),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t(context, 'signInError') + ': $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+
+    final cardColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF130B1E) : Colors.white);
+    final textColor = theme.textTheme.bodyMedium?.color ?? (isDark ? Colors.white70 : Colors.black87);
+
+    Color borderColor = secondaryColor.withOpacity(0.3);
+    if (theme.cardTheme.shape is RoundedRectangleBorder) {
+      final borderSide = (theme.cardTheme.shape as RoundedRectangleBorder).side;
+      if (borderSide.color != Colors.transparent && borderSide.color != Colors.black) {
+        borderColor = borderSide.color;
+      }
+    }
+
+    return PageShell(
+      title: tr ? 'Onay ve Giriş' : 'Consent & Sign In',
+      subtitle: t(context, 'legalSubtitle'),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Card(
+            elevation: 8,
+            color: cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: borderColor,
+                width: 1.2,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      tr
+                          ? 'Google ile giriş yapmadan önce lütfen aşağıdaki sözleşmeleri okuyup onaylayın.'
+                          : 'Please read and accept the agreements below before signing in with Google.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: textColor.withOpacity(0.85),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TabBar(
+                      labelColor: primaryColor,
+                      unselectedLabelColor: textColor.withOpacity(0.5),
+                      indicatorColor: secondaryColor,
+                      tabs: [
+                        Tab(text: t(context, 'termsOfUse')),
+                        Tab(text: t(context, 'privacyPolicy')),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 250,
+                      child: TabBarView(
+                        children: [
+                          _buildScrollableText(context, t(context, 'termsBody')),
+                          _buildScrollableText(context, t(context, 'privacyBody')),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Theme(
+                      data: theme.copyWith(
+                        unselectedWidgetColor: isDark ? Colors.white30 : Colors.black38,
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _accepted = !_accepted;
+                          });
+                        },
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Checkbox(
+                              value: _accepted,
+                              activeColor: primaryColor,
+                              checkColor: Colors.white,
+                              onChanged: (val) {
+                                setState(() {
+                                  _accepted = val ?? false;
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                tr
+                                    ? 'Gizlilik Sözleşmesi ve Kullanım Koşulları\'nı okudum ve kabul ediyorum.'
+                                    : 'I read and accept the Privacy Policy and Terms of Use.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor.withOpacity(0.85),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22),
+                        gradient: _accepted && !_isLoading
+                            ? LinearGradient(
+                                colors: [primaryColor, secondaryColor],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : LinearGradient(
+                                colors: [
+                                  isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+                                  isDark ? Colors.grey.shade900 : Colors.grey.shade400
+                                ],
+                              ),
+                        boxShadow: _accepted && !_isLoading
+                            ? [
+                                BoxShadow(
+                                  color: primaryColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: _accepted && !_isLoading
+                            ? () => _handleGoogleSignIn(context)
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                        ),
+                        icon: _isLoading
+                            ? const SizedBox.square(
+                                dimension: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.8,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.login_rounded, color: Colors.white, size: 18),
+                        label: Text(
+                          t(context, 'continueGoogle'),
+                          style: TextStyle(
+                            color: _accepted && !_isLoading
+                                ? Colors.white
+                                : (isDark ? Colors.white30 : Colors.black26),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            fontFamily: 'Outfit',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScrollableText(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final boxColor = isDark
+        ? theme.scaffoldBackgroundColor.withOpacity(0.6)
+        : Colors.grey.shade100;
+
+    final textColor = (theme.textTheme.bodyMedium?.color ?? (isDark ? Colors.white70 : Colors.black87)).withOpacity(0.7);
+    final borderColor = isDark ? Colors.white10 : Colors.black12;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: boxColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: borderColor,
+          width: 0.8,
+        ),
+      ),
+      child: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontFamily: 'Outfit',
+              fontSize: 12.5,
+              height: 1.55,
+              color: textColor,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

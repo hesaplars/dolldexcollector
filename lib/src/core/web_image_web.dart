@@ -1,5 +1,4 @@
 import 'dart:html' as html;
-import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 
 Widget buildWebImage({
@@ -8,6 +7,7 @@ Widget buildWebImage({
   BoxFit? fit,
 }) {
   return _WebImageWrapper(
+    key: ValueKey(imageUrl),
     imageUrl: imageUrl,
     label: label,
     fit: fit,
@@ -19,6 +19,7 @@ class _WebImageWrapper extends StatefulWidget {
     required this.imageUrl,
     required this.label,
     this.fit,
+    super.key,
   });
 
   final String imageUrl;
@@ -31,39 +32,34 @@ class _WebImageWrapper extends StatefulWidget {
 
 class _WebImageWrapperState extends State<_WebImageWrapper> {
   bool _hasError = false;
-  late final String _viewId;
-
-  @override
-  void initState() {
-    super.initState();
-    _viewId = 'img-${widget.imageUrl.hashCode}-${DateTime.now().microsecondsSinceEpoch}';
-    
-    ui_web.platformViewRegistry.registerViewFactory(_viewId, (int viewId) {
-      final img = html.ImageElement()
-        ..src = widget.imageUrl
-        ..alt = widget.label
-        ..style.width = '100%'
-        ..style.height = '100%'
-        ..style.pointerEvents = 'none'
-        ..style.objectFit = widget.fit == BoxFit.contain ? 'contain' : 'cover';
-
-      img.onError.listen((_) {
-        if (mounted) {
-          setState(() {
-            _hasError = true;
-          });
-        }
-      });
-      return img;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
       return _buildErrorPlaceholder(context, widget.label);
     }
-    return HtmlElementView(viewType: _viewId);
+    return HtmlElementView.fromTagName(
+      tagName: 'img',
+      onElementCreated: (Object element) {
+        final img = element as html.ImageElement;
+        img.src = widget.imageUrl;
+        img.alt = widget.label;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.pointerEvents = 'none';
+        img.style.objectFit = widget.fit == BoxFit.contain ? 'contain' : 'cover';
+
+        img.onError.listen((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _hasError = true;
+              });
+            }
+          });
+        });
+      },
+    );
   }
 
   Widget _buildErrorPlaceholder(BuildContext context, String label) {

@@ -8,12 +8,14 @@ class CollectionActionSheet extends StatefulWidget {
     required this.item,
     required this.onSave,
     this.initialEntry,
+    this.onDelete,
     super.key,
   });
 
   final CatalogEntry item;
   final Future<bool> Function(CollectionEntryDraft) onSave;
   final CollectionEntry? initialEntry;
+  final Future<bool> Function()? onDelete;
 
   @override
   State<CollectionActionSheet> createState() => _CollectionActionSheetState();
@@ -165,60 +167,106 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
               ),
             ),
             const SizedBox(height: 14),
-            InkWell(
-              onTap: () async {
-                final success = await widget.onSave(
-                  CollectionEntryDraft(
-                    itemId: widget.item.id,
-                    status: _status,
-                    condition: _condition,
-                    quantity: _quantity,
-                    isPublic: _isPublic,
-                    notes: _notesController.text.trim(),
-                  ),
-                );
-                if (success && context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFEC008C).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.save_outlined, color: Colors.white, size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppLanguageScope.languageOf(context) == AppLanguage.tr
-                          ? 'Koleksiyona kaydet'
-                          : 'Save to collection',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        letterSpacing: 0.5,
+            Row(
+              children: [
+                if (widget.initialEntry != null && widget.onDelete != null) ...[
+                  Expanded(
+                    flex: 1,
+                    child: InkWell(
+                      onTap: () async {
+                        final success = await widget.onDelete!();
+                        if (success && context.mounted) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.redAccent, width: 1.5),
+                          color: Colors.redAccent.withOpacity(0.08),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                            const SizedBox(width: 6),
+                            Text(
+                              AppLanguageScope.languageOf(context) == AppLanguage.tr
+                                  ? 'Sil'
+                                  : 'Delete',
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13.5,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  flex: 2,
+                  child: InkWell(
+                    onTap: () async {
+                      final success = await widget.onSave(
+                        CollectionEntryDraft(
+                          itemId: widget.item.id,
+                          status: _status,
+                          condition: _condition,
+                          quantity: _quantity,
+                          isPublic: _isPublic,
+                          notes: _notesController.text.trim(),
+                        ),
+                      );
+                      if (success && context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFEC008C).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.save_outlined, color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            AppLanguageScope.languageOf(context) == AppLanguage.tr
+                                ? 'Koleksiyona kaydet'
+                                : 'Save to collection',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.5,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

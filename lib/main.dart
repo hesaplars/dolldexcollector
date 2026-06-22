@@ -52,6 +52,9 @@ import 'src/screens/announcement_screen.dart';
 import 'src/screens/collection_entry_detail_screen.dart';
 import 'src/screens/admin_screen.dart';
 import 'src/screens/messages_screen.dart';
+import 'src/screens/username_profile_loader.dart';
+import 'src/screens/user_search_screen.dart';
+import 'src/screens/legal_consent_screen.dart';
 
 import 'src/widgets/doll_widgets.dart';
 import 'src/widgets/app_scaffold.dart';
@@ -80,6 +83,9 @@ final commentsNotifier = ValueNotifier<Map<String, List<AppComment>>>(
 );
 final notificationsNotifier = ValueNotifier<List<String>>(<String>[]);
 final appThemeController = ValueNotifier<ThemeMode>(ThemeMode.light);
+final ValueNotifier<String> appThemeKeyController = ValueNotifier<String>('goth_dark')..addListener(() {
+  LocalStorage.setString('selected_theme', appThemeKeyController.value);
+});
 
 IconData _notificationTypeIcon(AppNotificationType type) {
   return switch (type) {
@@ -93,8 +99,39 @@ IconData _notificationTypeIcon(AppNotificationType type) {
   };
 }
 
+bool _isCriticalError(Object exception) {
+  final str = exception.toString().toLowerCase();
+  if (str.contains('http request failed') ||
+      str.contains('networkimage') ||
+      str.contains('socketexception') ||
+      str.contains('httpexception') ||
+      str.contains('handshakeexception') ||
+      str.contains('failed host lookup') ||
+      str.contains('network_error') ||
+      str.contains('xmlhttprequest') ||
+      str.contains('image resource service') ||
+      str.contains('load failed') ||
+      str.contains('status code: 0') ||
+      str.contains('status code: 404') ||
+      str.contains('status code: 500') ||
+      str.contains('status code: 502') ||
+      str.contains('status code: 503') ||
+      str.contains('status code: 504') ||
+      str.contains('clientexception') ||
+      str.contains('connection failed') ||
+      str.contains('connection timed out')) {
+    return false;
+  }
+  return true;
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final savedTheme = await LocalStorage.getString('selected_theme');
+  if (savedTheme != null && savedTheme.isNotEmpty) {
+    appThemeKeyController.value = savedTheme;
+  }
 
   ErrorWidget.builder = (FlutterErrorDetails details) {
     final errStr = 'Render Error: ${details.exception}\n\n${details.stack}';
@@ -148,6 +185,9 @@ Future<void> main() async {
   };
 
   FlutterError.onError = (FlutterErrorDetails details) {
+    if (!_isCriticalError(details.exception)) {
+      return;
+    }
     FlutterError.presentError(details);
     final errStr = 'Framework Error: ${details.exception}\n\n${details.stack}';
     Future.microtask(() {
@@ -156,6 +196,9 @@ Future<void> main() async {
   };
 
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    if (!_isCriticalError(error)) {
+      return true; // Return true to mark the error as handled and suppress console logging
+    }
     final errStr = 'Async Error: $error\n\n$stack';
     Future.microtask(() {
       appErrorNotifier.value = errStr;
@@ -195,15 +238,16 @@ class DollDexApp extends StatelessWidget {
       child: ValueListenableBuilder<AppLanguage>(
         valueListenable: appLanguageController,
         builder: (context, language, _) {
-          return ValueListenableBuilder<ThemeMode>(
-            valueListenable: appThemeController,
-            builder: (context, themeMode, _) {
+          return ValueListenableBuilder<String>(
+            valueListenable: appThemeKeyController,
+            builder: (context, themeKey, _) {
+              final activeTheme = DollDexTheme.getThemeData(themeKey);
               return MaterialApp.router(
                 title: 'DollDex Collector',
                 debugShowCheckedModeBanner: false,
-                theme: DollDexTheme.light,
-                darkTheme: DollDexTheme.dark,
-                themeMode: themeMode,
+                theme: activeTheme,
+                darkTheme: activeTheme,
+                themeMode: themeKey == 'goth_light' ? ThemeMode.light : ThemeMode.dark,
                 routerConfig: _router,
                 builder: (context, child) {
                   return ValueListenableBuilder<String?>(
@@ -323,11 +367,25 @@ final _router = GoRouter(
       builder: (context, state, child) => AppScaffold(child: child),
       routes: [
         GoRoute(
+          path: '/consent',
+          builder: (context, state) => const LegalConsentScreen(),
+        ),
+        GoRoute(
           path: '/',
-          builder: (context, state) => const CatalogScreen(),
+          builder: (context, state) {
+            final query = state.uri.queryParameters['q'];
+            return CatalogScreen(initialQuery: query);
+          },
         ),
         GoRoute(
           path: '/catalog/:id',
+          redirect: (context, state) {
+            final id = state.pathParameters['id'] ?? '';
+            return '/i/$id';
+          },
+        ),
+        GoRoute(
+          path: '/i/:id',
           builder: (context, state) {
             final id = state.pathParameters['id'] ?? '';
             return CatalogDetailScreen(
@@ -341,7 +399,9 @@ final _router = GoRouter(
         ),
         GoRoute(
           path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
+          builder: (context, state) => authService.currentUser == null
+              ? const LegalConsentScreen()
+              : const ProfileScreen(),
         ),
         GoRoute(
           path: '/settings',
@@ -370,13 +430,18 @@ final _router = GoRouter(
         GoRoute(
           path: '/social',
           builder: (context, state) {
+            if (authService.currentUser == null) {
+              return const LegalConsentScreen();
+            }
             final chatUserId = state.uri.queryParameters['chatUserId'];
             return SocialScreen(chatUserId: chatUserId);
           },
         ),
         GoRoute(
           path: '/messages',
-          builder: (context, state) => const MessagesScreen(),
+          builder: (context, state) => authService.currentUser == null
+              ? const LegalConsentScreen()
+              : const MessagesScreen(),
         ),
         GoRoute(
           path: '/users/:id',
@@ -387,7 +452,27 @@ final _router = GoRouter(
           },
         ),
         GoRoute(
+          path: '/u/:username',
+          builder: (context, state) {
+            final username = state.pathParameters['username'] ?? '';
+            return UsernameProfileLoader(username: username);
+          },
+        ),
+        GoRoute(
+          path: '/user_search',
+          builder: (context, state) => authService.currentUser == null
+              ? const LegalConsentScreen()
+              : const UserSearchScreen(),
+        ),
+        GoRoute(
           path: '/collection/entry/:id',
+          redirect: (context, state) {
+            final id = state.pathParameters['id'] ?? '';
+            return '/c/$id';
+          },
+        ),
+        GoRoute(
+          path: '/c/:id',
           builder: (context, state) {
             final id = state.pathParameters['id'] ?? '';
             return UserCollectionEntryDetailScreen(entryId: id);
@@ -705,7 +790,194 @@ Widget _buildProfileDirectMessagesCard(BuildContext context, String userId) {
 
 
 
+void _showPurchaseDialog({
+  required BuildContext context,
+  required String userId,
+  required String title,
+  required int cost,
+  required int userCoins,
+  required Future<void> Function() onConfirm,
+}) {
+  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+  if (userCoins < cost) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tr ? 'Yetersiz Jeton' : 'Insufficient Coins'),
+        content: Text(
+          tr
+              ? 'Bu ürünü satın almak için $cost Jetona ihtiyacınız var. Mevcut jetonunuz: $userCoins.'
+              : 'You need $cost Coins to buy this item. Your current balance: $userCoins.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(tr ? 'Kapat' : 'Close'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showProSubscriptionModal(context);
+            },
+            child: Text(tr ? 'Jeton Al / Pro Ol' : 'Get Coins / Go Pro'),
+          ),
+        ],
+      ),
+    );
+  } else {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(
+          tr
+              ? 'Bu ürünü $cost Jeton karşılığında açmak istiyor musunuz?\nKalan Jetonunuz: ${userCoins - cost}'
+              : 'Do you want to unlock this item for $cost Coins?\nRemaining Coins: ${userCoins - cost}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(tr ? 'İptal' : 'Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              try {
+                await onConfirm();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(e.toString())),
+                  );
+                }
+              }
+            },
+            child: Text(tr ? 'Satın Al' : 'Purchase'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+void _showBadgeDetailDialog({
+  required BuildContext context,
+  required String userId,
+  required ProfileBadge badge,
+  required bool isUnlocked,
+  required bool isSelected,
+  required ProfileSetupStatus status,
+}) {
+  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+  showDialog<void>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ProfileBadgeWidget(badgeId: badge.id, size: 10),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: Colors.green, size: 18)
+            else if (isUnlocked)
+              const Icon(Icons.lock_open, color: Colors.green, size: 16)
+            else
+              const Icon(Icons.lock, color: Colors.grey, size: 16),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              badge.description(context),
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            if (badge.coinsPrice > 0 && !isUnlocked)
+              Text(
+                tr 
+                    ? 'Fiyat: ${badge.coinsPrice} Jeton' 
+                    : 'Price: ${badge.coinsPrice} Coins',
+                style: const TextStyle(
+                  color: Color(0xFFFFCC00),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  fontFamily: 'Outfit',
+                ),
+              )
+            else if (!isUnlocked)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  tr 
+                      ? 'Bu rozeti kullanabilmek için yukarıdaki şartı sağlamalısın.' 
+                      : 'You must meet the requirement above to use this badge.',
+                  style: const TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11.5,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(tr ? 'Kapat' : 'Close'),
+          ),
+          if (isUnlocked)
+            FilledButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final nextBadge = isSelected ? '' : badge.id;
+                await profileSetupRepository.saveSelectedBadge(userId, nextBadge);
+              },
+              child: Text(
+                isSelected 
+                    ? (tr ? 'Rozeti Kaldır' : 'Remove Badge') 
+                    : (tr ? 'Rozeti Kullan' : 'Equip Badge'),
+              ),
+            )
+          else if (badge.coinsPrice > 0 && !(status.unlockedBadges.contains(badge.id)))
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showPurchaseDialog(
+                  context: context,
+                  userId: userId,
+                  title: tr ? 'Rozet Satın Al' : 'Buy Badge',
+                  cost: badge.coinsPrice,
+                  userCoins: status.coins,
+                  onConfirm: () async {
+                    await profileSetupRepository.unlockBadge(userId, badge.id, badge.coinsPrice);
+                  },
+                );
+              },
+              child: Text(tr ? 'Satın Al' : 'Purchase'),
+            ),
+        ],
+      );
+    },
+  );
+}
+
 void _showAvatarStudioModal(BuildContext context, String userId) {
+  final Future<Map<String, dynamic>> badgeDataFuture = () async {
+    final commentCountSnap = await FirebaseFirestore.instance
+        .collection('comments')
+        .where('userId', isEqualTo: userId)
+        .count()
+        .get();
+    final commentCount = commentCountSnap.count ?? 0;
+    final collection = await collectionRepository.listForUser(userId);
+    return {
+      'commentCount': commentCount,
+      'collection': collection,
+    };
+  }();
+
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -724,6 +996,7 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
               final selectedAvatar = status?.avatarId ?? '';
               final selectedFrame = status?.avatarFrameColor ?? '';
               final selectedCover = status?.coverId ?? 'default';
+              final selectedBadge = status?.selectedBadge ?? '';
               final isPro = status?.isPro == true;
 
               final avatars = [
@@ -745,15 +1018,112 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 children: [
                   Text(
-                    t(context, 'avatarStudio'),
+                    tr ? 'Profilini Özelleştir' : 'Customize Your Profile',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: DollDexTheme.teal,
                         ),
                   ),
                   const SizedBox(height: 6),
-                  Text(t(context, 'avatarStudioBody')),
+                  Text(
+                    tr 
+                        ? 'Avatar, çerçeve, rozet ve kapak fotoğraflarını özelleştir.' 
+                        : 'Customize your avatar, frame, badge, and cover photos.'
+                  ),
                   const SizedBox(height: 16),
+
+                  // Jeton Cüzdanı ve Günlük Ödül (Tıklanabilir Mağaza Entegrasyonu)
+                  Builder(
+                    builder: (context) {
+                      final coins = status?.coins ?? 0;
+                      return InkWell(
+                        onTap: () {
+                          // Mağazayı/Pro Modalını Aç
+                          _showProSubscriptionModal(context);
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF3A1C71), Color(0xFFD76D77), Color(0xFFFFAF7B)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.purple.withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFCC00), size: 28),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    tr ? 'Jeton Cüzdanı' : 'Coin Wallet',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 16,
+                                      fontFamily: 'Outfit',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white24,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          tr ? 'Mağaza' : 'Store',
+                                          style: const TextStyle(
+                                            color: Color(0xFFFFCC00),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 2),
+                                        const Icon(Icons.add_circle, color: Color(0xFFFFCC00), size: 10),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                '$coins',
+                                style: const TextStyle(
+                                  color: Color(0xFFFFCC00),
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 22,
+                                  fontFamily: 'Outfit',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  Text(
+                    tr ? 'Pro Avatarlar' : 'Pro Avatars',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -766,33 +1136,60 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                     itemBuilder: (context, index) {
                       final avatarId = avatars[index];
                       final isSelected = selectedAvatar == avatarId;
-                      return Opacity(
-                        opacity: isPro ? 1.0 : 0.4,
-                        child: AvatarOption(
-                          avatarId: avatarId,
-                          selected: isSelected,
-                          frameColor: selectedFrame,
-                          onTap: isPro
-                              ? () {
-                                  profileSetupRepository.saveAvatar(
-                                    userId: userId,
-                                    avatarId: avatarId,
-                                    avatarFrameColor: selectedFrame,
-                                  );
-                                }
-                              : () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        tr
-                                            ? 'Avatarlar sadece Pro üyeler içindir!'
-                                            : 'Avatars are for Pro members only!',
-                                      ),
-                                    ),
-                                  );
-                                },
-                        ),
+                      final isUnlocked = isPro || (status?.unlockedAvatars.contains(avatarId) ?? false);
+                      Widget avatarWidget = AvatarOption(
+                        avatarId: avatarId,
+                        selected: isSelected,
+                        frameColor: selectedFrame,
+                        onTap: isUnlocked
+                            ? () {
+                                profileSetupRepository.saveAvatar(
+                                  userId: userId,
+                                  avatarId: avatarId,
+                                  avatarFrameColor: selectedFrame,
+                                );
+                              }
+                            : () {
+                                _showPurchaseDialog(
+                                  context: context,
+                                  userId: userId,
+                                  title: tr ? 'Avatar Satın Al' : 'Buy Avatar',
+                                  cost: 100,
+                                  userCoins: status?.coins ?? 0,
+                                  onConfirm: () async {
+                                    await profileSetupRepository.unlockAvatar(userId, avatarId, 100);
+                                  },
+                                );
+                              },
                       );
+
+                      if (!isUnlocked) {
+                        avatarWidget = Stack(
+                          children: [
+                            Opacity(
+                              opacity: 0.5,
+                              child: avatarWidget,
+                            ),
+                            Positioned.fill(
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.lock,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      return avatarWidget;
                     },
                   ),
                   const SizedBox(height: 24),
@@ -808,63 +1205,82 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                     runSpacing: 10,
                     children: [
                       for (final frame in frames)
-                        InkWell(
-                          onTap: isPro
-                              ? () {
-                                  profileSetupRepository.saveAvatar(
-                                    userId: userId,
-                                    avatarId: selectedAvatar,
-                                    avatarFrameColor: frame,
-                                  );
-                                }
-                              : () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(t(context, 'proFramesLocked'))),
-                                  );
-                                },
-                          child: Opacity(
-                            opacity: isPro ? 1.0 : 0.4,
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: selectedFrame == frame
-                                      ? const Color(0xFFEC008C)
-                                      : Colors.grey.shade800,
-                                  width: selectedFrame == frame ? 2.5 : 1.5,
-                                ),
-                              ),
+                        Builder(
+                          builder: (context) {
+                            final isFrameUnlocked = isPro || (status?.unlockedFrames.contains(frame) ?? false);
+                            final previewAvatar = selectedAvatar.isNotEmpty ? selectedAvatar : 'avatar-0';
+                            return InkWell(
+                              onTap: isFrameUnlocked
+                                  ? () {
+                                      profileSetupRepository.saveAvatar(
+                                        userId: userId,
+                                        avatarId: selectedAvatar,
+                                        avatarFrameColor: frame,
+                                      );
+                                    }
+                                  : () {
+                                      _showPurchaseDialog(
+                                        context: context,
+                                        userId: userId,
+                                        title: tr ? 'Çerçeve Satın Al' : 'Buy Frame',
+                                        cost: 150,
+                                        userCoins: status?.coins ?? 0,
+                                        onConfirm: () async {
+                                          await profileSetupRepository.unlockFrame(userId, frame, 150);
+                                        },
+                                      );
+                                    },
                               child: Stack(
-                                alignment: Alignment.center,
                                 children: [
-                                  GothicFrameWidget(frameType: frame, size: 36),
-                                  if (selectedFrame == frame)
-                                    const Icon(
-                                      Icons.check,
-                                      size: 14,
-                                      color: Color(0xFFEC008C),
+                                  Opacity(
+                                    opacity: isFrameUnlocked ? 1.0 : 0.5,
+                                    child: Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: selectedFrame == frame
+                                              ? const Color(0xFFEC008C)
+                                              : Colors.transparent,
+                                          width: 2.0,
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.all(2),
+                                      child: buildAvatarHelper(
+                                        previewAvatar,
+                                        frame,
+                                        size: 36,
+                                      ),
+                                    ),
+                                  ),
+                                  if (!isFrameUnlocked)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.black87,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.lock,
+                                          size: 10,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                     ),
                                 ],
                               ),
-                            ),
-                          ),
+                            );
+                          }
                         ),
                     ],
                   ),
-                  if (!isPro) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      t(context, 'proFramesLocked'),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                    ),
-                  ],
                   const SizedBox(height: 24),
                   Text(
-                    tr ? 'Gotik Kapak Fotoğrafları' : 'Gothic Cover Photos',
+                    tr ? 'Pro Kapak Fotoğrafları' : 'Pro Cover Photos',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                         ),
@@ -878,8 +1294,9 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                       itemBuilder: (context, index) {
                         final coverId = index == 0 ? 'default' : 'cover-${index - 1}';
                         final isSelected = selectedCover == coverId || (coverId == 'default' && selectedCover.isEmpty);
+                        final isCoverUnlocked = isPro || coverId == 'default' || (status?.unlockedCovers.contains(coverId) ?? false);
                         return InkWell(
-                          onTap: isPro
+                          onTap: isCoverUnlocked
                               ? () {
                                   profileSetupRepository.saveCover(
                                     userId: userId,
@@ -887,67 +1304,207 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                   );
                                 }
                               : () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        tr
-                                            ? 'Kapak fotoğrafları sadece Pro üyeler içindir!'
-                                            : 'Cover photos are for Pro members only!',
-                                      ),
-                                    ),
+                                  _showPurchaseDialog(
+                                    context: context,
+                                    userId: userId,
+                                    title: tr ? 'Kapak Fotoğrafı Satın Al' : 'Buy Cover Photo',
+                                    cost: 200,
+                                    userCoins: status?.coins ?? 0,
+                                    onConfirm: () async {
+                                      await profileSetupRepository.unlockCover(userId, coverId, 200);
+                                    },
                                   );
                                 },
-                          child: Opacity(
-                            opacity: isPro ? 1.0 : 0.4,
-                            child: Container(
-                              width: 100,
-                              margin: const EdgeInsets.only(right: 8),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? DollDexTheme.teal
-                                      : Colors.transparent,
-                                  width: 2.5,
-                                ),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Stack(
-                                  children: [
-                                    _buildCoverPhotoPreview(coverId),
-                                    if (isSelected)
-                                      const Center(
-                                        child: CircleAvatar(
-                                          radius: 12,
-                                          backgroundColor: Colors.black54,
-                                          child: Icon(
-                                            Icons.check,
-                                            size: 14,
-                                            color: Colors.white,
+                          child: Stack(
+                            children: [
+                              Opacity(
+                                opacity: isCoverUnlocked ? 1.0 : 0.5,
+                                child: Container(
+                                  width: 100,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? DollDexTheme.teal
+                                          : Colors.transparent,
+                                      width: 2.5,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Stack(
+                                      children: [
+                                        _buildCoverPhotoPreview(coverId),
+                                        if (isSelected)
+                                          const Center(
+                                            child: CircleAvatar(
+                                              radius: 12,
+                                              backgroundColor: Colors.black54,
+                                              child: Icon(
+                                                Icons.check,
+                                                size: 14,
+                                                color: Colors.white,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                  ],
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                              if (!isCoverUnlocked)
+                                Positioned.fill(
+                                  child: Container(
+                                    margin: const EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black45,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.lock,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         );
                       },
                     ),
                   ),
-                  if (!isPro) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      tr
-                          ? 'Kapak fotoğrafları Pro kullanıcılar için açıktır.'
-                          : 'Cover photos are available for Pro users.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                    ),
-                  ],
+
+                  // Profil Rozetleri
+                  const SizedBox(height: 24),
+                  Text(
+                    tr ? 'Profil Rozetleri' : 'Profile Badges',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tr 
+                        ? 'Rozet detaylarını görmek, kuşanmak veya satın almak için rozete tıkla.' 
+                        : 'Click on a badge to view details, equip it, or buy it with coins.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  FutureBuilder<Map<String, dynamic>>(
+                    future: badgeDataFuture,
+                    builder: (context, badgeSnapshot) {
+                      if (badgeSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      
+                      final data = badgeSnapshot.data ?? {'commentCount': 0, 'collection': <CollectionEntry>[]};
+                      final int commentCount = data['commentCount'] as int;
+                      final List<CollectionEntry> collection = data['collection'] as List<CollectionEntry>;
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: 2.5,
+                        ),
+                        itemCount: allProfileBadges.length,
+                        itemBuilder: (context, index) {
+                          final badge = allProfileBadges[index];
+                          final isSelected = selectedBadge == badge.id;
+                          final isEligible = checkBadgeRequirement(
+                            badge, 
+                            status ?? const ProfileSetupStatus(
+                              userId: '', 
+                              displayName: '', 
+                              username: '', 
+                              birthYear: null, 
+                              privacyVersion: '', 
+                              termsVersion: '', 
+                              role: '', 
+                              isPro: false, 
+                              avatarId: '', 
+                              avatarFrameColor: '', 
+                              coverId: ''
+                            ), 
+                            collection, 
+                            commentCount
+                          );
+                          final isUnlocked = badge.coinsPrice > 0
+                              ? (badge.id == 'star'
+                                  ? ((status?.unlockedBadges.contains(badge.id) ?? false) || isEligible)
+                                  : (status?.unlockedBadges.contains(badge.id) ?? false))
+                              : isEligible;
+                          
+                          return InkWell(
+                            onTap: () {
+                              _showBadgeDetailDialog(
+                                context: context,
+                                userId: userId,
+                                badge: badge,
+                                isUnlocked: isUnlocked,
+                                isSelected: isSelected,
+                                status: status ?? const ProfileSetupStatus(
+                                  userId: '',
+                                  displayName: '',
+                                  username: '',
+                                  birthYear: null,
+                                  privacyVersion: '',
+                                  termsVersion: '',
+                                  role: '',
+                                  isPro: false,
+                                  avatarId: '',
+                                  avatarFrameColor: '',
+                                  coverId: ''
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                    ? badge.color.withOpacity(0.15) 
+                                    : (isUnlocked ? Colors.grey.shade900.withOpacity(0.5) : Colors.black45),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected 
+                                      ? badge.color 
+                                      : (isUnlocked ? Colors.grey.shade800 : Colors.grey.shade900),
+                                  width: isSelected ? 2.0 : 1.0,
+                                ),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  ProfileBadgeWidget(badgeId: badge.id, size: 8),
+                                  if (isSelected)
+                                    const Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      child: Icon(Icons.check_circle, color: Colors.green, size: 10),
+                                    )
+                                  else if (!isUnlocked)
+                                    const Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      child: Icon(Icons.lock, color: Colors.grey, size: 10),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ],
               );
             },
@@ -965,6 +1522,7 @@ void _showProSubscriptionModal(BuildContext context) {
     showDragHandle: true,
     builder: (context) {
       final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return DraggableScrollableSheet(
         initialChildSize: 0.70,
         minChildSize: 0.5,
@@ -1057,12 +1615,177 @@ void _showProSubscriptionModal(BuildContext context) {
                 style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
                 label: Text(t(context, 'connectBilling')),
               ),
+              const SizedBox(height: 24),
+              const Divider(color: DollDexTheme.line, height: 1),
+              const SizedBox(height: 20),
+              Text(
+                tr ? 'Jeton Satın Al' : 'Buy Coins',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: DollDexTheme.teal,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                tr
+                    ? 'Jetonlar ile ek takas, yorum yapma veya profilinizi öne çıkarma limitlerini arttırabilirsiniz.'
+                    : 'Use coins to increase limits for trades, comments or profile showcases.',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontFamily: 'Outfit',
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _buildCoinPackItem(
+                context: context,
+                amount: 150,
+                price: '₺19.99',
+                description: tr ? 'Başlangıç gotik cüzdan paketi' : 'Starter gothic wallet pack',
+                isPopular: false,
+                onTap: () => _handleBuyCoinPack(context, 150, '₺19.99'),
+              ),
+              _buildCoinPackItem(
+                context: context,
+                amount: 500,
+                price: '₺49.99',
+                description: tr ? 'Koleksiyoncuların en çok tercih ettiği paket' : 'Most preferred pack by collectors',
+                isPopular: true,
+                onTap: () => _handleBuyCoinPack(context, 500, '₺49.99'),
+              ),
+              _buildCoinPackItem(
+                context: context,
+                amount: 1200,
+                price: '₺99.99',
+                description: tr ? 'Büyük gotik bebek takas ve vitrin paketi' : 'Large trade and showcase pack',
+                isPopular: false,
+                onTap: () => _handleBuyCoinPack(context, 1200, '₺99.99'),
+              ),
             ],
           );
         },
       );
     },
   );
+}
+
+Widget _buildCoinPackItem({
+  required BuildContext context,
+  required int amount,
+  required String price,
+  required String description,
+  required bool isPopular,
+  required VoidCallback onTap,
+}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return Container(
+    margin: const EdgeInsets.only(bottom: 10),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isPopular ? const Color(0xFFFFCC00) : (isDark ? const Color(0xFFEC008C).withOpacity(0.3) : Colors.black12),
+        width: isPopular ? 1.8 : 1.0,
+      ),
+      color: isPopular 
+          ? (isDark ? const Color(0xFF231707) : const Color(0xFFFFFDF5))
+          : (isDark ? const Color(0xFF130820) : Colors.white),
+    ),
+    child: ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFCC00).withOpacity(0.12),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFCC00), size: 24),
+      ),
+      title: Row(
+        children: [
+          Text(
+            '$amount Jeton / Coins',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+          ),
+          if (isPopular) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFCC00),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'POPÜLER' : 'POPULAR',
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      subtitle: Text(
+        description,
+        style: TextStyle(
+          fontSize: 11,
+          fontFamily: 'Outfit',
+          color: isDark ? Colors.white70 : Colors.black54,
+        ),
+      ),
+      trailing: Text(
+        price,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+          fontSize: 13,
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> _handleBuyCoinPack(BuildContext context, int amount, String price) async {
+  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+  final user = authService.currentUser;
+  if (user == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(tr ? 'Öncelikle giriş yapmalısınız!' : 'Please sign in first!')),
+    );
+    return;
+  }
+  
+  final confirmed = await _showGothicConfirmDialog(
+    context,
+    title: tr ? 'Jeton Paketini Onayla' : 'Confirm Coin Package',
+    content: tr 
+        ? '$amount jeton paketini $price karşılığında satın almak istediğinize emin misiniz?'
+        : 'Are you sure you want to purchase $amount coins for $price?',
+    confirmText: tr ? 'Satın Al' : 'Purchase',
+  );
+  
+  if (confirmed == true) {
+    try {
+      await profileSetupRepository.buyCoinPackage(user.uid, amount);
+      if (context.mounted) {
+        Navigator.of(context).pop(); // close the subscription sheet
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(tr ? 'Tebrikler! $amount Jeton hesabınıza eklendi.' : 'Congratulations! $amount Coins added to your account.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr ? 'İşlem başarısız: $e' : 'Transaction failed: $e')),
+        );
+      }
+    }
+  }
 }
 
 
@@ -1415,6 +2138,8 @@ Future<void> _saveCatalogDraft(
     year: draft.year,
     tags: draft.tags,
     description: draft.description,
+    parentId: draft.parentId,
+    series: draft.series,
   );
 
   try {
@@ -1504,6 +2229,7 @@ List<CatalogEntry> _filterCatalogEntries(
     return entry.name.toLowerCase().contains(normalizedQuery) ||
         entry.subtitle.toLowerCase().contains(normalizedQuery) ||
         entry.description.toLowerCase().contains(normalizedQuery) ||
+        (entry.series?.toLowerCase().contains(normalizedQuery) ?? false) ||
         entry.tags.any((tag) => tag.toLowerCase().contains(normalizedQuery));
   }).toList(growable: false);
 }
@@ -1958,24 +2684,24 @@ String _formatMessageTime(DateTime? value) {
 void _openReportTarget(BuildContext context, UserReport report) {
   final router = GoRouter.of(context);
   if (report.targetType == ReportTargetType.catalogEntry) {
-    router.push('/catalog/${report.targetId}');
+    router.go('/i/${report.targetId}');
   } else if (report.targetType == ReportTargetType.profile || report.targetType == ReportTargetType.user) {
-    router.push('/users/${report.targetId}');
+    router.go('/users/${report.targetId}');
   } else if (report.targetType == ReportTargetType.collectionEntry) {
-    router.push('/collection/entry/${report.targetId}');
+    router.go('/c/${report.targetId}');
   } else if (report.targetType == ReportTargetType.comment) {
     FirebaseFirestore.instance.collection('comments').doc(report.targetId).get().then((doc) {
       if (doc.exists) {
         final targetType = doc.data()?['targetType'] as String?;
         final targetId = doc.data()?['targetId'] as String?;
         if (targetType == 'catalogEntry') {
-          router.push('/catalog/$targetId');
+          router.go('/i/$targetId');
         } else if (targetType == 'collectionEntry') {
-          router.push('/collection/entry/$targetId');
+          router.go('/c/$targetId');
         } else if (targetType == 'profile') {
-          router.push('/users/$targetId');
+          router.go('/users/$targetId');
         } else {
-          router.push('/social');
+          router.go('/social');
         }
       } else {
         router.push('/social');
@@ -2386,7 +3112,7 @@ Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> c
         elevation: isPng ? 0 : 2,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => context.push('/collection/entry/${entry.id}'),
+          onTap: () => context.go('/c/${entry.id}'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2584,14 +3310,14 @@ Widget _buildStatItem(BuildContext context, {required String label, required Str
   );
 }
 
-void _showConnectionsModal(BuildContext context, String userId) {
+void _showConnectionsModal(BuildContext parentContext, String userId) {
   final currentUserId = authService.currentUser?.uid;
   final isOwnProfile = currentUserId == userId;
   final tabsCount = isOwnProfile ? 4 : 3;
-  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final isDark = Theme.of(parentContext).brightness == Brightness.dark;
 
   showModalBottomSheet<void>(
-    context: context,
+    context: parentContext,
     isScrollControlled: true,
     showDragHandle: true,
     backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
@@ -2644,6 +3370,7 @@ void _showConnectionsModal(BuildContext context, String userId) {
                             );
                           }
                           return ListView.builder(
+                            key: const PageStorageKey('messages_friends_scroll'),
                             controller: scrollController,
                             itemCount: list.length,
                             itemBuilder: (context, idx) {
@@ -2656,8 +3383,13 @@ void _showConnectionsModal(BuildContext context, String userId) {
                                 ),
                                 subtitle: Text(user.displayName, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
                                 onTap: () {
+                                  final currentPath = GoRouterState.of(parentContext).uri.toString();
                                   Navigator.of(context).pop();
-                                  context.push('/users/${user.id}');
+                                  if (user.username.isNotEmpty) {
+                                    parentContext.go('/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
+                                  } else {
+                                    parentContext.go('/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
+                                  }
                                 },
                               );
                             },
@@ -2693,8 +3425,13 @@ void _showConnectionsModal(BuildContext context, String userId) {
                                 ),
                                 subtitle: Text(user.displayName, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
                                 onTap: () {
+                                  final currentPath = GoRouterState.of(parentContext).uri.toString();
                                   Navigator.of(context).pop();
-                                  context.push('/users/${user.id}');
+                                  if (user.username.isNotEmpty) {
+                                    parentContext.go('/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
+                                  } else {
+                                    parentContext.go('/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
+                                  }
                                 },
                               );
                             },
@@ -2730,8 +3467,13 @@ void _showConnectionsModal(BuildContext context, String userId) {
                                 ),
                                 subtitle: Text(user.displayName, style: TextStyle(color: isDark ? Colors.white60 : Colors.black54)),
                                 onTap: () {
+                                  final currentPath = GoRouterState.of(parentContext).uri.toString();
                                   Navigator.of(context).pop();
-                                  context.push('/users/${user.id}');
+                                  if (user.username.isNotEmpty) {
+                                    parentContext.go('/u/${user.username}?from=${Uri.encodeComponent(currentPath)}');
+                                  } else {
+                                    parentContext.go('/users/${user.id}?from=${Uri.encodeComponent(currentPath)}');
+                                  }
                                 },
                               );
                             },
@@ -3098,7 +3840,12 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                                 GestureDetector(
                                   onTap: () {
                                     Navigator.pop(context); // Close comments bottom sheet
-                                    context.push('/users/${comment.userId}');
+                                    if (comment.senderUsername.isNotEmpty) {
+                                      final uName = comment.senderUsername.replaceAll('@', '');
+                                      context.go('/u/$uName');
+                                    } else {
+                                      context.go('/users/${comment.userId}');
+                                    }
                                   },
                                   child: _buildAvatarHelper(
                                     comment.senderAvatarId,
@@ -3114,7 +3861,12 @@ void _showCommentsSheet(BuildContext context, String targetId, {String? catalogE
                                       GestureDetector(
                                         onTap: () {
                                           Navigator.pop(context); // Close comments bottom sheet
-                                          context.push('/users/${comment.userId}');
+                                          if (comment.senderUsername.isNotEmpty) {
+                                            final uName = comment.senderUsername.replaceAll('@', '');
+                                            context.go('/u/$uName');
+                                          } else {
+                                            context.go('/users/${comment.userId}');
+                                          }
                                         },
                                         child: Text(
                                           comment.senderUsername.isEmpty ? 'Collector' : comment.senderUsername,
@@ -3375,4 +4127,55 @@ void openReportTarget(BuildContext context, UserReport report) => _openReportTar
 Future<String> resolveReportTargetText(UserReport report) => _resolveReportTargetText(report);
 bool isTemplateEntry(CatalogEntry entry) => _isTemplateEntry(entry);
 void addAppNotification(String text) => _addAppNotification(text);
+
+Future<void> performGoogleSignIn(BuildContext context) async {
+  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+  try {
+    final userCredential = await authService.signInWithGoogle();
+    final newUser = userCredential.user;
+    if (newUser != null) {
+      final localEntries = collectionEntriesNotifier.value
+          .where((entry) => entry.userId == 'local-user')
+          .toList();
+      if (localEntries.isNotEmpty) {
+        for (final localEntry in localEntries) {
+          final migratedEntry = CollectionEntry(
+            id: '${newUser.uid}-${localEntry.itemId}',
+            userId: newUser.uid,
+            itemId: localEntry.itemId,
+            status: localEntry.status,
+            condition: localEntry.condition,
+            quantity: localEntry.quantity,
+            notes: localEntry.notes,
+            isPublic: localEntry.isPublic,
+          );
+          await collectionRepository.save(migratedEntry);
+        }
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                tr
+                    ? '${localEntries.length} parça hesabınıza aktarıldı!'
+                    : '${localEntries.length} items migrated to your account!',
+              ),
+            ),
+          );
+        }
+      }
+    }
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            tr
+                ? 'Giriş yapılamadı: $error'
+                : 'Sign in failed: $error',
+          ),
+        ),
+      );
+    }
+  }
+}
 

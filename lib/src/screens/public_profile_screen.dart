@@ -78,10 +78,21 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
           stream: profileSetupRepository.watch(widget.userId),
           builder: (context, profileSnap) {
             final profile = profileSnap.data;
+            if (profile != null && profile.username.isNotEmpty) {
+              final currentPath = GoRouterState.of(context).uri.path;
+              if (currentPath.startsWith('/users/')) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    context.replace('/u/${profile.username}');
+                  }
+                });
+              }
+            }
             final avatarId = profile?.avatarId ?? '';
             final frameColor = profile?.avatarFrameColor ?? '';
 
             return ListView(
+              key: PageStorageKey('public_profile_${widget.userId}'),
               padding: EdgeInsets.zero,
               children: [
                 // Cover Photo
@@ -154,11 +165,23 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  profile?.username.isNotEmpty == true ? '@${profile!.username}' : 'Collector',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.w900,
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        profile?.username.isNotEmpty == true ? '@${profile!.username}' : 'Collector',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.w900,
+                                            ),
                                       ),
+                                    ),
+                                    if (profile?.selectedBadge.isNotEmpty == true) ...[
+                                      const SizedBox(width: 8),
+                                      ProfileBadgeWidget(badgeId: profile!.selectedBadge),
+                                    ],
+                                  ],
                                 ),
                               ],
                             ),
@@ -434,10 +457,10 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                       height: 320,
                                       child: TabBarView(
                                         children: [
-                                          CollectionCategoryTab(entries: owned),
-                                          CollectionCategoryTab(entries: wanted),
-                                          CollectionCategoryTab(entries: trade),
-                                          CollectionCategoryTab(entries: selling),
+                                          CollectionCategoryTab(entries: owned, from: 'public_profile', userId: widget.userId),
+                                          CollectionCategoryTab(entries: wanted, from: 'public_profile', userId: widget.userId),
+                                          CollectionCategoryTab(entries: trade, from: 'public_profile', userId: widget.userId),
+                                          CollectionCategoryTab(entries: selling, from: 'public_profile', userId: widget.userId),
                                         ],
                                       ),
                                     ),

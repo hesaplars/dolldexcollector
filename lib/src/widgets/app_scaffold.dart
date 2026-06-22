@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,9 +31,14 @@ class _AppScaffoldState extends State<AppScaffold> {
   StreamSubscription<ProfileSetupStatus>? _profileSubscription;
   bool _profileComplete = false;
   bool _isAdmin = false;
+  bool _isPro = false;
+  bool _profileLoaded = false;
   String _avatarId = '';
   String _avatarFrameColor = '';
   String? _watchedUserId;
+  bool _isBanned = false;
+  DateTime? _banUntil;
+  DateTime? _lastDailyClaim;
 
   AppNotification? _currentHudNotification;
   bool _showHudBanner = false;
@@ -42,7 +48,12 @@ class _AppScaffoldState extends State<AppScaffold> {
   StreamSubscription<List<AppNotification>>? _notificationsSubscription;
   int _unreadNotificationsCount = 0;
   StreamSubscription<List<ChatThread>>? _chatThreadsSubscription;
-  bool _hasUnreadDMs = false;
+  StreamSubscription<List<String>>? _deletedThreadsSubscription;
+  List<ChatThread> _currentThreads = [];
+  List<String> _deletedThreadIds = [];
+  int _unreadDMsCount = 0;
+  StreamSubscription<DocumentSnapshot>? _monetizationSubscription;
+  static bool _campaignPopupShown = false;
 
   @override
   void initState() {
@@ -54,12 +65,14 @@ class _AppScaffoldState extends State<AppScaffold> {
   }
 
   Widget _buildNeonTopIcon(IconData icon) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final secondary = Theme.of(context).colorScheme.secondary;
     return SafeShaderMask(
       shaderCallback: (bounds) {
-        return const LinearGradient(
+        return LinearGradient(
           colors: [
-            Color(0xFFEC008C),
-            Color(0xFF00FFCC),
+            primary,
+            secondary,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -86,11 +99,12 @@ class _AppScaffoldState extends State<AppScaffold> {
   }
 
   Widget _buildNeonIcon(BuildContext context, IconData icon, {double size = 24}) {
-    // Standard icon helper from theme
+    final primary = Theme.of(context).colorScheme.primary;
+    final secondary = Theme.of(context).colorScheme.secondary;
     return SafeShaderMask(
       shaderCallback: (bounds) {
-        return const LinearGradient(
-          colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+        return LinearGradient(
+          colors: [primary, secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ).createShader(bounds);
@@ -103,16 +117,241 @@ class _AppScaffoldState extends State<AppScaffold> {
     );
   }
 
+  bool get _isCurrentlyBanned {
+    if (_isBanned) return true;
+    if (_banUntil != null) {
+      if (_banUntil!.isAfter(DateTime.now())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _showInfoModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded, color: Color(0xFFEC008C), size: 28),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          tr ? 'DollDex Rehberi & Yasal Bilgiler' : 'DollDex Guide & Legal Info',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Outfit',
+                            color: Color(0xFFEC008C),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEC008C).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFEC008C).withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'YASAL UYARI / LEGAL DISCLAIMER',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'TR: DollDex, ticari amaç gütmeyen bir hayran sitesidir. Monster High ve ilgili tüm ticari markalar Mattel, Inc. şirketine aittir. Bu site hiçbir şekilde Mattel, Inc. ile ilişkili değildir veya sponsorluğunda değildir.',
+                          style: TextStyle(fontSize: 11, height: 1.4, color: Colors.white70),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'EN: DollDex is a non-commercial, fan-made site. Monster High and all related trademarks are owned by Mattel, Inc. This site is in no way affiliated with or sponsored by Mattel, Inc.',
+                          style: TextStyle(fontSize: 11, height: 1.4, color: Colors.white60),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    tr ? 'KULLANIM REHBERİ' : 'USER GUIDE',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Outfit',
+                      letterSpacing: 0.5,
+                      color: Color(0xFF00FFCC),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildGuideSection(
+                    title: tr ? '1. Katalog ve Arama' : '1. Catalog & Search',
+                    content: tr 
+                      ? 'Geniş Monster High kataloğumuzda dilediğiniz bebeği arayabilir, seriye ve yıla göre filtreleme yapabilirsiniz. Bebeklerin detay sayfalarından çıkış yıllarını, aksesuarlarını, kutu görsellerini ve koleksiyoner yorumlarını inceleyebilirsiniz.'
+                      : 'Search for any doll in our comprehensive Monster High catalog, filter by series and release year. Inspect release years, accessories, box arts, and collector reviews on the detail pages.',
+                    icon: Icons.search_rounded,
+                    isDark: isDark,
+                  ),
+                  _buildGuideSection(
+                    title: tr ? '2. Koleksiyon & İstek Listesi Yönetimi' : '2. Collection & Wishlist Management',
+                    content: tr 
+                      ? 'Katalogtaki bebeklerin yanındaki butonları kullanarak bunları Koleksiyonunuza ("Sahibim"), İstek Listenize ("Arıyorum") veya "Yolda" statüsüne ekleyebilirsiniz. Koleksiyonunuzdaki bebeklerin durumlarını (Kutulu/Kutusuz) seçebilir ve onlara özel notlar ekleyebilirsiniz.'
+                      : 'Use the action buttons on doll cards to add them to your Collection ("Owned"), Wishlist ("Looking For"), or "On the Way" lists. Track conditions (In Box/Loose) and write custom private notes.',
+                    icon: Icons.auto_awesome_motion_rounded,
+                    isDark: isDark,
+                  ),
+                  _buildGuideSection(
+                    title: tr ? '3. Vitrin Sınırları & PRO Üyelik' : '3. Showcase Limits & PRO Membership',
+                    content: tr 
+                      ? 'Standart üyeler koleksiyonlarında ve istek listelerinde belirli bir sayıda bebek sergileyebilirler. PRO (Premium) üyeliğe geçerek bu sınırları tamamen kaldırabilir, reklamları kapatabilir, özel profil çerçevelerine erişebilir ve her ay ekstra sohbet jetonları kazanabilirsiniz.'
+                      : 'Standard members have limits on how many dolls they can display. Upgrade to PRO (Premium) to unlock unlimited slots, disable ads, access exclusive avatar frames, and receive monthly chat coins.',
+                    icon: Icons.stars_rounded,
+                    isDark: isDark,
+                  ),
+                  _buildGuideSection(
+                    title: tr ? '4. Genel Sohbet & Öge Paylaşımı' : '4. Global Chat & Item Sharing',
+                    content: tr 
+                      ? 'Sohbet alanında diğer koleksiyonerler ile gerçek zamanlı yazışabilir, "+" butonuna basarak Katalogtan veya kendi Koleksiyonunuzdan bebekleri minyatür kartlar şeklinde sohbete gönderebilirsiniz. Gönderilen kartlara tıklayan diğer kullanıcılar alttan kayan detay penceresinde bebeği inceleyebilirler.'
+                      : 'Chat with other collectors in real-time, press the "+" button to select dolls from the Catalog or your own Collection, and share them as miniature cards. Others can tap these cards to view details instantly.',
+                    icon: Icons.chat_bubble_outline_rounded,
+                    isDark: isDark,
+                  ),
+                  _buildGuideSection(
+                    title: tr ? '5. Jeton (Coin) Sistemi' : '5. Coin System',
+                    content: tr 
+                      ? 'Genel sohbette mesaj göndermek ve öge paylaşmak için jeton kullanılır. Sol üstteki Hediye Kutusu simgesiyle günlük ücretsiz jetonlarınızı toplayabilir, video reklamları izleyerek jeton kazanabilir ya da Mağazadan PRO paketleri satın alarak jeton bakiyenizi doldurabilirsiniz.'
+                      : 'Coins are used to send messages and share items in global chat. Collect free daily coins from the Gift Box on the top-left, watch short video ads for coins, or top up your balance from the Shop.',
+                    icon: Icons.monetization_on_rounded,
+                    isDark: isDark,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildGuideSection({
+    required String title,
+    required String content,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00FFCC).withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: const Color(0xFF00FFCC), size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  content,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.45,
+                    color: isDark ? const Color(0xFFB5A7C5) : const Color(0xFF5B4A75),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isCurrentlyBanned) {
+      return GothicAccessDeniedScreen(
+        isPermanent: _isBanned,
+        banUntil: _banUntil,
+      );
+    }
     final location = GoRouterState.of(context).uri.path;
-    final selectedIndex = switch (location) {
-      '/collection' => 1,
-      '/messages' => 2,
-      '/social' => 3,
-      '/admin' => _isAdmin ? 4 : 0,
-      _ => 0,
-    };
+    final showTopBackButton = (GoRouter.of(context).canPop() ||
+            Navigator.of(context).canPop() ||
+            location == '/profile' ||
+            location.startsWith('/u/') ||
+            location.startsWith('/users/')) &&
+        !location.startsWith('/catalog/') &&
+        !location.startsWith('/i/') &&
+        !location.startsWith('/collection/entry/') &&
+        !location.startsWith('/c/') &&
+        !(location == '/' && GoRouterState.of(context).uri.queryParameters.containsKey('q'));
+    final selectedIndex = (() {
+      var activePath = location;
+      if (activePath.startsWith('/consent')) {
+        final uri = GoRouterState.of(context).uri;
+        final fromPath = uri.queryParameters['from'];
+        if (fromPath != null && fromPath.isNotEmpty) {
+          activePath = Uri.parse(fromPath).path;
+        }
+      }
+      return switch (activePath) {
+        '/collection' => 1,
+        '/messages' => 2,
+        '/user_search' => 3,
+        '/social' => 4,
+        '/admin' => _isAdmin ? 5 : 0,
+        _ => 0,
+      };
+    })();
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final destinations = [
       NavigationDestination(
@@ -139,7 +378,8 @@ class _AppScaffoldState extends State<AppScaffold> {
       ),
       NavigationDestination(
         icon: Badge(
-          isLabelVisible: _hasUnreadDMs,
+          isLabelVisible: _unreadDMsCount > 0,
+          label: Text('$_unreadDMsCount'),
           backgroundColor: const Color(0xFFEC008C),
           child: Opacity(
             opacity: selectedIndex == 2 ? 1.0 : 0.45,
@@ -155,18 +395,25 @@ class _AppScaffoldState extends State<AppScaffold> {
       NavigationDestination(
         icon: Opacity(
           opacity: selectedIndex == 3 ? 1.0 : 0.45,
+          child: _buildNeonIcon(context, Icons.person_search_rounded, size: 28),
+        ),
+        label: tr ? 'Ara' : 'Search',
+      ),
+      NavigationDestination(
+        icon: Opacity(
+          opacity: selectedIndex == 4 ? 1.0 : 0.45,
           child: Image.asset(
             'assets/icons/nav_social.png',
             width: 28,
             height: 28,
           ),
         ),
-        label: tr ? 'Sosyal' : 'Social',
+        label: tr ? 'Sohbet' : 'Chat',
       ),
       if (_isAdmin)
         NavigationDestination(
           icon: Opacity(
-            opacity: selectedIndex == 4 ? 1.0 : 0.45,
+            opacity: selectedIndex == 5 ? 1.0 : 0.45,
             child: Image.asset(
               'assets/icons/nav_admin.png',
               width: 28,
@@ -183,11 +430,9 @@ class _AppScaffoldState extends State<AppScaffold> {
     final mainScaffold = Scaffold(
       backgroundColor: Colors.transparent,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(74 + MediaQuery.of(context).padding.top),
+        preferredSize: Size.fromHeight(90 + MediaQuery.of(context).padding.top),
         child: Container(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? DollDexTheme.darkPaper
-              : DollDexTheme.paper,
+          color: Theme.of(context).colorScheme.surface,
           padding: EdgeInsets.only(
             top: MediaQuery.of(context).padding.top + 4,
             bottom: 4,
@@ -200,28 +445,42 @@ class _AppScaffoldState extends State<AppScaffold> {
                   onTap: () => _goGuarded('/'),
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click,
-                    child: SafeShaderMask(
-                      shaderCallback: (bounds) {
-                        return const LinearGradient(
-                          colors: [
-                            Color(0xFFEC008C),
-                            Color(0xFF00FFCC),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds);
-                      },
-                      child: Text(
-                        t(context, 'appName').toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.cinzel(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 0.8,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SafeShaderMask(
+                          shaderCallback: (bounds) {
+                            return LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.secondary,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds);
+                          },
+                          child: Text(
+                            t(context, 'appName').toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.cinzel(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
                         ),
-                      ),
+                        Text(
+                          tr ? 'Online Bebek Koleksiyonu' : 'Online Doll Collection',
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontSize: 10,
+                            color: Colors.grey.shade400,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -231,21 +490,42 @@ class _AppScaffoldState extends State<AppScaffold> {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
-                    if (GoRouter.of(context).canPop() || Navigator.of(context).canPop())
+                    if (showTopBackButton)
                       IconButton(
                         tooltip: AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Geri' : 'Back',
                         icon: _buildNeonTopIcon(Icons.arrow_back_ios_new_rounded),
                         onPressed: () {
                           final router = GoRouter.of(context);
+                          final fromPath = GoRouterState.of(context).uri.queryParameters['from'];
+                          if (fromPath != null && fromPath.isNotEmpty) {
+                            router.go(fromPath);
+                            return;
+                          }
                           if (router.canPop()) {
                             router.pop();
                           } else if (Navigator.of(context).canPop()) {
                             Navigator.of(context).pop();
+                          } else {
+                            if (location.startsWith('/u/') || location.startsWith('/users/')) {
+                              router.go('/user_search');
+                            } else {
+                              router.go('/');
+                            }
                           }
                         },
                       )
-                    else
-                      const SizedBox(width: 48),
+                    else ...[
+                      DailyRewardGiftWidget(
+                        currentUser: authService.currentUser,
+                        lastDailyClaim: _lastDailyClaim,
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        tooltip: AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Kullanım Rehberi & Bilgi' : 'User Guide & Info',
+                        icon: _buildNeonTopIcon(Icons.info_outline_rounded),
+                        onPressed: () => _showInfoModal(context),
+                      ),
+                    ],
                     const Spacer(),
                     ValueListenableBuilder<AppLanguage>(
                       valueListenable: appLanguageController,
@@ -260,18 +540,22 @@ class _AppScaffoldState extends State<AppScaffold> {
                         );
                       },
                     ),
-                    ValueListenableBuilder<ThemeMode>(
-                      valueListenable: appThemeController,
-                      builder: (context, themeMode, _) {
+                    ValueListenableBuilder<String>(
+                      valueListenable: appThemeKeyController,
+                      builder: (context, themeKey, _) {
+                        final isDark = themeKey != 'goth_light';
                         return IconButton(
                           tooltip: t(context, 'theme'),
                           onPressed: () {
-                            appThemeController.value = themeMode == ThemeMode.dark
-                                ? ThemeMode.light
-                                : ThemeMode.dark;
+                            final nextTheme = isDark ? 'goth_light' : 'goth_dark';
+                            appThemeKeyController.value = nextTheme;
+                            final currentUser = authService.currentUser;
+                            if (currentUser != null) {
+                              profileSetupRepository.saveSelectedTheme(currentUser.uid, nextTheme);
+                            }
                           },
                           icon: _buildNeonTopIcon(
-                            themeMode == ThemeMode.dark
+                            isDark
                                 ? Icons.light_mode_rounded
                                 : Icons.dark_mode_rounded,
                           ),
@@ -279,6 +563,11 @@ class _AppScaffoldState extends State<AppScaffold> {
                       },
                     ),
 
+                    IconButton(
+                      tooltip: AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Mağaza / Jeton Al' : 'Shop / Buy Coins',
+                      icon: _buildNeonTopIcon(Icons.storefront),
+                      onPressed: () => showProSubscriptionModal(context),
+                    ),
                     Badge(
                       isLabelVisible: _unreadNotificationsCount > 0,
                       label: Text('$_unreadNotificationsCount'),
@@ -286,14 +575,14 @@ class _AppScaffoldState extends State<AppScaffold> {
                       textColor: Colors.white,
                       child: IconButton(
                         tooltip: t(context, 'notifications'),
-                        onPressed: () => _goGuarded('/notifications', push: true),
+                        onPressed: () => showNotificationsModal(context),
                         icon: _buildNeonTopIcon(Icons.notifications_active_rounded),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8, left: 4),
                       child: InkWell(
-                        onTap: () => _goGuarded('/profile'),
+                        onTap: () => _goGuarded('/profile?from=${Uri.encodeComponent(GoRouterState.of(context).uri.toString())}', push: true),
                         borderRadius: BorderRadius.circular(20),
                         child: buildAvatarHelper(
                           authService.currentUser != null ? _avatarId : '',
@@ -321,6 +610,11 @@ class _AppScaffoldState extends State<AppScaffold> {
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (!_isPro)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: GothicAdBannerHorizontal(),
+                  ),
                 NavigationBar(
                   selectedIndex: selectedIndex,
                   onDestinationSelected: (index) {
@@ -329,21 +623,30 @@ class _AppScaffoldState extends State<AppScaffold> {
                   },
                   destinations: destinations,
                 ),
-                const GothicAdBannerHorizontal(),
               ],
             )
-          : NavigationBar(
-              selectedIndex: selectedIndex,
-              onDestinationSelected: (index) {
-                final path = _pathForIndex(index);
-                _goGuarded(path);
-              },
-              destinations: destinations,
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!_isPro)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    child: GothicAdBannerHorizontal(),
+                  ),
+                NavigationBar(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (index) {
+                    final path = _pathForIndex(index);
+                    _goGuarded(path);
+                  },
+                  destinations: destinations,
+                ),
+              ],
             ),
     );
 
     return PopScope(
-      canPop: false,
+      canPop: Navigator.of(context).canPop(),
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) {
           return;
@@ -390,7 +693,7 @@ class _AppScaffoldState extends State<AppScaffold> {
             const Positioned.fill(
               child: GothicPageBackgroundWidget(),
             ),
-            if (isDesktop)
+            if (isDesktop && !_isPro)
               Positioned.fill(
                 child: Center(
                   child: Row(
@@ -427,7 +730,14 @@ class _AppScaffoldState extends State<AppScaffold> {
               )
             else
               Positioned.fill(
-                child: mainScaffold,
+                child: isDesktop
+                    ? Center(
+                        child: SizedBox(
+                          width: 650,
+                          child: mainScaffold,
+                        ),
+                      )
+                    : mainScaffold,
               ),
           ],
         ),
@@ -441,6 +751,8 @@ class _AppScaffoldState extends State<AppScaffold> {
     _profileSubscription?.cancel();
     _notificationsSubscription?.cancel();
     _chatThreadsSubscription?.cancel();
+    _deletedThreadsSubscription?.cancel();
+    _monetizationSubscription?.cancel();
     _hudTimer?.cancel();
     super.dispose();
   }
@@ -453,22 +765,48 @@ class _AppScaffoldState extends State<AppScaffold> {
     _profileSubscription?.cancel();
     _notificationsSubscription?.cancel();
     _chatThreadsSubscription?.cancel();
+    _deletedThreadsSubscription?.cancel();
+    _monetizationSubscription?.cancel();
     _watchedUserId = user?.uid;
     _profileComplete = user == null;
     _isAdmin = false;
+    _isPro = false;
+    _profileLoaded = false;
     _avatarId = '';
     _avatarFrameColor = '';
+    _isBanned = false;
+    _banUntil = null;
+    _lastDailyClaim = null;
     _isFirstNotificationsLoad = true;
     _shownNotificationIds.clear();
     _unreadNotificationsCount = 0;
-    _hasUnreadDMs = false;
+    _unreadDMsCount = 0;
+    _currentThreads = [];
+    _deletedThreadIds = [];
 
     if (user == null) {
+      _campaignPopupShown = false;
+      _profileLoaded = true;
+      appThemeKeyController.value = 'goth_dark';
       if (mounted) {
         setState(() {});
       }
       return;
     }
+
+    _monetizationSubscription = FirebaseFirestore.instance
+        .collection('settings')
+        .doc('monetization')
+        .snapshots()
+        .listen((snapshot) {
+      if (!mounted) return;
+      final data = snapshot.data();
+      if (data != null) {
+        _checkAndShowCampaign(data);
+      }
+    }, onError: (err) {
+      print('AppScaffold: Error watching monetization settings: $err');
+    });
 
     _profileSubscription = profileSetupRepository.watch(user.uid).listen((status) {
       if (!mounted) {
@@ -477,9 +815,24 @@ class _AppScaffoldState extends State<AppScaffold> {
       setState(() {
         _profileComplete = status.isComplete;
         _isAdmin = status.role == 'admin';
+        _isPro = status.isPro || status.role == 'admin';
         _avatarId = status.avatarId;
         _avatarFrameColor = status.avatarFrameColor;
+        _isBanned = status.isBanned;
+        _banUntil = status.banUntil;
+        _lastDailyClaim = status.lastDailyClaim;
+        _profileLoaded = true;
       });
+      if (status.selectedTheme.isNotEmpty && appThemeKeyController.value != status.selectedTheme) {
+        appThemeKeyController.value = status.selectedTheme;
+      }
+    }, onError: (err) {
+      print('AppScaffold: Error watching profile: $err');
+      if (mounted) {
+        setState(() {
+          _profileLoaded = true;
+        });
+      }
     });
 
     _notificationsSubscription = notificationRepository.watchForUser(user.uid).listen((notifications) {
@@ -487,18 +840,29 @@ class _AppScaffoldState extends State<AppScaffold> {
         return;
       }
       _onNotificationsUpdated(notifications);
+    }, onError: (err) {
+      print('AppScaffold: Error watching notifications: $err');
     });
 
     _chatThreadsSubscription = socialRepository.watchChatThreads(user.uid).listen((threads) {
-      _updateUnreadDMsCount(threads, user.uid);
+      _currentThreads = threads;
+      _recalculateUnreadDMsCount(user.uid);
+    }, onError: (err) {
+      print('AppScaffold: Error watching chat threads: $err');
+    });
+
+    _deletedThreadsSubscription = socialRepository.watchDeletedThreads(user.uid).listen((deletedIds) {
+      _deletedThreadIds = deletedIds;
+      _recalculateUnreadDMsCount(user.uid);
+    }, onError: (err) {
+      print('AppScaffold: Error watching deleted threads: $err');
     });
 
     // Invoke global load function in main.dart
     loadCollectionForCurrentUser();
   }
 
-  void _updateUnreadDMsCount(List<ChatThread> threads, String myUid) async {
-    final deleted = await LocalStorage.getStringList('deleted_threads');
+  void _recalculateUnreadDMsCount(String myUid) async {
     final readTimesRaw = await LocalStorage.getString('last_read_times');
     Map<String, String> readTimes = {};
     if (readTimesRaw != null) {
@@ -507,31 +871,31 @@ class _AppScaffoldState extends State<AppScaffold> {
       } catch (_) {}
     }
 
-    bool hasUnread = false;
-    for (final thread in threads) {
-      if (deleted.contains(thread.id)) continue;
+    int unreadCount = 0;
+    for (final thread in _currentThreads) {
+      if (_deletedThreadIds.contains(thread.id)) continue;
       if (thread.lastMessageSenderId == myUid) continue;
       if (thread.lastMessagePreview.isEmpty) continue;
 
       final lastReadStr = readTimes[thread.id];
       if (lastReadStr == null) {
-        hasUnread = true;
-        break;
+        unreadCount++;
+        continue;
       }
       final lastRead = DateTime.tryParse(lastReadStr);
       if (lastRead == null) {
-        hasUnread = true;
-        break;
+        unreadCount++;
+        continue;
       }
       if (thread.updatedAt != null && thread.updatedAt!.isAfter(lastRead)) {
-        hasUnread = true;
-        break;
+        unreadCount++;
+        continue;
       }
     }
 
     if (mounted) {
       setState(() {
-        _hasUnreadDMs = hasUnread;
+        _unreadDMsCount = unreadCount;
       });
     }
   }
@@ -657,14 +1021,35 @@ class _AppScaffoldState extends State<AppScaffold> {
     return switch (index) {
       1 => '/collection',
       2 => '/messages',
-      3 => '/social',
-      4 => _isAdmin ? '/admin' : '/',
+      3 => '/user_search',
+      4 => '/social',
+      5 => _isAdmin ? '/admin' : '/',
       _ => '/',
     };
   }
 
   void _goGuarded(String path, {bool push = false}) {
     final user = authService.currentUser;
+    if (user == null) {
+      final uri = Uri.parse(path);
+      final cleanPath = uri.path;
+      final isAllowed = cleanPath == '/' ||
+          cleanPath == '/collection' ||
+          cleanPath.startsWith('/i/') ||
+          cleanPath.startsWith('/c/') ||
+          cleanPath == '/privacy' ||
+          cleanPath == '/terms' ||
+          cleanPath == '/splash' ||
+          cleanPath == '/consent' ||
+          cleanPath == '/announcement' ||
+          cleanPath.startsWith('/catalog/') ||
+          cleanPath.startsWith('/collection/entry/');
+      if (!isAllowed) {
+        push ? context.push('/consent') : context.go('/consent');
+        return;
+      }
+    }
+
     final allowedWithoutProfile = path == '/profile' ||
         path == '/settings' ||
         path == '/privacy' ||
@@ -684,5 +1069,791 @@ class _AppScaffoldState extends State<AppScaffold> {
     }
 
     push ? context.push(path) : context.go(path);
+  }
+
+  void _checkAndShowCampaign(Map<String, dynamic> data) {
+    if (_campaignPopupShown) return;
+    final user = authService.currentUser;
+    if (user == null) return;
+
+    final isGoogleUser = user.providerData.any((p) => p.providerId == 'google.com');
+    if (!isGoogleUser) return;
+
+    final rawCampaignActive = data['isCampaignActive'] as bool? ?? false;
+    final campaignEndTimestamp = data['campaignEndTimestamp'] as Timestamp?;
+    final isCampaignExpired = campaignEndTimestamp != null && DateTime.now().isAfter(campaignEndTimestamp.toDate());
+    final isCampaignActive = rawCampaignActive && !isCampaignExpired;
+    if (!isCampaignActive) return;
+
+    _campaignPopupShown = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showCampaignModal(data);
+    });
+  }
+
+  void _showCampaignModal(Map<String, dynamic> data) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final campaignTitle = tr
+        ? (data['campaignTitleTr'] as String? ?? 'KARANLIK FIRSAT')
+        : (data['campaignTitleEn'] as String? ?? 'MYSTIC OFFER');
+    final campaignText = tr
+        ? (data['campaignTextTr'] as String? ?? 'Sınırlı Süre Fırsatı!')
+        : (data['campaignTextEn'] as String? ?? 'Limited Time Offer!');
+    final campaignEndTimestamp = data['campaignEndTimestamp'] as Timestamp?;
+    final coinMultiplier = (data['coinMultiplier'] as num?)?.toDouble() ?? 1.0;
+
+    final monthlyPrice = data['proMonthlyPriceText'] as String? ?? '₺19.99';
+    final yearlyPrice = data['proYearlyPriceText'] as String? ?? '₺199.99';
+    final monthlyOldPrice = data['proMonthlyOldPriceText'] as String? ?? '';
+    final yearlyOldPrice = data['proYearlyOldPriceText'] as String? ?? '';
+
+    final dealsList = <Widget>[];
+
+    if (monthlyOldPrice.isNotEmpty) {
+      dealsList.add(_buildCampaignDealCard(
+        context: context,
+        icon: Icons.workspace_premium_rounded,
+        iconColor: const Color(0xFFFFD700),
+        title: tr ? 'Aylık Pro Üyelik' : 'Monthly Pro Subscription',
+        oldValue: monthlyOldPrice,
+        newValue: monthlyPrice,
+        badgeText: tr ? 'İNDİRİM' : 'DISCOUNT',
+        badgeColor: const Color(0xFFFFD700),
+      ));
+    }
+
+    if (yearlyOldPrice.isNotEmpty) {
+      if (dealsList.isNotEmpty) dealsList.add(const SizedBox(height: 12));
+      dealsList.add(_buildCampaignDealCard(
+        context: context,
+        icon: Icons.workspace_premium_rounded,
+        iconColor: const Color(0xFFFFD700),
+        title: tr ? 'Yıllık Pro Üyelik' : 'Yearly Pro Subscription',
+        oldValue: yearlyOldPrice,
+        newValue: yearlyPrice,
+        badgeText: tr ? 'SÜPER FIRSAT' : 'MEGA VALUE',
+        badgeColor: const Color(0xFFFFD700),
+      ));
+    }
+
+    if (coinMultiplier > 1.0) {
+      final pack1Coins = ((data['coinsPack1Amount'] as num?)?.toInt() ?? 150);
+      final pack2Coins = ((data['coinsPack2Amount'] as num?)?.toInt() ?? 500);
+      final pack3Coins = ((data['coinsPack3Amount'] as num?)?.toInt() ?? 1200);
+
+      final pack1Amount = (pack1Coins * coinMultiplier).toInt();
+      final pack2Amount = (pack2Coins * coinMultiplier).toInt();
+      final pack3Amount = (pack3Coins * coinMultiplier).toInt();
+
+      if (dealsList.isNotEmpty) dealsList.add(const SizedBox(height: 12));
+      dealsList.add(Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFEC008C).withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.monetization_on_rounded,
+                  color: Color(0xFFFFCC00),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    tr ? 'Jeton Paketlerinde Bonus!' : 'Bonus on Coin Packs!',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Outfit',
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEC008C).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: const Color(0xFFEC008C), width: 1),
+                  ),
+                  child: Text(
+                    '${coinMultiplier.toStringAsFixed(1)}x',
+                    style: const TextStyle(
+                      color: Color(0xFFEC008C),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Outfit',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _buildCoinComparisonLine(
+              label: tr ? 'Küçük Paket:' : 'Small Pack:',
+              oldCoins: pack1Coins,
+              newCoins: pack1Amount,
+            ),
+            const SizedBox(height: 6),
+            _buildCoinComparisonLine(
+              label: tr ? 'Büyük Paket:' : 'Medium Pack:',
+              oldCoins: pack2Coins,
+              newCoins: pack2Amount,
+            ),
+            const SizedBox(height: 6),
+            _buildCoinComparisonLine(
+              label: tr ? 'Efsanevi Paket:' : 'Mega Pack:',
+              oldCoins: pack3Coins,
+              newCoins: pack3Amount,
+            ),
+          ],
+        ),
+      ));
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: 420,
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0F071A), Color(0xFF1B0B2E)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFEC008C),
+                width: 2.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFEC008C).withOpacity(0.3),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+                BoxShadow(
+                  color: const Color(0xFF00FFCC).withOpacity(0.15),
+                  blurRadius: 25,
+                  spreadRadius: -5,
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 40, 24, 28),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFEC008C).withOpacity(0.1),
+                            border: Border.all(
+                              color: const Color(0xFFEC008C).withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: SafeShaderMask(
+                            shaderCallback: (bounds) {
+                              return const LinearGradient(
+                                colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ).createShader(bounds);
+                            },
+                            child: const Icon(
+                              Icons.auto_awesome_rounded,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          campaignTitle,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.cinzel(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFFFD700),
+                            letterSpacing: 2.0,
+                            shadows: [
+                              Shadow(
+                                color: const Color(0xFFFFD700).withOpacity(0.6),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          campaignText,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            height: 1.5,
+                            fontFamily: 'Outfit',
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        if (campaignEndTimestamp != null) ...[
+                          GothicCampaignCountdown(endTime: campaignEndTimestamp.toDate()),
+                          const SizedBox(height: 20),
+                        ],
+                        if (dealsList.isNotEmpty) ...[
+                          Text(
+                            tr ? 'AKTİF KAMPANYALAR' : 'ACTIVE DEALS',
+                            style: GoogleFonts.cinzel(
+                              color: const Color(0xFFEC008C),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ...dealsList,
+                          const SizedBox(height: 24),
+                        ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              showProSubscriptionModal(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEC008C),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              elevation: 5,
+                              shadowColor: const Color(0xFFEC008C),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              tr ? 'FIRSATI YAKALA' : 'SEIZE THE OFFER',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(
+                            tr ? 'Karanlığa Dön' : 'Back to Darkness',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 12,
+                              decoration: TextDecoration.underline,
+                              fontFamily: 'Outfit',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCampaignDealCard({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String oldValue,
+    required String newValue,
+    required String badgeText,
+    required Color badgeColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: badgeColor.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Outfit',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: badgeColor, width: 1),
+                      ),
+                      child: Text(
+                        badgeText,
+                        style: TextStyle(
+                          color: badgeColor,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Outfit',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Text(
+                      oldValue,
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 13,
+                        decoration: TextDecoration.lineThrough,
+                        fontFamily: 'Outfit',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white70,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      newValue,
+                      style: TextStyle(
+                        color: badgeColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Outfit',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoinComparisonLine({
+    required String label,
+    required int oldCoins,
+    required int newCoins,
+  }) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+            fontFamily: 'Outfit',
+          ),
+        ),
+        const Spacer(),
+        Text(
+          '$oldCoins',
+          style: const TextStyle(
+            color: Colors.white38,
+            fontSize: 12,
+            decoration: TextDecoration.lineThrough,
+            fontFamily: 'Outfit',
+          ),
+        ),
+        const SizedBox(width: 6),
+        const Icon(
+          Icons.arrow_forward_rounded,
+          color: Colors.white54,
+          size: 12,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$newCoins Jeton',
+          style: const TextStyle(
+            color: Color(0xFFFFD700),
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Outfit',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class GothicAccessDeniedScreen extends StatelessWidget {
+  const GothicAccessDeniedScreen({
+    required this.isPermanent,
+    this.banUntil,
+    super.key,
+  });
+
+  final bool isPermanent;
+  final DateTime? banUntil;
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final title = tr ? 'ERİŞİM ENGELLENDİ' : 'ACCESS DENIED';
+    final desc = isPermanent
+        ? (tr
+            ? 'Hesabınız kuralları ihlal ettiğiniz için süresiz olarak engellenmiştir.'
+            : 'Your account has been permanently banned due to violating the rules.')
+        : (tr
+            ? 'Hesabınız geçici olarak askıya alınmıştır.\nYasak bitiş tarihi: ${_formatDateTime(banUntil!)}'
+            : 'Your account has been temporarily suspended.\nSuspension ends: ${_formatDateTime(banUntil!)}');
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: GothicPageBackgroundWidget(),
+          ),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFEC008C).withOpacity(0.3),
+                          blurRadius: 30,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.gavel_rounded,
+                      size: 80,
+                      color: Color(0xFFEC008C),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.cinzel(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF00FFCC),
+                      letterSpacing: 2,
+                      shadows: [
+                        Shadow(
+                          color: const Color(0xFF00FFCC).withOpacity(0.8),
+                          blurRadius: 15,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    desc,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      fontSize: 16,
+                      color: Colors.grey.shade300,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  OutlinedButton(
+                    onPressed: () async {
+                      await authService.signOut();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFEC008C),
+                      side: const BorderSide(color: Color(0xFFEC008C), width: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      shadowColor: const Color(0xFFEC008C),
+                      elevation: 5,
+                    ),
+                    child: Text(
+                      tr ? 'ÇIKIŞ YAP' : 'SIGN OUT',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dt) {
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final year = dt.year;
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$day.$month.$year - $hour:$minute';
+  }
+}
+
+class DailyRewardGiftWidget extends StatefulWidget {
+  final User? currentUser;
+  final DateTime? lastDailyClaim;
+
+  const DailyRewardGiftWidget({
+    super.key,
+    required this.currentUser,
+    required this.lastDailyClaim,
+  });
+
+  @override
+  State<DailyRewardGiftWidget> createState() => _DailyRewardGiftWidgetState();
+}
+
+class _DailyRewardGiftWidgetState extends State<DailyRewardGiftWidget> {
+  bool _isClaiming = false;
+
+  bool get _hasClaimedToday {
+    if (widget.currentUser == null) return false;
+    final lastClaim = widget.lastDailyClaim;
+    if (lastClaim == null) return false;
+    final now = DateTime.now();
+    return lastClaim.year == now.year &&
+        lastClaim.month == now.month &&
+        lastClaim.day == now.day;
+  }
+
+  Future<void> _handleClaim() async {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    if (widget.currentUser == null) {
+      final currentLoc = GoRouterState.of(context).uri.toString();
+      context.push('/consent?from=${Uri.encodeComponent(currentLoc)}');
+      return;
+    }
+
+    if (_hasClaimedToday) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            tr
+                ? 'Bugünkü günlük ödülünüzü zaten aldınız.'
+                : 'You have already claimed today\'s daily reward.',
+            style: const TextStyle(
+              color: Color(0xFFFFD700),
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Outfit',
+            ),
+          ),
+          backgroundColor: const Color(0xFF160E24),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isClaiming = true;
+    });
+
+    try {
+      await profileSetupRepository.claimDailyCoins(widget.currentUser!.uid);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              tr
+                  ? 'Tebrikler! Günlük 5 Jeton kazandınız.'
+                  : 'Congratulations! You claimed 5 daily Coins.',
+              style: const TextStyle(
+                color: Color(0xFF00FFCC),
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Outfit',
+              ),
+            ),
+            backgroundColor: const Color(0xFF160E24),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              tr
+                  ? 'Ödül alınırken bir hata oluştu: $e'
+                  : 'Error claiming reward: $e',
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Outfit',
+              ),
+            ),
+            backgroundColor: const Color(0xFF160E24),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isClaiming = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    final claimed = _hasClaimedToday;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return InkWell(
+      onTap: _isClaiming ? null : _handleClaim,
+      borderRadius: BorderRadius.circular(22),
+      child: _isClaiming
+          ? const SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            )
+          : claimed
+              ? Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark ? const Color(0xFF130B1E).withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.4),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFFC4B2D9).withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.card_giftcard_rounded,
+                      color: isDark ? const Color(0xFFC4B2D9).withValues(alpha: 0.35) : Colors.grey.withValues(alpha: 0.45),
+                      size: 20,
+                    ),
+                  ),
+                )
+              : Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark ? const Color(0xFF2A1E00) : const Color(0xFFFFFDE7),
+                    border: Border.all(
+                      color: const Color(0xFFFFD700),
+                      width: 2.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                        blurRadius: 8.0,
+                        spreadRadius: 1.0,
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.card_giftcard_rounded,
+                      color: Color(0xFFFFD700),
+                      size: 20,
+                    ),
+                  ),
+                ),
+    );
   }
 }

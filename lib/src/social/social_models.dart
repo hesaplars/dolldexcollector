@@ -94,6 +94,10 @@ class ChatMessage {
     this.senderAvatarId = '',
     this.senderFrameColor = '',
     this.createdAt,
+    this.sharedCatalogId = '',
+    this.sharedCollectionId = '',
+    this.sharedCollectionStatus = '',
+    this.sharedSource = '',
   });
 
   final String id;
@@ -104,6 +108,10 @@ class ChatMessage {
   final String senderAvatarId;
   final String senderFrameColor;
   final DateTime? createdAt;
+  final String sharedCatalogId;
+  final String sharedCollectionId;
+  final String sharedCollectionStatus;
+  final String sharedSource;
 
   Map<String, Object?> toMap() {
     return {
@@ -114,6 +122,10 @@ class ChatMessage {
       'senderAvatarId': senderAvatarId,
       'senderFrameColor': senderFrameColor,
       'createdAt': createdAt?.toIso8601String(),
+      'sharedCatalogId': sharedCatalogId,
+      'sharedCollectionId': sharedCollectionId,
+      'sharedCollectionStatus': sharedCollectionStatus,
+      'sharedSource': sharedSource,
     };
   }
 
@@ -127,6 +139,10 @@ class ChatMessage {
       senderAvatarId: map['senderAvatarId'] as String? ?? '',
       senderFrameColor: map['senderFrameColor'] as String? ?? '',
       createdAt: _dateFromMapValue(map['createdAt']),
+      sharedCatalogId: map['sharedCatalogId'] as String? ?? '',
+      sharedCollectionId: map['sharedCollectionId'] as String? ?? '',
+      sharedCollectionStatus: map['sharedCollectionStatus'] as String? ?? '',
+      sharedSource: map['sharedSource'] as String? ?? '',
     );
   }
 }

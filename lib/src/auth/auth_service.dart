@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
+import '../users/profile_setup_repository.dart';
 
 bool _isFirebaseInitialized() {
   try {
@@ -85,6 +86,7 @@ class AuthService {
   }
 }
 
+
 Future<void> _syncUserProfile(User? user) async {
   if (user == null || !_isFirebaseInitialized()) {
     return;
@@ -92,12 +94,31 @@ Future<void> _syncUserProfile(User? user) async {
 
   final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
   final snapshot = await userRef.get();
+  final data = snapshot.data();
+  final hasCoins = data != null && data.containsKey('coins');
+
+  final existingAvatarId = data?['avatarId'] as String?;
+  final googlePhotoUrl = user.photoURL;
+  final bool hasExistingAvatar = existingAvatarId != null && existingAvatarId.isNotEmpty;
+
+  final String? newAvatarId = (!hasExistingAvatar && googlePhotoUrl != null && googlePhotoUrl.isNotEmpty)
+      ? googlePhotoUrl
+      : (existingAvatarId != null &&
+              (existingAvatarId.startsWith('http://') || existingAvatarId.startsWith('https://')) &&
+              googlePhotoUrl != null &&
+              googlePhotoUrl.isNotEmpty)
+          ? googlePhotoUrl
+          : null;
 
   await userRef.set({
     'displayName': user.displayName,
     'email': user.email,
     'photoUrl': user.photoURL,
+    if (newAvatarId != null) 'avatarId': newAvatarId,
     if (!snapshot.exists) 'role': 'user',
+    if (!snapshot.exists || !hasCoins) 'coins': 20,
+    'acceptedPrivacyVersion': ProfileSetupRepository.privacyVersion,
+    'acceptedTermsVersion': ProfileSetupRepository.termsVersion,
     'lastSeen': FieldValue.serverTimestamp(),
   }, SetOptions(merge: true));
 }

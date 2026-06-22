@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -8,27 +9,56 @@ import '../collection/collection_repository.dart';
 import '../core/app_helpers.dart';
 import '../core/app_language.dart';
 import '../moderation/report_models.dart';
+import '../users/profile_setup_repository.dart';
 import '../widgets/doll_widgets.dart';
 
 class CatalogScreen extends StatefulWidget {
-  const CatalogScreen({super.key});
+  final String? initialQuery;
+  const CatalogScreen({this.initialQuery, super.key});
 
   @override
   State<CatalogScreen> createState() => _CatalogScreenState();
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
-  String _query = '';
+  late String _query;
   CatalogItemType? _type;
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _query = widget.initialQuery ?? '';
+    _searchController = TextEditingController(text: _query);
+  }
+
+  @override
+  void didUpdateWidget(covariant CatalogScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialQuery != widget.initialQuery) {
+      final newQuery = widget.initialQuery ?? '';
+      _query = newQuery;
+      _searchController.text = newQuery;
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return PageShell(
+      listViewKey: const PageStorageKey('catalog_scroll'),
       title: t(context, 'catalog'),
       subtitle: t(context, 'catalogSubtitle'),
+      showBackButton: context.canPop(),
       child: Column(
         children: [
           SearchPanel(
+            controller: _searchController,
             selectedType: _type,
             onQueryChanged: (value) {
               setState(() {
@@ -64,12 +94,14 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
 class SearchPanel extends StatelessWidget {
   const SearchPanel({
+    required this.controller,
     required this.selectedType,
     required this.onQueryChanged,
     required this.onTypeChanged,
     super.key,
   });
 
+  final TextEditingController controller;
   final CatalogItemType? selectedType;
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<CatalogItemType?> onTypeChanged;
@@ -146,19 +178,20 @@ class SearchPanel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GothicIvyContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      borderRadius: 16,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      borderRadius: 12,
       child: Row(
         children: [
           Expanded(
             child: TextField(
+              controller: controller,
               onChanged: onQueryChanged,
-              style: TextStyle(fontSize: 14, color: isDark ? Colors.white : Colors.black87, fontFamily: 'Outfit'),
+              style: TextStyle(fontSize: 12.5, color: isDark ? Colors.white : Colors.black87, fontFamily: 'Outfit'),
               decoration: InputDecoration(
                 hintText: t(context, 'searchHint'),
-                hintStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, fontFamily: 'Outfit'),
-                prefixIcon: _buildNeonIcon(context, Icons.search_rounded, size: 20),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                hintStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12.5, fontFamily: 'Outfit'),
+                prefixIcon: _buildNeonIcon(context, Icons.search_rounded, size: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 6),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -166,30 +199,30 @@ class SearchPanel extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           InkWell(
             onTap: () => _showCatalogFilterSheet(context),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: const Color(0xFFEC008C).withOpacity(isDark ? 0.5 : 0.25),
-                  width: 1.2,
+                  width: 1.0,
                 ),
                 color: isDark ? const Color(0xFF160E22) : Colors.white,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildNeonIcon(context, Icons.tune_rounded, size: 18),
-                  const SizedBox(width: 6),
+                  _buildNeonIcon(context, Icons.tune_rounded, size: 14),
+                  const SizedBox(width: 4),
                   Text(
                     selectedType == null ? (tr ? 'Hepsi' : 'All') : catalogTypeLabel(context, selectedType!),
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : const Color(0xFFEC008C),
                     ),
@@ -215,49 +248,80 @@ class SearchPanel extends StatelessWidget {
       ),
       builder: (context) {
         final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-        return GothicIvyContainer(
-          borderRadius: 20,
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tr ? 'Katalog Filtrele' : 'Filter Catalog',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+        final currentUser = authService.currentUser;
+
+        return StreamBuilder<ProfileSetupStatus>(
+          stream: currentUser != null
+              ? profileSetupRepository.watch(currentUser.uid)
+              : const Stream.empty(),
+          builder: (context, snap) {
+            final isPro = snap.data?.isPro == true;
+
+            return GothicIvyContainer(
+              borderRadius: 20,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildFilterChip(
-                    context: context,
-                    isSelected: selectedType == null,
-                    label: t(context, 'all'),
-                    onTap: () {
-                      onTypeChanged(null);
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  for (final type in CatalogItemType.values)
-                    _buildFilterChip(
-                      context: context,
-                      isSelected: selectedType == type,
-                      label: catalogTypeLabel(context, type),
-                      onTap: () {
-                        onTypeChanged(type);
-                        Navigator.of(context).pop();
-                      },
+                  Text(
+                    tr ? 'Katalog Filtrele' : 'Filter Catalog',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildFilterChip(
+                        context: context,
+                        isSelected: selectedType == null,
+                        label: t(context, 'all'),
+                        onTap: () {
+                          onTypeChanged(null);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      for (final type in CatalogItemType.values)
+                        _buildFilterChip(
+                          context: context,
+                          isSelected: selectedType == type,
+                          label: catalogTypeLabel(context, type),
+                          onTap: () {
+                            final isRestricted = type == CatalogItemType.set ||
+                                type == CatalogItemType.pet ||
+                                type == CatalogItemType.accessory;
+                            if (isRestricted && !isPro) {
+                              Navigator.of(context).pop();
+                              showGothicConfirmDialog(
+                                context,
+                                title: tr ? 'Pro Filtre Özelliği' : 'Pro Filter Feature',
+                                content: tr
+                                    ? 'Set, Pet ve Aksesuar filtreleri DollDex Pro üyelerine özeldir. Avantajları görmek ve Pro\'ya yükseltmek ister misiniz?'
+                                    : 'Set, Pet, and Accessory filters are exclusive to DollDex Pro members. Would you like to view the benefits and upgrade to Pro?',
+                                confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                cancelText: tr ? 'Vazgeç' : 'Cancel',
+                              ).then((confirmed) {
+                                if (confirmed && context.mounted) {
+                                  showProSubscriptionModal(context);
+                                }
+                              });
+                            } else {
+                              onTypeChanged(type);
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        ),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -276,33 +340,47 @@ class FeaturedGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<CatalogEntry>>(
-      valueListenable: catalogEntriesNotifier,
-      builder: (context, entries, _) {
-        final items = filterCatalogEntries(entries, query, type);
-        if (items.isEmpty) {
-          return EmptyState(
-            icon: Icons.search_off_rounded,
-            title: t(context, 'noCatalogResults'),
-            body: t(context, 'noCatalogResultsBody'),
-          );
-        }
+    final currentUser = authService.currentUser;
+    return StreamBuilder<ProfileSetupStatus>(
+      stream: currentUser != null
+          ? profileSetupRepository.watch(currentUser.uid)
+          : const Stream.empty(),
+      builder: (context, snap) {
+        final isPro = snap.data?.isPro == true || snap.data?.role == 'admin';
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            const columns = 3;
+        return ValueListenableBuilder<List<CatalogEntry>>(
+          valueListenable: catalogEntriesNotifier,
+          builder: (context, entries, _) {
+            final items = filterCatalogEntries(entries, query, type);
+            if (items.isEmpty) {
+              return EmptyState(
+                icon: Icons.search_off_rounded,
+                title: t(context, 'noCatalogResults'),
+                body: t(context, 'noCatalogResultsBody'),
+              );
+            }
 
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: items.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 6,
-                childAspectRatio: 0.58,
-              ),
-              itemBuilder: (context, index) => CatalogCard(item: items[index]),
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                const columns = 4;
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: items.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    mainAxisSpacing: 6,
+                    crossAxisSpacing: 6,
+                    childAspectRatio: 0.58,
+                  ),
+                  itemBuilder: (context, index) => CatalogCard(
+                    item: items[index],
+                    isPro: isPro,
+                    isSearching: query.trim().isNotEmpty,
+                  ),
+                );
+              },
             );
           },
         );
@@ -312,138 +390,215 @@ class FeaturedGrid extends StatelessWidget {
 }
 
 class CatalogCard extends StatelessWidget {
-  const CatalogCard({required this.item, super.key});
+  const CatalogCard({
+    required this.item,
+    required this.isPro,
+    required this.isSearching,
+    super.key,
+  });
 
   final CatalogEntry item;
+  final bool isPro;
+  final bool isSearching;
 
   @override
   Widget build(BuildContext context) {
     final isPng = item.primaryImageUrl.toLowerCase().contains('.png');
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final shouldBlur = isSearching && !isPro;
+
+    Widget cardBody = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: DollImage(
+                  imageUrl: item.primaryImageUrl,
+                  label: entryName(context, item),
+                ),
+              ),
+              if (!shouldBlur)
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                       onTap: () => context.go('/i/${item.id}'),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                entryName(context, item),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  height: 1.05,
+                  fontFamily: 'Outfit',
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                entrySubtitle(context, item),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 9.0,
+                  height: 1.1,
+                  fontFamily: 'Outfit',
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (!shouldBlur) ...[
+                ValueListenableBuilder<List<CollectionEntry>>(
+                  valueListenable: collectionEntriesNotifier,
+                  builder: (context, collectionEntries, _) {
+                    final entry = collectionEntries.firstWhere(
+                      (e) => e.itemId == item.id,
+                      orElse: () => const CollectionEntry(
+                        id: '',
+                        userId: '',
+                        itemId: '',
+                        status: CollectionStatus.owned,
+                        condition: CollectionCondition.complete,
+                        quantity: 0,
+                      ),
+                    );
+
+                    final isOwned = entry.quantity > 0 && entry.status == CollectionStatus.owned;
+                    final isWanted = entry.quantity > 0 && entry.status == CollectionStatus.wanted;
+                    final isTrade = entry.quantity > 0 && entry.status == CollectionStatus.trade;
+                    final isSelling = entry.quantity > 0 && entry.status == CollectionStatus.selling;
+
+                    return SizedBox(
+                      height: 30,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _CardActionButton(
+                              tooltip: t(context, 'owned'),
+                              icon: Icons.check_rounded,
+                              isActive: isOwned,
+                              activeColor: DollDexTheme.teal,
+                              onPressed: () => showCollectionSheet(context, item),
+                            ),
+                            const SizedBox(width: 4),
+                            _CardActionButton(
+                              tooltip: t(context, 'want'),
+                              icon: isWanted ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              isActive: isWanted,
+                              activeColor: DollDexTheme.berry,
+                              onPressed: () => showCollectionSheet(context, item),
+                            ),
+                            const SizedBox(width: 4),
+                            _CardActionButton(
+                              tooltip: t(context, 'trade'),
+                              icon: Icons.swap_horiz_rounded,
+                              isActive: isTrade,
+                              activeColor: Colors.deepPurpleAccent,
+                              onPressed: () => showCollectionSheet(context, item),
+                            ),
+                            const SizedBox(width: 4),
+                            _CardActionButton(
+                              tooltip: t(context, 'selling'),
+                              icon: Icons.sell_outlined,
+                              isActive: isSelling,
+                              activeColor: DollDexTheme.amber,
+                              onPressed: () => showCollectionSheet(context, item),
+                            ),
+                            const SizedBox(width: 4),
+                            _CardActionButton(
+                              tooltip: t(context, 'report'),
+                              icon: Icons.flag_outlined,
+                              isNeonFlag: true,
+                              onPressed: () => showReportSheet(
+                                context,
+                                ReportTargetType.catalogEntry,
+                                item.id,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ] else
+                const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (shouldBlur) {
+      cardBody = Stack(
+        children: [
+          ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
+            child: cardBody,
+          ),
+          Positioned.fill(
+            child: Material(
+              color: Colors.black.withOpacity(0.35),
+              child: InkWell(
+                onTap: () => showProSubscriptionModal(context),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.lock_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          tr ? 'Görmek için\nPro olmalısınız' : 'Upgrade to Pro\nto view',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Outfit',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Card(
       color: isPng ? Colors.transparent : null,
       elevation: isPng ? 0 : null,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/catalog/${item.id}'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: DollImage(
-                imageUrl: item.primaryImageUrl,
-                label: entryName(context, item),
-              ),
+      child: shouldBlur
+          ? cardBody
+          : InkWell(
+              onTap: () => context.go('/i/${item.id}'),
+              child: cardBody,
             ),
-            Padding(
-              padding: const EdgeInsets.all(5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entryName(context, item),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      height: 1.05,
-                      fontFamily: 'Outfit',
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    entrySubtitle(context, item),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 9.0,
-                      height: 1.1,
-                      fontFamily: 'Outfit',
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  ValueListenableBuilder<List<CollectionEntry>>(
-                    valueListenable: collectionEntriesNotifier,
-                    builder: (context, collectionEntries, _) {
-                      final entry = collectionEntries.firstWhere(
-                        (e) => e.itemId == item.id,
-                        orElse: () => const CollectionEntry(
-                          id: '',
-                          userId: '',
-                          itemId: '',
-                          status: CollectionStatus.owned,
-                          condition: CollectionCondition.complete,
-                          quantity: 0,
-                        ),
-                      );
-
-                      final isOwned = entry.quantity > 0 && entry.status == CollectionStatus.owned;
-                      final isWanted = entry.quantity > 0 && entry.status == CollectionStatus.wanted;
-                      final isTrade = entry.quantity > 0 && entry.status == CollectionStatus.trade;
-                      final isSelling = entry.quantity > 0 && entry.status == CollectionStatus.selling;
-
-                      return SizedBox(
-                        height: 30,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _CardActionButton(
-                                tooltip: t(context, 'owned'),
-                                icon: Icons.check_rounded,
-                                isActive: isOwned,
-                                activeColor: DollDexTheme.teal,
-                                onPressed: () => showCollectionSheet(context, item),
-                              ),
-                              const SizedBox(width: 4),
-                              _CardActionButton(
-                                tooltip: t(context, 'want'),
-                                icon: isWanted ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                isActive: isWanted,
-                                activeColor: DollDexTheme.berry,
-                                onPressed: () => showCollectionSheet(context, item),
-                              ),
-                              const SizedBox(width: 4),
-                              _CardActionButton(
-                                tooltip: t(context, 'trade'),
-                                icon: Icons.swap_horiz_rounded,
-                                isActive: isTrade,
-                                activeColor: Colors.deepPurpleAccent,
-                                onPressed: () => showCollectionSheet(context, item),
-                              ),
-                              const SizedBox(width: 4),
-                              _CardActionButton(
-                                tooltip: t(context, 'selling'),
-                                icon: Icons.sell_outlined,
-                                isActive: isSelling,
-                                activeColor: DollDexTheme.amber,
-                                onPressed: () => showCollectionSheet(context, item),
-                              ),
-                              const SizedBox(width: 4),
-                              _CardActionButton(
-                                tooltip: t(context, 'report'),
-                                icon: Icons.flag_outlined,
-                                isNeonFlag: true,
-                                onPressed: () => showReportSheet(
-                                  context,
-                                  ReportTargetType.catalogEntry,
-                                  item.id,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

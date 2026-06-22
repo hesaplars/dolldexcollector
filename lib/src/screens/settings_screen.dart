@@ -6,6 +6,8 @@ import '../../main.dart';
 import '../../src/monetization/billing_service.dart';
 import '../core/app_language.dart';
 import '../widgets/doll_widgets.dart';
+import '../users/profile_setup_repository.dart';
+import '../core/app_helpers.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,18 +19,19 @@ class SettingsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     Widget buildGothicCard({required String title, required List<Widget> children}) {
+      final primary = Theme.of(context).colorScheme.primary;
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFFEC008C).withOpacity(isDark ? 0.4 : 0.6),
+            color: primary.withOpacity(isDark ? 0.4 : 0.6),
             width: isDark ? 1.5 : 2.0,
           ),
-          color: isDark ? const Color(0xFF130820) : Colors.white,
+          color: Theme.of(context).cardTheme.color ?? (isDark ? const Color(0xFF130820) : Colors.white),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFEC008C).withOpacity(isDark ? 0.15 : 0.08),
+              color: primary.withOpacity(isDark ? 0.15 : 0.08),
               blurRadius: 10,
               spreadRadius: 1,
             ),
@@ -106,10 +109,17 @@ class SettingsScreen extends StatelessWidget {
       );
     }
 
-    return PageShell(
-      title: tr ? 'Ayarlar' : 'Settings',
-      subtitle: tr ? 'Hesap ve uygulama ayarları' : 'Account and app settings',
-      child: ListView(
+    return StreamBuilder<ProfileSetupStatus>(
+      stream: user != null ? profileSetupRepository.watch(user.uid) : const Stream.empty(),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final isPro = profile?.isPro == true || profile?.role == 'admin';
+
+        return PageShell(
+          title: tr ? 'Ayarlar' : 'Settings',
+          subtitle: tr ? 'Hesap ve uygulama ayarları' : 'Account and app settings',
+          showBackButton: true,
+          child: ListView(
         padding: EdgeInsets.zero,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -121,10 +131,10 @@ class SettingsScreen extends StatelessWidget {
                 buildGothicRow(
                   context: context,
                   icon: Icons.face_3_outlined,
-                  title: tr ? 'Avatar & Çerçeve Seçimi' : 'Select Avatar & Frame',
+                  title: tr ? 'Profilini Özelleştir' : 'Customize Your Profile',
                   subtitle: tr
-                      ? 'Gotik bebek avatarını ve Pro çerçeveni ayarla'
-                      : 'Set your gothic doll avatar and Pro frame',
+                      ? 'Avatar, Profil Çerçevesi, Profil Rozeti ve Kapak Fotoğrafını değiştir'
+                      : 'Change Avatar, Profile Frame, Profile Badge, and Cover Photo',
                   onTap: () => showAvatarStudioModal(context, user.uid),
                 ),
                 const Divider(color: Color(0xFF2C1F45), height: 16, thickness: 0.8),
@@ -141,7 +151,7 @@ class SettingsScreen extends StatelessWidget {
                   icon: Icons.workspace_premium_outlined,
                   title: 'DollDex Pro',
                   subtitle: tr ? 'Pro üyelik avantajlarını gör ve satın al' : 'View Pro benefits and purchase',
-                  onTap: () => _showProSubscriptionModal(context),
+                  onTap: () => showProSubscriptionModal(context),
                 ),
                 const Divider(color: Color(0xFF2C1F45), height: 16, thickness: 0.8),
                 buildGothicRow(
@@ -153,6 +163,137 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
+          buildGothicCard(
+            title: tr ? 'Arayüz ve Görünüm' : 'Interface & Appearance',
+            children: [
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  title: Text(
+                    tr ? 'Site Teması Seçimi' : 'Select Site Theme',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  leading: buildNeonIcon(context, Icons.palette_outlined),
+                  childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  iconColor: Theme.of(context).colorScheme.primary,
+                  collapsedIconColor: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  children: [
+                    ValueListenableBuilder<String>(
+                      valueListenable: appThemeKeyController,
+                      builder: (context, activeThemeKey, _) {
+                        final themes = [
+                          {'key': 'goth_light', 'nameTr': 'Açık Goth', 'nameEn': 'Light Goth', 'color': DollDexTheme.teal, 'bg': DollDexTheme.paper},
+                          {'key': 'goth_dark', 'nameTr': 'Koyu Goth', 'nameEn': 'Dark Goth', 'color': DollDexTheme.teal, 'bg': DollDexTheme.darkPaper},
+                          {'key': 'toxic_neon', 'nameTr': 'Zehir Yeşili', 'nameEn': 'Toxic Neon', 'color': const Color(0xFF39FF14), 'bg': const Color(0xFF060D08), 'isPro': true},
+                          {'key': 'crimson_blood', 'nameTr': 'Kan Kırmızısı', 'nameEn': 'Crimson Blood', 'color': const Color(0xFFFF073A), 'bg': const Color(0xFF0B0606), 'isPro': true},
+                          {'key': 'royal_gold', 'nameTr': 'Asil Altın', 'nameEn': 'Royal Gold', 'color': const Color(0xFFFFD700), 'bg': const Color(0xFF0B0410), 'isPro': true},
+                        ];
+
+                        return Column(
+                          children: themes.map((tItem) {
+                            final themeKey = tItem['key'] as String;
+                            final name = tr ? tItem['nameTr'] as String : tItem['nameEn'] as String;
+                            final primaryColor = tItem['color'] as Color;
+                            final themeIsPro = tItem['isPro'] == true;
+                            final isSelected = activeThemeKey == themeKey;
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: InkWell(
+                                onTap: () {
+                                  if (themeIsPro && !isPro) {
+                                    showGothicConfirmDialog(
+                                      context,
+                                      title: tr ? 'DollDex Pro Özelliği' : 'DollDex Pro Feature',
+                                      content: tr
+                                          ? 'Bu özel renkli gotik temayı kullanabilmek için DollDex Pro üyesi olmalısınız.'
+                                          : 'You must be a DollDex Pro member to use this custom colored gothic theme.',
+                                      confirmText: tr ? "Pro'ya Geç" : 'Upgrade to Pro',
+                                      cancelText: tr ? 'Vazgeç' : 'Cancel',
+                                    ).then((confirmed) {
+                                      if (confirmed && context.mounted) {
+                                        showProSubscriptionModal(context);
+                                      }
+                                    });
+                                  } else {
+                                    appThemeKeyController.value = themeKey;
+                                    if (user != null) {
+                                      profileSetupRepository.saveSelectedTheme(user.uid, themeKey);
+                                    }
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 14,
+                                        height: 14,
+                                        decoration: BoxDecoration(
+                                          color: primaryColor,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: primaryColor.withOpacity(0.4),
+                                              blurRadius: 4,
+                                              spreadRadius: 1,
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              name,
+                                              style: TextStyle(
+                                                fontSize: 13.5,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                color: isDark ? Colors.white : Colors.black87,
+                                              ),
+                                            ),
+                                            if (themeIsPro) ...[
+                                              const SizedBox(width: 6),
+                                              const Icon(
+                                                Icons.workspace_premium_rounded,
+                                                color: Colors.amber,
+                                                size: 14,
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        isSelected
+                                            ? Icons.radio_button_checked_rounded
+                                            : Icons.radio_button_off_rounded,
+                                        color: isSelected
+                                            ? primaryColor
+                                            : Colors.grey.withOpacity(0.5),
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           buildGothicCard(
             title: tr ? 'Yasal ve Hesap' : 'Legal & Account',
             children: [
@@ -212,160 +353,9 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _showProSubscriptionModal(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) {
-        final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-        return DraggableScrollableSheet(
-          initialChildSize: 0.70,
-          minChildSize: 0.5,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                Text(
-                  'DollDex Pro',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: DollDexTheme.teal,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(t(context, 'proSubtitle')),
-                const SizedBox(height: 16),
-                Card(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t(context, 'proBenefits'),
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                        ),
-                        const SizedBox(height: 10),
-                        FeatureLine(text: tr ? 'Reklamsız Koyu Gotik Deneyim' : 'Ad-Free Dark Gothic Experience'),
-                        FeatureLine(text: tr ? '12 Özel Gotik Bebek Avatarı' : '12 Exclusive Gothic Doll Avatars'),
-                        FeatureLine(text: tr ? '12 Premium Gotik Profil Kapak Fotoğrafı' : '12 Premium Gothic Cover Photos'),
-                        FeatureLine(text: tr ? '12 Gotik Profil Çerçevesi (Sarmaşık, Yarasa, Örümcek Ağı)' : '12 Gothic Profile Frames (Ivy, Bats, Webs)'),
-                        FeatureLine(text: tr ? 'Gelişmiş Koleksiyon İstatistikleri ve Analizler' : 'Advanced Collection Stats & Analytics'),
-                        FeatureLine(text: tr ? 'Daha Geniş Profil Vitrini' : 'Expanded Profile Showcase'),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: PriceOptionCard(
-                        title: t(context, 'monthly'),
-                        price: t(context, 'playBilling'),
-                        subtitle: t(context, 'serverVerified'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: PriceOptionCard(
-                        title: t(context, 'yearly'),
-                        price: t(context, 'playBilling'),
-                        subtitle: t(context, 'bestCollectors'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: () async {
-                    try {
-                      const billing = BillingService();
-                      await billing.buySubscription(BillingService.proMonthlyProductId);
-                    } catch (error) {
-                      showDialog<void>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text(tr ? 'Google Play Uyarısı' : 'Google Play Warning'),
-                          content: Text(
-                            tr
-                                ? 'Google Play Billing entegrasyonu Google Play Console kurulumundan sonra aktif olacaktır.'
-                                : 'Google Play Billing will be enabled after Google Play Console setup.',
-                          ),
-                          actions: [
-                            FilledButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Tamam'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.lock_open_rounded),
-                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                  label: Text(t(context, 'connectBilling')),
-                ),
-              ],
-            );
-          },
-        );
       },
     );
   }
-}
 
-class PriceOptionCard extends StatelessWidget {
-  const PriceOptionCard({
-    required this.title,
-    required this.price,
-    required this.subtitle,
-    super.key,
-  });
 
-  final String title;
-  final String price;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? DollDexTheme.darkLine
-              : DollDexTheme.line,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(price),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

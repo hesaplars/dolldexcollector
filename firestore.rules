@@ -27,11 +27,28 @@ service cloud.firestore {
         && request.auth.uid in get(/databases/$(database)/documents/chatThreads/$(threadId)).data.memberIds;
     }
 
+    function notBanned() {
+      return !signedIn()
+        || !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        || (
+          (
+            !('isBanned' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBanned == false
+          )
+          && (
+            !('banUntil' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+            || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.banUntil == null
+            || request.time >= get(/databases/$(database)/documents/users/$(request.auth.uid)).data.banUntil
+          )
+        );
+    }
+
     match /users/{userId} {
-      allow read: if signedIn();
+      allow read: if signedIn() && notBanned();
       allow create: if isOwner(userId) && request.resource.data.role == 'user';
       allow update: if isAdmin()
         || (isOwner(userId)
+          && notBanned()
           && !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['role', 'isPro', 'proUntil']));
       allow delete: if isAdmin();
@@ -39,14 +56,14 @@ service cloud.firestore {
 
     match /usernames/{username} {
       allow read: if true;
-      allow create: if signedIn() && isValidUsername(username) && request.resource.data.userId == request.auth.uid && request.resource.data.username == username;
-      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid && request.resource.data.username == username;
-      allow delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if signedIn() && notBanned() && isValidUsername(username) && request.resource.data.userId == request.auth.uid && request.resource.data.username == username;
+      allow update: if signedIn() && notBanned() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid && request.resource.data.username == username;
+      allow delete: if signedIn() && ((resource.data.userId == request.auth.uid && notBanned()) || isAdmin());
     }
 
     match /accountDeletionRequests/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create, update: if isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      allow read: if (isOwner(userId) && notBanned()) || isAdmin();
+      allow create, update: if isOwner(userId) && notBanned() && request.resource.data.userId == request.auth.uid;
       allow delete: if isAdmin();
     }
 
@@ -76,46 +93,60 @@ service cloud.firestore {
     }
 
     match /collectionEntries/{entryId} {
-      allow read: if (!('visibility' in resource.data) || resource.data.visibility == 'public')
-        || isOwner(resource.data.userId)
+      allow read: if resource == null
+        || (!('visibility' in resource.data) || resource.data.visibility == 'public')
+        || (isOwner(resource.data.userId) && notBanned())
         || isAdmin();
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow update, delete: if (isOwner(resource.data.userId) && notBanned()) || isAdmin();
     }
 
     match /comments/{commentId} {
       allow read: if true;
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+      allow update, delete: if (isOwner(resource.data.userId) && notBanned()) || isAdmin();
     }
 
     match /reports/{reportId} {
-      allow read: if isAdmin()
-        || isOwner(resource.data.reporterId);
+      allow read: if resource == null
+        || isAdmin()
+        || (isOwner(resource.data.reporterId) && notBanned());
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.reporterId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
     match /notifications/{notificationId} {
-      allow read, update: if isOwner(resource.data.userId);
-      allow create: if signedIn();
+      allow read: if resource == null
+        || (isOwner(resource.data.userId) && notBanned())
+        || isAdmin();
+      allow update: if isOwner(resource.data.userId) && notBanned();
+      allow create: if signedIn() && notBanned();
       allow delete: if signedIn()
-        && (isOwner(resource.data.userId) || isAdmin());
+        && ((isOwner(resource.data.userId) && notBanned()) || isAdmin());
     }
 
     match /friendRequests/{requestId} {
       allow read: if signedIn()
-        && (request.auth.uid == resource.data.fromUserId
+        && notBanned()
+        && (resource == null
+          || resource.data.status == 'accepted'
+          || request.auth.uid == resource.data.fromUserId
           || request.auth.uid == resource.data.toUserId
           || isAdmin());
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.fromUserId == request.auth.uid;
       allow update: if signedIn()
+        && notBanned()
         && (request.auth.uid == resource.data.toUserId || isAdmin());
       allow delete: if signedIn()
+        && notBanned()
         && (request.auth.uid == resource.data.fromUserId
           || request.auth.uid == resource.data.toUserId
           || isAdmin());
@@ -124,44 +155,55 @@ service cloud.firestore {
     match /follows/{followId} {
       allow read: if true;
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.followerId == request.auth.uid;
       allow delete: if signedIn()
-        && (request.auth.uid == resource.data.followerId || isAdmin());
+        && ((request.auth.uid == resource.data.followerId && notBanned()) || isAdmin());
       allow update: if false;
     }
 
     match /blocks/{blockId} {
       allow read: if signedIn()
-        && (resource.data.blockerId == request.auth.uid || isAdmin());
+        && ((resource.data.blockerId == request.auth.uid && notBanned()) || isAdmin());
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.blockerId == request.auth.uid;
       allow delete: if signedIn()
-        && (resource.data.blockerId == request.auth.uid || isAdmin());
+        && ((resource.data.blockerId == request.auth.uid && notBanned()) || isAdmin());
       allow update: if false;
     }
 
     match /likes/{likeId} {
       allow read: if true;
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.userId == request.auth.uid;
       allow delete: if signedIn()
-        && (resource.data.userId == request.auth.uid || isAdmin());
+        && ((resource.data.userId == request.auth.uid && notBanned()) || isAdmin());
       allow update: if false;
     }
 
     match /chatThreads/{threadId} {
       allow read: if signedIn()
-        && request.auth.uid in resource.data.memberIds;
+        && notBanned()
+        && (resource == null || request.auth.uid in resource.data.memberIds);
       allow create: if signedIn()
+        && notBanned()
         && request.auth.uid in request.resource.data.memberIds;
       allow update: if signedIn()
+        && notBanned()
         && request.auth.uid in resource.data.memberIds;
       allow delete: if isAdmin();
     }
 
+    match /deletedThreads/{userId} {
+      allow read, write: if isOwner(userId) && notBanned();
+    }
+
     match /chatMessages/{messageId} {
-      allow read: if isThreadMember(resource.data.threadId);
+      allow read: if (resource == null || isThreadMember(resource.data.threadId)) && notBanned();
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.senderId == request.auth.uid
         && isThreadMember(request.resource.data.threadId);
       allow update, delete: if isAdmin();
@@ -170,6 +212,7 @@ service cloud.firestore {
     match /globalChatMessages/{messageId} {
       allow read: if true;
       allow create: if signedIn()
+        && notBanned()
         && request.resource.data.senderId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
@@ -184,6 +227,11 @@ service cloud.firestore {
     }
 
     match /appConfig/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();
     }

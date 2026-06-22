@@ -5,6 +5,7 @@ import '../users/user_models.dart';
 import 'social_models.dart';
 import '../catalog/catalog_models.dart';
 import '../comments/comment_models.dart';
+import '../core/replay_stream.dart';
 
 bool _isFirebaseInitialized() {
   try {
@@ -18,6 +19,9 @@ class SocialRepository {
   SocialRepository({FirebaseFirestore? firestore}) : _firestore = firestore;
 
   final FirebaseFirestore? _firestore;
+  ReplayStream<List<ChatMessage>>? _globalChatStream;
+  final Map<String, ReplayStream<List<ChatMessage>>> _directMessagesCache = {};
+  final Map<String, ReplayStream<List<ChatThread>>> _chatThreadsCache = {};
 
   FirebaseFirestore? get _db {
     if (!_isFirebaseInitialized()) {
@@ -311,12 +315,16 @@ class SocialRepository {
   }
 
   Stream<List<ChatMessage>> watchDirectMessages(String threadId) {
+    if (_directMessagesCache.containsKey(threadId)) {
+      return _directMessagesCache[threadId]!;
+    }
+
     final db = _db;
     if (db == null || threadId.isEmpty) {
       return const Stream<List<ChatMessage>>.empty();
     }
 
-    return db
+    final source = db
         .collection('chatMessages')
         .where('threadId', isEqualTo: threadId)
         .snapshots()
@@ -336,15 +344,23 @@ class SocialRepository {
         return list;
       },
     );
+
+    final stream = ReplayStream<List<ChatMessage>>(source);
+    _directMessagesCache[threadId] = stream;
+    return stream;
   }
 
   Stream<List<ChatThread>> watchChatThreads(String userId) {
+    if (_chatThreadsCache.containsKey(userId)) {
+      return _chatThreadsCache[userId]!;
+    }
+
     final db = _db;
     if (db == null || userId.isEmpty) {
       return const Stream<List<ChatThread>>.empty();
     }
 
-    return db
+    final source = db
         .collection('chatThreads')
         .where('memberIds', arrayContains: userId)
         .snapshots()
@@ -361,15 +377,43 @@ class SocialRepository {
         return list;
       },
     );
+
+    final stream = ReplayStream<List<ChatThread>>(source);
+    _chatThreadsCache[userId] = stream;
+    return stream;
+  }
+
+  Future<void> deleteThreadForUser(String userId, String threadId) async {
+    final db = _db;
+    if (db == null || userId.isEmpty) return;
+    await db.collection('deletedThreads').doc(userId).set({
+      'threadIds': FieldValue.arrayUnion([threadId]),
+    }, SetOptions(merge: true));
+  }
+
+  Stream<List<String>> watchDeletedThreads(String userId) {
+    final db = _db;
+    if (db == null || userId.isEmpty) {
+      return Stream.value(const <String>[]);
+    }
+    return db.collection('deletedThreads').doc(userId).snapshots().map((doc) {
+      if (!doc.exists) return const <String>[];
+      final list = doc.data()?['threadIds'] as List? ?? [];
+      return List<String>.from(list);
+    });
   }
 
   Stream<List<ChatMessage>> watchGlobalChat() {
+    if (_globalChatStream != null) {
+      return _globalChatStream!;
+    }
+
     final db = _db;
     if (db == null) {
       return const Stream<List<ChatMessage>>.empty();
     }
 
-    return db
+    final source = db
         .collection('globalChatMessages')
         .orderBy('createdAt', descending: true)
         .limit(60)
@@ -379,15 +423,22 @@ class SocialRepository {
               .map((doc) => ChatMessage.fromMap(doc.id, doc.data()))
               .toList(growable: false),
         );
+
+    _globalChatStream = ReplayStream<List<ChatMessage>>(source);
+    return _globalChatStream!;
   }
 
   Future<void> sendGlobalMessage({
     required String senderId,
     required String text,
+    String sharedCatalogId = '',
+    String sharedCollectionId = '',
+    String sharedCollectionStatus = '',
+    String sharedSource = '',
   }) async {
     final db = _db;
     final trimmed = text.trim();
-    if (db == null || trimmed.isEmpty) {
+    if (db == null || (trimmed.isEmpty && sharedSource.isEmpty)) {
       return;
     }
 
@@ -405,6 +456,10 @@ class SocialRepository {
       'senderFrameColor': senderFrameColor,
       'text': trimmed,
       'createdAt': FieldValue.serverTimestamp(),
+      'sharedCatalogId': sharedCatalogId,
+      'sharedCollectionId': sharedCollectionId,
+      'sharedCollectionStatus': sharedCollectionStatus,
+      'sharedSource': sharedSource,
     });
   }
 

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../main.dart';
+
 import '../core/app_helpers.dart';
 import '../core/app_language.dart';
 import '../core/local_storage_helper.dart';
@@ -11,6 +12,7 @@ import '../widgets/doll_widgets.dart';
 import '../social/social_models.dart';
 import '../users/user_models.dart';
 import '../users/profile_setup_repository.dart';
+import '../auth/sign_in_panel.dart';
 
 class DirectMessagesModalContent extends StatefulWidget {
   const DirectMessagesModalContent({
@@ -32,8 +34,8 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
   bool _isLoading = false;
 
   List<String> _mutedThreadIds = [];
-  List<String> _deletedThreadIds = [];
   Map<String, String> _lastReadTimes = {};
+  String? _resolvedThreadForUserId;
 
   @override
   void initState() {
@@ -44,9 +46,53 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.showDragHandle) {
+      final state = GoRouterState.of(context);
+      final chatUserId = state.uri.queryParameters['chatUserId'];
+      final newChat = state.uri.queryParameters['newChat'] == 'true';
+
+      if (chatUserId != null) {
+        _activeChatUserId = chatUserId;
+        _showFriendsSelection = false;
+        _resolveActiveThreadForUser(chatUserId);
+      } else if (newChat) {
+        _activeThreadId = null;
+        _activeChatUserId = null;
+        _showFriendsSelection = true;
+        _resolvedThreadForUserId = null;
+      } else {
+        _activeThreadId = null;
+        _activeChatUserId = null;
+        _showFriendsSelection = false;
+        _resolvedThreadForUserId = null;
+      }
+    }
+  }
+
+  Future<void> _resolveActiveThreadForUser(String otherUserId) async {
+    if (_resolvedThreadForUserId == otherUserId) return;
+    _resolvedThreadForUserId = otherUserId;
+    final myUid = authService.currentUser?.uid;
+    if (myUid == null) return;
+    try {
+      final threadId = await socialRepository.openDirectThread(
+        currentUserId: myUid,
+        otherUserId: otherUserId,
+      );
+      if (mounted && _activeChatUserId == otherUserId) {
+        setState(() {
+          _activeThreadId = threadId;
+        });
+        _markThreadAsRead(threadId);
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadMutedAndDeleted() async {
     final muted = await LocalStorage.getStringList('muted_threads');
-    final deleted = await LocalStorage.getStringList('deleted_threads');
     final readTimesRaw = await LocalStorage.getString('last_read_times');
     Map<String, String> readTimes = {};
     if (readTimesRaw != null) {
@@ -57,7 +103,6 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
     if (mounted) {
       setState(() {
         _mutedThreadIds = muted;
-        _deletedThreadIds = deleted;
         _lastReadTimes = readTimes;
       });
     }
@@ -77,14 +122,21 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
   }
 
   Future<void> _deleteThread(String threadId) async {
-    final updated = List<String>.from(_deletedThreadIds);
-    if (!updated.contains(threadId)) {
-      updated.add(threadId);
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final confirmed = await showGothicConfirmDialog(
+      context,
+      title: tr ? 'Sohbeti Sil' : 'Delete Chat',
+      content: tr
+          ? 'Bu sohbeti silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'
+          : 'Are you sure you want to delete this chat? This action cannot be undone.',
+      confirmText: tr ? 'Sil' : 'Delete',
+    );
+    if (confirmed != true) return;
+
+    final myUid = authService.currentUser?.uid ?? '';
+    if (myUid.isNotEmpty) {
+      await socialRepository.deleteThreadForUser(myUid, threadId);
     }
-    await LocalStorage.setStringList('deleted_threads', updated);
-    setState(() {
-      _deletedThreadIds = updated;
-    });
   }
 
   Future<void> _markThreadAsRead(String threadId) async {
@@ -110,6 +162,10 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
   }
 
   Future<void> _startChatWithUser(String otherUserId) async {
+    if (!widget.showDragHandle) {
+      context.go('/messages?chatUserId=$otherUserId');
+      return;
+    }
     final myUid = authService.currentUser?.uid;
     if (myUid == null) return;
     setState(() => _isLoading = true);
@@ -138,6 +194,10 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
   }
 
   void _backToInbox() {
+    if (!widget.showDragHandle) {
+      context.go('/messages');
+      return;
+    }
     _loadMutedAndDeleted();
     setState(() {
       _activeThreadId = null;
@@ -153,11 +213,40 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (myUid.isEmpty) {
-      return Center(
-        child: Text(
-          tr ? 'Lütfen önce giriş yapın' : 'Please sign in first',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
-        ),
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 32),
+          buildGothicNeonIconButton(
+            context: context,
+            icon: Icons.chat_bubble_outline_rounded,
+            size: 36,
+            padding: const EdgeInsets.all(12),
+            activeColor: DollDexTheme.teal,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            tr ? 'Mesajlarını Kontrol Et' : 'Check Your Messages',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              tr
+                  ? 'Diğer koleksiyoncularla mesajlaşmak ve sohbet etmek için giriş yapmalısın.'
+                  : 'You must sign in to message and chat with other collectors.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const GuestLoginBanner(),
+        ],
       );
     }
 
@@ -187,7 +276,12 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
                   if (widget.showDragHandle) {
                     Navigator.of(context).pop();
                   }
-                  context.push('/users/${_activeChatUserId}');
+                  final uName = snap.data?.username ?? '';
+                  if (uName.isNotEmpty) {
+                    context.go('/u/$uName');
+                  } else {
+                    context.go('/users/${_activeChatUserId}');
+                  }
                 },
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
@@ -195,9 +289,19 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
                     children: [
                       buildAvatarHelper(avatarId, frameColor, size: 32),
                       const SizedBox(width: 10),
-                      Text(
-                        username,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (snap.data?.selectedBadge.isNotEmpty == true) ...[
+                            ProfileBadgeWidget(badgeId: snap.data!.selectedBadge, size: 8),
+                            const SizedBox(height: 2),
+                          ],
+                          Text(
+                            username,
+                            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -245,14 +349,25 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
               );
             }
             return ListView.builder(
+              key: const PageStorageKey('messages_friends_scroll'),
               itemCount: friends.length,
               itemBuilder: (context, idx) {
                 final friend = friends[idx];
                 return ListTile(
                   leading: buildAvatarHelper(friend.avatarId, friend.avatarFrameColor, size: 36),
-                  title: Text(
-                    friend.username.isEmpty ? friend.displayName : '@${friend.username}',
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (friend.selectedBadge.isNotEmpty) ...[
+                        ProfileBadgeWidget(badgeId: friend.selectedBadge, size: 8),
+                        const SizedBox(height: 2),
+                      ],
+                      Text(
+                        friend.username.isEmpty ? friend.displayName : '@${friend.username}',
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                   subtitle: Text(friend.displayName, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12)),
                   onTap: () => _startChatWithUser(friend.id),
@@ -274,57 +389,74 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
             ),
             IconButton(
               icon: const Icon(Icons.add_comment_rounded, color: Color(0xFFEC008C)),
-              onPressed: () => setState(() => _showFriendsSelection = true),
+              onPressed: () {
+                if (!widget.showDragHandle) {
+                  context.go('/messages?newChat=true');
+                } else {
+                  setState(() => _showFriendsSelection = true);
+                }
+              },
             ),
           ],
         ),
       );
 
       body = Expanded(
-        child: StreamBuilder<List<ChatThread>>(
-          stream: socialRepository.watchChatThreads(myUid),
-          builder: (context, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final allThreads = snap.data ?? [];
-            final threads = allThreads.where((t) => !_deletedThreadIds.contains(t.id)).toList();
-            if (threads.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.forum_outlined, size: 48, color: isDark ? Colors.white24 : Colors.black26),
-                    const SizedBox(height: 12),
-                    Text(
-                      tr ? 'Henüz konuşma yok' : 'No conversations yet',
-                      style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14),
+        child: StreamBuilder<List<String>>(
+          stream: socialRepository.watchDeletedThreads(myUid),
+          builder: (context, deletedSnap) {
+            final deletedIds = deletedSnap.data ?? [];
+            return StreamBuilder<List<ChatThread>>(
+              stream: socialRepository.watchChatThreads(myUid),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final allThreads = snap.data ?? [];
+                final threads = allThreads.where((t) => !deletedIds.contains(t.id)).toList();
+                if (threads.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.forum_outlined, size: 48, color: isDark ? Colors.white24 : Colors.black26),
+                        const SizedBox(height: 12),
+                        Text(
+                          tr ? 'Henüz konuşma yok' : 'No conversations yet',
+                          style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }
-            return ListView.builder(
-              itemCount: threads.length,
-              itemBuilder: (context, idx) {
-                final thread = threads[idx];
-                final otherMemberId = thread.memberIds.firstWhere((id) => id != myUid, orElse: () => '');
-                if (otherMemberId.isEmpty) return const SizedBox.shrink();
+                  );
+                }
+                return ListView.builder(
+                  key: const PageStorageKey('messages_inbox_scroll'),
+                  itemCount: threads.length,
+                  itemBuilder: (context, idx) {
+                    final thread = threads[idx];
+                    final otherMemberId = thread.memberIds.firstWhere((id) => id != myUid, orElse: () => '');
+                    if (otherMemberId.isEmpty) return const SizedBox.shrink();
 
-                return ThreadListTile(
-                  thread: thread,
-                  otherUserId: otherMemberId,
-                  onTap: () {
-                    setState(() {
-                      _activeThreadId = thread.id;
-                      _activeChatUserId = otherMemberId;
-                    });
-                    _markThreadAsRead(thread.id);
+                    return ThreadListTile(
+                      thread: thread,
+                      otherUserId: otherMemberId,
+                      onTap: () {
+                        if (!widget.showDragHandle) {
+                          context.go('/messages?chatUserId=$otherMemberId');
+                        } else {
+                          setState(() {
+                            _activeThreadId = thread.id;
+                            _activeChatUserId = otherMemberId;
+                          });
+                          _markThreadAsRead(thread.id);
+                        }
+                      },
+                      isMuted: _mutedThreadIds.contains(thread.id),
+                      hasUnread: _isThreadUnread(thread, myUid),
+                      onMute: () => _muteThread(thread.id),
+                      onDelete: () => _deleteThread(thread.id),
+                    );
                   },
-                  isMuted: _mutedThreadIds.contains(thread.id),
-                  hasUnread: _isThreadUnread(thread, myUid),
-                  onMute: () => _muteThread(thread.id),
-                  onDelete: () => _deleteThread(thread.id),
                 );
               },
             );
@@ -333,25 +465,36 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
       );
     }
 
-    return Column(
-      children: [
-        if (widget.showDragHandle) ...[
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white30 : Colors.black26,
-              borderRadius: BorderRadius.circular(2),
+    return PopScope(
+      canPop: widget.showDragHandle
+          ? (_activeThreadId == null && !_showFriendsSelection)
+          : true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (widget.showDragHandle && (_activeThreadId != null || _showFriendsSelection)) {
+          _backToInbox();
+        }
+      },
+      child: Column(
+        children: [
+          if (widget.showDragHandle) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white30 : Colors.black26,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-        ] else
-          const SizedBox(height: 8),
-        header,
-        Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
-        body,
-      ],
+            const SizedBox(height: 12),
+          ] else
+            const SizedBox(height: 8),
+          header,
+          Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
+          body,
+        ],
+      ),
     );
   }
 }
@@ -399,12 +542,22 @@ class ThreadListTile extends StatelessWidget {
         return ListTile(
           onTap: onTap,
           leading: buildAvatarHelper(avatarId, frameColor, size: 40),
-          title: Text(
-            username,
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold,
-            ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (status.selectedBadge.isNotEmpty) ...[
+                ProfileBadgeWidget(badgeId: status.selectedBadge, size: 8),
+                const SizedBox(height: 2),
+              ],
+              Text(
+                username,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           subtitle: Row(
             children: [
@@ -568,6 +721,7 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
               }
 
               return ListView.builder(
+                key: const PageStorageKey('messages_chat_scroll'),
                 reverse: true,
                 controller: _scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -657,6 +811,36 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              StreamBuilder<ProfileSetupStatus>(
+                stream: profileSetupRepository.watch(msg.senderId),
+                builder: (context, snapshot) {
+                  final badge = snapshot.data?.selectedBadge ?? '';
+                  final username = snapshot.data?.username ?? msg.senderUsername;
+                  final displayUsername = username.isNotEmpty ? '@$username' : (isMe ? 'Ben' : 'Collector');
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (badge.isNotEmpty) ...[
+                        ProfileBadgeWidget(badgeId: badge, size: 7),
+                        const SizedBox(height: 2),
+                      ],
+                      Text(
+                        displayUsername,
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          color: isMe
+                              ? const Color(0xFF00FFCC)
+                              : (isDark ? const Color(0xFF00FFCC) : const Color(0xFF8338EC)),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                  );
+                },
+              ),
               Text(
                 msg.text,
                 style: TextStyle(
@@ -695,20 +879,25 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
+  bool _isSigningIn = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isSigningIn = true;
+    });
+    try {
+      await performGoogleSignIn(context);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSigningIn = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = authService.currentUser;
-    if (user == null) {
-      return Center(
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(t(context, 'socialSignInRequired')),
-          ),
-        ),
-      );
-    }
-
     return const SafeArea(
       child: DirectMessagesModalContent(showDragHandle: false),
     );

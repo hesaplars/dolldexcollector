@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import '../core/replay_stream.dart';
 
 class ProfileSetupStatus {
   const ProfileSetupStatus({
@@ -14,7 +15,20 @@ class ProfileSetupStatus {
     required this.avatarId,
     required this.avatarFrameColor,
     required this.coverId,
+    this.photoUrl = '',
     this.featuredEntryIds = const [],
+    this.coins = 20,
+    this.unlockedBadges = const ['novice'],
+    this.selectedBadge = '',
+    this.unlockedAvatars = const [],
+    this.unlockedFrames = const [],
+    this.unlockedCovers = const [],
+    this.lastDailyClaim,
+    this.lastCommentCoinsClaimDate = '',
+    this.dailyCommentCoinsClaimed = 0,
+    this.isBanned = false,
+    this.banUntil,
+    this.selectedTheme = 'goth_dark',
   });
 
   final String userId;
@@ -28,7 +42,20 @@ class ProfileSetupStatus {
   final String avatarId;
   final String avatarFrameColor;
   final String coverId;
+  final String photoUrl;
   final List<String> featuredEntryIds;
+  final int coins;
+  final List<String> unlockedBadges;
+  final String selectedBadge;
+  final List<String> unlockedAvatars;
+  final List<String> unlockedFrames;
+  final List<String> unlockedCovers;
+  final DateTime? lastDailyClaim;
+  final String lastCommentCoinsClaimDate;
+  final int dailyCommentCoinsClaimed;
+  final bool isBanned;
+  final DateTime? banUntil;
+  final String selectedTheme;
 
   bool get isComplete {
     return username.isNotEmpty &&
@@ -40,6 +67,27 @@ class ProfileSetupStatus {
   factory ProfileSetupStatus.fromMap(String userId, Map<String, Object?> map) {
     final roleVal = map['role'] as String? ?? 'user';
     final isProVal = map['isPro'] as bool? ?? false;
+    
+    DateTime? parsedDailyClaim;
+    final rawClaim = map['lastDailyClaim'];
+    if (rawClaim is Timestamp) {
+      parsedDailyClaim = rawClaim.toDate();
+    } else if (rawClaim is String) {
+      parsedDailyClaim = DateTime.tryParse(rawClaim);
+    }
+
+    DateTime? parsedBanUntil;
+    final rawBanUntil = map['banUntil'];
+    if (rawBanUntil is Timestamp) {
+      parsedBanUntil = rawBanUntil.toDate();
+    } else if (rawBanUntil is String) {
+      parsedBanUntil = DateTime.tryParse(rawBanUntil);
+    }
+
+    final rawAvatarId = map['avatarId'] as String? ?? '';
+    final photoUrlVal = map['photoUrl'] as String? ?? '';
+    final finalAvatarId = (rawAvatarId.isEmpty && photoUrlVal.isNotEmpty) ? photoUrlVal : rawAvatarId;
+
     return ProfileSetupStatus(
       userId: userId,
       displayName: map['displayName'] as String? ?? 'Collector',
@@ -49,10 +97,23 @@ class ProfileSetupStatus {
       termsVersion: map['acceptedTermsVersion'] as String? ?? '',
       role: roleVal,
       isPro: isProVal || roleVal == 'admin',
-      avatarId: map['avatarId'] as String? ?? '',
+      avatarId: finalAvatarId,
       avatarFrameColor: map['avatarFrameColor'] as String? ?? '',
       coverId: map['coverId'] as String? ?? 'default',
+      photoUrl: photoUrlVal,
       featuredEntryIds: List<String>.from(map['featuredEntryIds'] as List? ?? []),
+      coins: map['coins'] as int? ?? 20,
+      unlockedBadges: List<String>.from(map['unlockedBadges'] as List? ?? ['novice']),
+      selectedBadge: map['selectedBadge'] as String? ?? '',
+      unlockedAvatars: List<String>.from(map['unlockedAvatars'] as List? ?? []),
+      unlockedFrames: List<String>.from(map['unlockedFrames'] as List? ?? []),
+      unlockedCovers: List<String>.from(map['unlockedCovers'] as List? ?? []),
+      lastDailyClaim: parsedDailyClaim,
+      lastCommentCoinsClaimDate: map['lastCommentCoinsClaimDate'] as String? ?? '',
+      dailyCommentCoinsClaimed: map['dailyCommentCoinsClaimed'] as int? ?? 0,
+      isBanned: map['isBanned'] as bool? ?? false,
+      banUntil: parsedBanUntil,
+      selectedTheme: map['selectedTheme'] as String? ?? 'goth_dark',
     );
   }
 }
@@ -83,6 +144,7 @@ class ProfileSetupRepository {
   static const termsVersion = '2026-06-13';
 
   final FirebaseFirestore? _firestore;
+  final Map<String, ReplayStream<ProfileSetupStatus>> _watchCache = {};
 
   FirebaseFirestore? get _db {
     if (!_isFirebaseInitialized()) {
@@ -93,6 +155,10 @@ class ProfileSetupRepository {
   }
 
   Stream<ProfileSetupStatus> watch(String userId) {
+    if (_watchCache.containsKey(userId)) {
+      return _watchCache[userId]!;
+    }
+
     final db = _db;
     if (db == null) {
       return Stream.value(
@@ -112,9 +178,13 @@ class ProfileSetupRepository {
       );
     }
 
-    return db.collection('users').doc(userId).snapshots().map((snapshot) {
+    final source = db.collection('users').doc(userId).snapshots().map((snapshot) {
       return ProfileSetupStatus.fromMap(userId, snapshot.data() ?? {});
     });
+
+    final stream = ReplayStream<ProfileSetupStatus>(source);
+    _watchCache[userId] = stream;
+    return stream;
   }
 
   Future<void> saveAvatar({
@@ -145,6 +215,18 @@ class ProfileSetupRepository {
 
     await db.collection('users').doc(userId).set({
       'coverId': coverId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> saveSelectedTheme(String userId, String themeKey) async {
+    final db = _db;
+    if (db == null) {
+      return;
+    }
+
+    await db.collection('users').doc(userId).set({
+      'selectedTheme': themeKey,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -248,6 +330,208 @@ class ProfileSetupRepository {
 
   static int ageFromBirthYear(int birthYear) {
     return DateTime.now().year - birthYear;
+  }
+
+  Future<void> saveSelectedBadge(String userId, String badgeId) async {
+    final db = _db;
+    if (db == null) return;
+    await db.collection('users').doc(userId).set({
+      'selectedBadge': badgeId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> unlockBadge(String userId, String badgeId, int coinCost) async {
+    final db = _db;
+    if (db == null) return;
+    final docRef = db.collection('users').doc(userId);
+    await db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      final data = snapshot.data() ?? {};
+      final currentCoins = data['coins'] as int? ?? 20;
+      transaction.set(docRef, {
+        'unlockedBadges': FieldValue.arrayUnion([badgeId]),
+        if (coinCost > 0) 'coins': currentCoins - coinCost,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<void> unlockAvatar(String userId, String avatarId, int coinCost) async {
+    final db = _db;
+    if (db == null) return;
+    final docRef = db.collection('users').doc(userId);
+    await db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      final data = snapshot.data() ?? {};
+      final currentCoins = data['coins'] as int? ?? 20;
+      transaction.set(docRef, {
+        'unlockedAvatars': FieldValue.arrayUnion([avatarId]),
+        if (coinCost > 0) 'coins': currentCoins - coinCost,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<void> unlockFrame(String userId, String frameColor, int coinCost) async {
+    final db = _db;
+    if (db == null) return;
+    final docRef = db.collection('users').doc(userId);
+    await db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      final data = snapshot.data() ?? {};
+      final currentCoins = data['coins'] as int? ?? 20;
+      transaction.set(docRef, {
+        'unlockedFrames': FieldValue.arrayUnion([frameColor]),
+        if (coinCost > 0) 'coins': currentCoins - coinCost,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<void> unlockFrameDirect(String userId, String frameColor) async {
+    final db = _db;
+    if (db == null) return;
+    await db.collection('users').doc(userId).set({
+      'unlockedFrames': FieldValue.arrayUnion([frameColor]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> unlockCover(String userId, String coverId, int coinCost) async {
+    final db = _db;
+    if (db == null) return;
+    final docRef = db.collection('users').doc(userId);
+    await db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      final data = snapshot.data() ?? {};
+      final currentCoins = data['coins'] as int? ?? 20;
+      transaction.set(docRef, {
+        'unlockedCovers': FieldValue.arrayUnion([coverId]),
+        if (coinCost > 0) 'coins': currentCoins - coinCost,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<void> claimDailyCoins(String userId) async {
+    final db = _db;
+    if (db == null) return;
+    final docRef = db.collection('users').doc(userId);
+    await db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      final data = snapshot.data() ?? {};
+      final currentCoins = data['coins'] as int? ?? 20;
+      transaction.set(docRef, {
+        'coins': currentCoins + 5,
+        'lastDailyClaim': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<void> buyCoinPackage(String userId, int coinsAmount) async {
+    final db = _db;
+    if (db == null) return;
+    final docRef = db.collection('users').doc(userId);
+    await db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      final data = snapshot.data() ?? {};
+      final currentCoins = data['coins'] as int? ?? 20;
+      transaction.set(docRef, {
+        'coins': currentCoins + coinsAmount,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  Future<ProfileSetupStatus?> getProfile(String userId) async {
+    final db = _db;
+    if (db == null) return null;
+    final doc = await db.collection('users').doc(userId).get();
+    if (!doc.exists) return null;
+    return ProfileSetupStatus.fromMap(userId, doc.data() ?? {});
+  }
+
+  Future<void> updateCoins(String userId, int newCoins) async {
+    final db = _db;
+    if (db == null) return;
+    await db.collection('users').doc(userId).set({
+      'coins': newCoins,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateBanStatus(String userId, {required bool isBanned, DateTime? banUntil}) async {
+    final db = _db;
+    if (db == null) return;
+    await db.collection('users').doc(userId).set({
+      'isBanned': isBanned,
+      'banUntil': banUntil != null ? Timestamp.fromDate(banUntil) : null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateRoleAndPro(String userId, {required String role, required bool isPro}) async {
+    final db = _db;
+    if (db == null) return;
+    await db.collection('users').doc(userId).set({
+      'role': role,
+      'isPro': isPro,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> resetProfileContent(String userId) async {
+    final db = _db;
+    if (db == null) return;
+    await db.collection('users').doc(userId).set({
+      'displayName': 'Collector',
+      'avatarId': '',
+      'coverId': 'default',
+      'featuredEntryIds': <String>[],
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> adminDeleteUserAccount(String userId, String username) async {
+    final db = _db;
+    if (db == null) return;
+    final normalizedUsername = normalizeUsername(username);
+
+    // Fetch collectionEntries owned by this user
+    final entriesSnapshot = await db
+        .collection('collectionEntries')
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    // Fetch notifications owned by this user
+    final notificationsSnapshot = await db
+        .collection('notifications')
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    final batch = db.batch();
+
+    // Delete user profile document
+    batch.delete(db.collection('users').doc(userId));
+
+    // Delete username mapping document (if any)
+    if (normalizedUsername.isNotEmpty) {
+      batch.delete(db.collection('usernames').doc(normalizedUsername));
+    }
+
+    // Delete collection entries
+    for (final doc in entriesSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Delete notifications
+    for (final doc in notificationsSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
   }
 }
 

@@ -34,6 +34,8 @@ class CatalogEntry {
     this.tags = const [],
     this.description = '',
     this.averagePrice = 1200.0,
+    this.parentId,
+    this.series,
   });
 
   final String id;
@@ -47,6 +49,8 @@ class CatalogEntry {
   final List<String> tags;
   final String description;
   final double averagePrice;
+  final String? parentId;
+  final String? series;
 
   String get primaryImageUrl => imageUrls.isEmpty ? '' : imageUrls.first;
 
@@ -62,6 +66,8 @@ class CatalogEntry {
       'tags': tags,
       'description': description,
       'averagePrice': averagePrice,
+      'parentId': parentId,
+      'series': series,
     };
   }
 
@@ -123,6 +129,8 @@ class CatalogEntry {
       tags: _stringList(map['tags']),
       description: descVal?.toString() ?? '',
       averagePrice: parsedPrice,
+      parentId: map['parentId'] as String?,
+      series: map['series'] as String?,
     );
   }
 }

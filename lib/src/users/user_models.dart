@@ -11,6 +11,7 @@ class AppUser {
     this.avatarId = '',
     this.avatarFrameColor = '',
     this.featuredEntryIds = const [],
+    this.selectedBadge = '',
   });
 
   final String id;
@@ -24,6 +25,7 @@ class AppUser {
   final String avatarId;
   final String avatarFrameColor;
   final List<String> featuredEntryIds;
+  final String selectedBadge;
 
   bool get isAdmin => role == 'admin';
 
@@ -40,23 +42,29 @@ class AppUser {
       'avatarId': avatarId,
       'avatarFrameColor': avatarFrameColor,
       'featuredEntryIds': featuredEntryIds,
+      'selectedBadge': selectedBadge,
     };
   }
 
   factory AppUser.fromMap(String id, Map<String, Object?> map) {
     final roleVal = map['role'] as String? ?? 'user';
+    final rawAvatarId = map['avatarId'] as String? ?? '';
+    final photoUrlVal = map['photoUrl'] as String? ?? '';
+    final finalAvatarId = (rawAvatarId.isEmpty && photoUrlVal.isNotEmpty) ? photoUrlVal : rawAvatarId;
+
     return AppUser(
       id: id,
       displayName: map['displayName'] as String? ?? 'Collector',
       email: map['email'] as String? ?? '',
-      photoUrl: map['photoUrl'] as String? ?? '',
+      photoUrl: photoUrlVal,
       role: roleVal,
       isPro: (map['isPro'] as bool? ?? false) || roleVal == 'admin',
       bio: map['bio'] as String? ?? '',
       username: map['username'] as String? ?? '',
-      avatarId: map['avatarId'] as String? ?? '',
+      avatarId: finalAvatarId,
       avatarFrameColor: map['avatarFrameColor'] as String? ?? '',
       featuredEntryIds: List<String>.from(map['featuredEntryIds'] as List? ?? []),
+      selectedBadge: map['selectedBadge'] as String? ?? '',
     );
   }
 }

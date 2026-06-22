@@ -27,65 +27,29 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isSigningIn = false;
+  bool _showStats = false;
 
   @override
   Widget build(BuildContext context) {
+    final user = authService.currentUser;
+    if (user == null) {
+      return const SizedBox.shrink();
+    }
+
     return Scaffold(
       body: SafeArea(
-        child: ValueListenableBuilder<bool>(
-          valueListenable: firebaseReadyNotifier,
-          builder: (context, firebaseReady, _) {
-            if (!firebaseReady) {
-              return PageShell(
-                title: t(context, 'profile'),
-                subtitle: t(context, 'profileSubtitle'),
-                child: SignInPanel(
-                  onGooglePressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(t(context, 'signInNeedsFirebase'))),
-                    );
-                  },
-                ),
-              );
-            }
+        child: StreamBuilder<ProfileSetupStatus>(
+          stream: profileSetupRepository.watch(user.uid),
+          builder: (context, profileSetupSnap) {
+            final setupStatus = profileSetupSnap.data;
+            final avatarId = setupStatus?.avatarId ?? '';
+            final frameColor = setupStatus?.avatarFrameColor ?? '';
 
-            return StreamBuilder<User?>(
-              stream: authService.authStateChanges,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return PageShell(
-                    title: t(context, 'profile'),
-                    subtitle: t(context, 'profileSubtitle'),
-                    child: SignInPanel(
-                      isLoading: _isSigningIn,
-                      onGooglePressed: _handleGoogleSignIn,
-                    ),
-                  );
-                }
-
-                final user = snapshot.data;
-                if (user == null) {
-                  return PageShell(
-                    title: t(context, 'profile'),
-                    subtitle: t(context, 'profileSubtitle'),
-                    child: SignInPanel(
-                      isLoading: _isSigningIn,
-                      onGooglePressed: _handleGoogleSignIn,
-                    ),
-                  );
-                }
-
-                return StreamBuilder<ProfileSetupStatus>(
-                  stream: profileSetupRepository.watch(user.uid),
-                  builder: (context, profileSetupSnap) {
-                    final setupStatus = profileSetupSnap.data;
-                    final avatarId = setupStatus?.avatarId ?? '';
-                    final frameColor = setupStatus?.avatarFrameColor ?? '';
-
-                    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-                    return ListView(
-                      padding: EdgeInsets.zero,
-                      children: [
+            final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+            return ListView(
+              key: const PageStorageKey('profile_scroll'),
+              padding: EdgeInsets.zero,
+              children: [
                         // Cover Photo Stack
                         Stack(
                           clipBehavior: Clip.none,
@@ -98,6 +62,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 onTap: () => showAvatarStudioModal(context, user.uid),
                                 borderRadius: BorderRadius.circular(38),
                                 child: buildAvatarHelper(avatarId, frameColor, size: 76),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: -15,
+                              right: 16,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _showStats = !_showStats;
+                                  });
+                                },
+                                icon: Icon(
+                                  _showStats ? Icons.insights_rounded : Icons.bar_chart_rounded,
+                                  color: const Color(0xFFFFCC00),
+                                  size: 15,
+                                ),
+                                label: Text(
+                                  tr ? 'Profil İstatistiği' : 'Profile Stats',
+                                  style: const TextStyle(
+                                    color: Color(0xFFFFCC00),
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Outfit',
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Color(0xFFFFCC00), width: 1.2),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                                ),
                               ),
                             ),
                           ],
@@ -113,7 +110,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 onSignOut: _handleSignOut,
                                 avatarId: avatarId,
                                 frameColor: frameColor,
+                                selectedBadge: setupStatus?.selectedBadge ?? '',
                               ),
+                              const SizedBox(height: 8),
+                              _buildCoinWallet(context, setupStatus?.coins ?? 20),
                               const SizedBox(height: 8),
                               // Connections stats row
                               StreamBuilder<List<AppUser>>(
@@ -176,11 +176,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const SizedBox(height: 12),
                               ProfileSetupCard(userId: user.uid),
                               const SizedBox(height: 16),
+                              if (_showStats) ...[
+                                const ProfileStatsCard(),
+                                const SizedBox(height: 16),
+                                CollectionAnalyticsCard(userId: user.uid),
+                                const SizedBox(height: 16),
+                              ],
                               FeaturedShowcaseCard(userId: user.uid),
-                              const SizedBox(height: 16),
-                              const ProfileStatsCard(),
-                              const SizedBox(height: 16),
-                              CollectionAnalyticsCard(userId: user.uid),
                               const SizedBox(height: 16),
                               const ProfileShowcaseCard(),
                               const SizedBox(height: 24),
@@ -188,10 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ],
-                    );
-                  },
-                );
-              },
             );
           },
         ),
@@ -230,70 +228,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _isSigningIn = true;
     });
-
     try {
-      final userCredential = await authService.signInWithGoogle();
-      final newUser = userCredential.user;
-      if (newUser != null) {
-        final localEntries = collectionEntriesNotifier.value
-            .where((entry) => entry.userId == 'local-user')
-            .toList();
-        if (localEntries.isNotEmpty) {
-          for (final localEntry in localEntries) {
-            final migratedEntry = CollectionEntry(
-              id: '${newUser.uid}-${localEntry.itemId}',
-              userId: newUser.uid,
-              itemId: localEntry.itemId,
-              status: localEntry.status,
-              condition: localEntry.condition,
-              quantity: localEntry.quantity,
-              notes: localEntry.notes,
-              isPublic: localEntry.isPublic,
-            );
-            await collectionRepository.save(migratedEntry);
-          }
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  AppLanguageScope.languageOf(context) == AppLanguage.tr
-                      ? '${localEntries.length} parça hesabınıza aktarıldı!'
-                      : '${localEntries.length} items migrated to your account!',
-                ),
-              ),
-            );
-          }
-        }
-      }
-      await loadCollectionForCurrentUser();
-      await loadReports();
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t(context, 'signInSuccess'))),
-      );
-    } on AuthCancelledException {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t(context, 'signInCancelled'))),
-      );
-    } on StateError {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t(context, 'signInNeedsFirebase'))),
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${t(context, 'signInFailed')} $error')),
-      );
+      await performGoogleSignIn(context);
     } finally {
       if (mounted) {
         setState(() {
@@ -301,6 +237,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     }
+  }
+
+  Widget _buildCoinWallet(BuildContext context, int coins) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: () => showProSubscriptionModal(context),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1230) : const Color(0xFFFAF2FF),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFFFCC00).withOpacity(0.4), width: 1.2),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFCC00), size: 20),
+                const SizedBox(width: 4),
+                const Icon(Icons.add_circle_outline_rounded, color: Color(0xFFFFCC00), size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  tr ? 'Jeton Cüzdanım' : 'My Coin Wallet',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Outfit'),
+                ),
+              ],
+            ),
+            Text(
+              tr ? '$coins Jeton' : '$coins Coins',
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
+                fontFamily: 'Outfit',
+                color: Color(0xFFFFCC00),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleSignOut() async {
@@ -326,6 +305,7 @@ class AccountSummaryCard extends StatelessWidget {
     required this.onSignOut,
     this.avatarId = '',
     this.frameColor = '',
+    this.selectedBadge = '',
     super.key,
   });
 
@@ -334,6 +314,7 @@ class AccountSummaryCard extends StatelessWidget {
   final Future<void> Function() onSignOut;
   final String avatarId;
   final String frameColor;
+  final String selectedBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -355,13 +336,23 @@ class AccountSummaryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
                         ),
+                      ),
+                      if (selectedBadge.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        ProfileBadgeWidget(badgeId: selectedBadge),
+                      ],
+                    ],
                   ),
                   Text(
                     subtitle,
@@ -787,6 +778,8 @@ class FeaturedShowcaseCard extends StatelessWidget {
 
         if (featuredIds.isEmpty) {
           if (!isMe) return const SizedBox.shrink();
+          final isPro = userSnap.data?.isPro == true || userSnap.data?.role == 'admin';
+          final maxShowcase = isPro ? (tr ? 'Sınırsız' : 'Unlimited') : '30';
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -802,8 +795,8 @@ class FeaturedShowcaseCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     tr
-                        ? 'Vitrininiz boş. Koleksiyonunuzdaki favori bebeklerinizin detay sayfasından yıldız simgesine tıklayarak vitrinize ekleyebilirsiniz! (Maksimum 5 bebek)'
-                        : 'Your showcase is empty. Tap the star icon on your favorite dolls\' detail pages to feature them here! (Max 5 dolls)',
+                        ? 'Vitrininiz boş. Koleksiyonunuzdaki favori bebeklerinizin detay sayfasından yıldız simgesine tıklayarak vitrinize ekleyebilirsiniz! (Maksimum $maxShowcase bebek)'
+                        : 'Your showcase is empty. Tap the star icon on your favorite dolls\' detail pages to feature them here! (Max $maxShowcase dolls)',
                     style: TextStyle(
                       fontSize: 13,
                       fontFamily: 'Outfit',
@@ -815,6 +808,9 @@ class FeaturedShowcaseCard extends StatelessWidget {
             ),
           );
         }
+
+        final isPro = userSnap.data?.isPro == true || userSnap.data?.role == 'admin';
+        final maxShowText = isPro ? (tr ? 'Sınırsız' : 'Unlimited') : '30';
 
         return FutureBuilder<List<CollectionEntry>>(
           future: collectionRepository.listForUser(userId),
@@ -860,7 +856,7 @@ class FeaturedShowcaseCard extends StatelessWidget {
                               const Icon(Icons.star_rounded, color: Color(0xFFFFCC00), size: 14),
                               const SizedBox(width: 4),
                               Text(
-                                '${featuredEntries.length}/5',
+                                '${featuredEntries.length} / $maxShowText',
                                 style: const TextStyle(
                                   color: Color(0xFFFFCC00),
                                   fontSize: 10,
@@ -883,7 +879,13 @@ class FeaturedShowcaseCard extends StatelessWidget {
                           final entry = featuredEntries[index];
                           final item = findCatalogEntry(entry.itemId);
                           return GestureDetector(
-                            onTap: () => context.push('/collection/entry/${entry.id}'),
+                             onTap: () {
+                               if (isMe) {
+                                 context.go('/c/${entry.id}?from=profile');
+                               } else {
+                                 context.go('/c/${entry.id}?from=public_profile&userId=$userId');
+                               }
+                             },
                             child: Container(
                               width: 110,
                               margin: const EdgeInsets.only(right: 12),
@@ -990,84 +992,87 @@ class CollectionAnalyticsCard extends StatelessWidget {
     };
   }
 
+  Widget _buildLockedPremiumCard(BuildContext context, bool tr, bool isDark) {
+    return Card(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFEC008C).withOpacity(0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.lock_outline_rounded,
+              color: const Color(0xFFEC008C).withOpacity(0.8),
+              size: 32,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              tr ? 'Koleksiyon İstatistikleri (Pro)' : 'Collection Analytics (Pro)',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Outfit',
+                color: Color(0xFFEC008C),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              tr
+                  ? 'Kutulu/Kutusuz oranları, set tamamlanma yüzdeleri ve gelişmiş kategori dağılım grafiklerini görmek için DollDex Pro sürümüne yükseltin!'
+                  : 'Upgrade to DollDex Pro to view boxed/unboxed ratios, set completion rates, and advanced category distribution charts!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: 'Outfit',
+                color: isDark ? Colors.white54 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => showProSubscriptionModal(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEC008C),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              child: Text(
+                tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final viewerId = authService.currentUser?.uid;
 
     return StreamBuilder<ProfileSetupStatus>(
       stream: profileSetupRepository.watch(userId),
       builder: (context, userSnap) {
         if (!userSnap.hasData) return const SizedBox.shrink();
         final user = userSnap.data!;
-        final isPro = user.isPro;
+        final isOwnerPro = user.isPro || user.role == 'admin';
 
-        final isMe = userId == (authService.currentUser?.uid ?? 'local-user');
-
-        if (!isPro) {
-          // Locked Premium Card
-          return Card(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFEC008C).withOpacity(0.3),
-                  width: 1.5,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.lock_outline_rounded,
-                    color: const Color(0xFFEC008C).withOpacity(0.8),
-                    size: 32,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    tr ? 'Koleksiyon İstatistikleri (Pro)' : 'Collection Analytics (Pro)',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Outfit',
-                      color: Color(0xFFEC008C),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    tr
-                        ? 'Kutulu/Kutusuz oranları, set tamamlanma yüzdeleri ve gelişmiş kategori dağılım grafiklerini görmek için DollDex Pro sürümüne yükseltin!'
-                        : 'Upgrade to DollDex Pro to view boxed/unboxed ratios, set completion rates, and advanced category distribution charts!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'Outfit',
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => showProSubscriptionModal(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEC008C),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    ),
-                    child: Text(
-                      tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+        final isMe = userId == (viewerId ?? 'local-user');
 
         if (isMe) {
+          if (!isOwnerPro) {
+            return _buildLockedPremiumCard(context, tr, isDark);
+          }
           return ValueListenableBuilder<List<CollectionEntry>>(
             valueListenable: collectionEntriesNotifier,
             builder: (context, collectionEntries, _) {
@@ -1075,11 +1080,40 @@ class CollectionAnalyticsCard extends StatelessWidget {
             },
           );
         } else {
-          return FutureBuilder<List<CollectionEntry>>(
-            future: collectionRepository.listPublicForUser(userId),
-            builder: (context, collectionSnap) {
-              final collectionEntries = collectionSnap.data ?? [];
-              return _buildContent(context, collectionEntries, isDark, tr);
+          // If the profile owner is Pro, everyone can see their stats
+          if (isOwnerPro) {
+            return FutureBuilder<List<CollectionEntry>>(
+              future: collectionRepository.listPublicForUser(userId),
+              builder: (context, collectionSnap) {
+                final collectionEntries = collectionSnap.data ?? [];
+                return _buildContent(context, collectionEntries, isDark, tr);
+              },
+            );
+          }
+
+          if (viewerId == null) {
+            return _buildLockedPremiumCard(context, tr, isDark);
+          }
+
+          // If owner is not Pro, check if the viewing user is Pro
+          return StreamBuilder<ProfileSetupStatus>(
+            stream: profileSetupRepository.watch(viewerId),
+            builder: (context, viewerSnap) {
+              if (!viewerSnap.hasData) return const SizedBox.shrink();
+              final viewer = viewerSnap.data!;
+              final isViewerPro = viewer.isPro || viewer.role == 'admin';
+
+              if (!isViewerPro) {
+                return _buildLockedPremiumCard(context, tr, isDark);
+              }
+
+              return FutureBuilder<List<CollectionEntry>>(
+                future: collectionRepository.listPublicForUser(userId),
+                builder: (context, collectionSnap) {
+                  final collectionEntries = collectionSnap.data ?? [];
+                  return _buildContent(context, collectionEntries, isDark, tr);
+                },
+              );
             },
           );
         }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -5,6 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../core/app_language.dart';
 import '../core/web_image_helper.dart';
+import '../../main.dart';
+import '../catalog/catalog_models.dart';
+import '../users/profile_setup_repository.dart';
+import '../notifications/notification_models.dart';
+import '../core/app_helpers.dart';
+import 'social_feed_tab.dart';
 
 class DollDexTheme {
   static const ink = Color(0xFF1C0D2B);
@@ -87,6 +94,18 @@ class DollDexTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         ),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 10.5,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            overflow: TextOverflow.ellipsis,
+            fontFamily: 'Outfit',
+            height: 1.0,
+          );
+        }),
+      ),
     );
   }
 
@@ -156,6 +175,152 @@ class DollDexTheme {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 10.5,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            overflow: TextOverflow.ellipsis,
+            fontFamily: 'Outfit',
+            height: 1.0,
+          );
+        }),
+      ),
+    );
+  }
+
+  static ThemeData get toxicNeon {
+    return _buildCustomDarkTheme(
+      primary: const Color(0xFF39FF14),
+      secondary: const Color(0xFF00E5FF),
+      background: const Color(0xFF060D08),
+      panel: const Color(0xFF0E1A11),
+      line: const Color(0xFF1C3A24),
+    );
+  }
+
+  static ThemeData get crimsonBlood {
+    return _buildCustomDarkTheme(
+      primary: const Color(0xFFFF073A),
+      secondary: const Color(0xFFFFCC00),
+      background: const Color(0xFF0B0606),
+      panel: const Color(0xFF160C0C),
+      line: const Color(0xFF321515),
+    );
+  }
+
+  static ThemeData get royalGold {
+    return _buildCustomDarkTheme(
+      primary: const Color(0xFFFFD700),
+      secondary: const Color(0xFF8A2BE2),
+      background: const Color(0xFF0B0410),
+      panel: const Color(0xFF160E1E),
+      line: const Color(0xFF332042),
+    );
+  }
+
+  static ThemeData getThemeData(String key) {
+    switch (key) {
+      case 'goth_light':
+        return light;
+      case 'toxic_neon':
+        return toxicNeon;
+      case 'crimson_blood':
+        return crimsonBlood;
+      case 'royal_gold':
+        return royalGold;
+      case 'goth_dark':
+      default:
+        return dark;
+    }
+  }
+
+  static ThemeData _buildCustomDarkTheme({
+    required Color primary,
+    required Color secondary,
+    required Color background,
+    required Color panel,
+    required Color line,
+  }) {
+    final base = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: Brightness.dark,
+        primary: primary,
+        secondary: secondary,
+        surface: background,
+      ),
+      useMaterial3: true,
+    );
+
+    return base.copyWith(
+      scaffoldBackgroundColor: background,
+      textTheme: GoogleFonts.cinzelTextTheme(base.textTheme).apply(
+        bodyColor: darkInk,
+        displayColor: darkInk,
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: background,
+        foregroundColor: darkInk,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      cardTheme: CardThemeData(
+        color: panel,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: line, width: 1.5),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: panel,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: line, width: 1.5),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: panel,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          side: BorderSide(color: darkLine, width: 1.5),
+        ),
+        dragHandleColor: line,
+        dragHandleSize: const Size(40, 4),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: darkInk,
+          side: BorderSide(color: line, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 10.5,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            overflow: TextOverflow.ellipsis,
+            fontFamily: 'Outfit',
+            height: 1.0,
+          );
+        }),
       ),
     );
   }
@@ -1428,12 +1593,18 @@ class PageShell extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
+    this.showBackButton = false,
+    this.onBack,
+    this.listViewKey,
     super.key,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
+  final bool showBackButton;
+  final VoidCallback? onBack;
+  final Key? listViewKey;
 
   @override
   Widget build(BuildContext context) {
@@ -1442,6 +1613,7 @@ class PageShell extends StatelessWidget {
 
     return SafeArea(
       child: ListView(
+        key: listViewKey,
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           ConstrainedBox(
@@ -1449,12 +1621,33 @@ class PageShell extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        height: 1.05,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (showBackButton) ...[
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+                        onPressed: onBack ?? () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
                       ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              height: 1.05,
+                            ),
+                      ),
+                    ),
+                  ],
                 ),
                 if (subtitle.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -1491,7 +1684,7 @@ class PageShell extends StatelessWidget {
                                 subtitle,
                                 style: TextStyle(
                                   color: isDark ? const Color(0xFFC4B2D9) : const Color(0xFF6B5885),
-                                  fontSize: 13,
+                                  fontSize: 11,
                                   fontStyle: FontStyle.italic,
                                   height: 1.4,
                                 ),
@@ -1515,12 +1708,14 @@ class PageShell extends StatelessWidget {
 }
 
 Widget buildNeonIcon(BuildContext context, IconData icon, {double size = 24}) {
+  final primary = Theme.of(context).colorScheme.primary;
+  final secondary = Theme.of(context).colorScheme.secondary;
   return SafeShaderMask(
     shaderCallback: (bounds) {
-      return const LinearGradient(
+      return LinearGradient(
         colors: [
-          Color(0xFFEC008C),
-          Color(0xFF00FFCC),
+          primary,
+          secondary,
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -1582,84 +1777,129 @@ Widget buildNeonFlagIcon(BuildContext context, {double size = 24}) {
 
 Widget buildAvatarHelper(String avatarId, String frameColor, {double size = 40}) {
   String assetPath = '';
-  switch (avatarId) {
-    case 'avatar-0':
-      assetPath = 'assets/avatars/avatar_vampire.png';
-      break;
-    case 'avatar-1':
-      assetPath = 'assets/avatars/avatar_werewolf.png';
-      break;
-    case 'avatar-2':
-      assetPath = 'assets/avatars/avatar_sea.png';
-      break;
-    case 'avatar-3':
-      assetPath = 'assets/avatars/avatar_zombie.png';
-      break;
-    case 'avatar-4':
-      assetPath = 'assets/avatars/avatar_mummy.png';
-      break;
-    case 'avatar-5':
-      assetPath = 'assets/avatars/avatar_phantom.png';
-      break;
-    case 'avatar-6':
-      assetPath = 'assets/avatars/avatar_witch.png';
-      break;
-    case 'avatar-7':
-      assetPath = 'assets/avatars/avatar_gargoyle.png';
-      break;
-    case 'avatar-8':
-      assetPath = 'assets/avatars/avatar_ghost.png';
-      break;
-    case 'avatar-9':
-      assetPath = 'assets/avatars/avatar_spider.png';
-      break;
-    case 'avatar-10':
-      assetPath = 'assets/avatars/avatar_cyber.png';
-      break;
-    case 'avatar-11':
-      assetPath = 'assets/avatars/avatar_skeleton.png';
-      break;
-    default:
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: const Color(0xFFEC008C),
-            width: 2.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFEC008C).withOpacity(0.3),
-              blurRadius: 6,
-              spreadRadius: 1,
+  final bool isNetwork = avatarId.startsWith('http://') || avatarId.startsWith('https://');
+
+  if (isNetwork) {
+    // Will be loaded via Image.network
+  } else {
+    switch (avatarId) {
+      case 'avatar-0':
+        assetPath = 'assets/avatars/avatar_vampire.png';
+        break;
+      case 'avatar-1':
+        assetPath = 'assets/avatars/avatar_werewolf.png';
+        break;
+      case 'avatar-2':
+        assetPath = 'assets/avatars/avatar_sea.png';
+        break;
+      case 'avatar-3':
+        assetPath = 'assets/avatars/avatar_zombie.png';
+        break;
+      case 'avatar-4':
+        assetPath = 'assets/avatars/avatar_mummy.png';
+        break;
+      case 'avatar-5':
+        assetPath = 'assets/avatars/avatar_phantom.png';
+        break;
+      case 'avatar-6':
+        assetPath = 'assets/avatars/avatar_witch.png';
+        break;
+      case 'avatar-7':
+        assetPath = 'assets/avatars/avatar_gargoyle.png';
+        break;
+      case 'avatar-8':
+        assetPath = 'assets/avatars/avatar_ghost.png';
+        break;
+      case 'avatar-9':
+        assetPath = 'assets/avatars/avatar_spider.png';
+        break;
+      case 'avatar-10':
+        assetPath = 'assets/avatars/avatar_cyber.png';
+        break;
+      case 'avatar-11':
+        assetPath = 'assets/avatars/avatar_skeleton.png';
+        break;
+      default:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFFEC008C),
+              width: 2.0,
             ),
-          ],
-          color: const Color(0xFF160E22),
-        ),
-        child: Center(
-          child: SafeShaderMask(
-            shaderCallback: (bounds) {
-              return const LinearGradient(
-                colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(bounds);
-            },
-            child: Icon(
-              Icons.face_3_outlined,
-              size: size * 0.6,
-              color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFEC008C).withOpacity(0.3),
+                blurRadius: 6,
+                spreadRadius: 1,
+              ),
+            ],
+            color: const Color(0xFF160E22),
+          ),
+          child: Center(
+            child: SafeShaderMask(
+              shaderCallback: (bounds) {
+                return const LinearGradient(
+                  colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds);
+              },
+              child: Icon(
+                Icons.face_3_outlined,
+                size: size * 0.6,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
-      );
+        );
+    }
   }
 
   final isGothicFrame = frameColor.startsWith('frame-');
   final parsedColor = !isGothicFrame ? int.tryParse(frameColor, radix: 16) : null;
   final Color? borderColor = parsedColor != null ? Color(parsedColor) : null;
+  final hasFrame = frameColor.isNotEmpty;
+
+  Widget buildDefaultPlaceholder() {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: const Color(0xFFEC008C),
+          width: 2.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEC008C).withOpacity(0.3),
+            blurRadius: 6,
+            spreadRadius: 1,
+          ),
+        ],
+        color: const Color(0xFF160E22),
+      ),
+      child: Center(
+        child: SafeShaderMask(
+          shaderCallback: (bounds) {
+            return const LinearGradient(
+              colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds);
+          },
+          child: Icon(
+            Icons.face_3_outlined,
+            size: size * 0.6,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
 
   return Stack(
     alignment: Alignment.center,
@@ -1669,10 +1909,12 @@ Widget buildAvatarHelper(String avatarId, String frameColor, {double size = 40})
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(
-            color: borderColor ?? const Color(0xFFEC008C).withOpacity(0.15),
-            width: borderColor != null ? 3.0 : 1.5,
-          ),
+          border: hasFrame
+              ? Border.all(
+                  color: borderColor ?? const Color(0xFFEC008C).withOpacity(0.15),
+                  width: borderColor != null ? 3.0 : 1.5,
+                )
+              : null,
           boxShadow: borderColor != null
               ? [
                   BoxShadow(
@@ -1687,47 +1929,21 @@ Widget buildAvatarHelper(String avatarId, String frameColor, {double size = 40})
           padding: EdgeInsets.all(borderColor != null || isGothicFrame ? 2.0 : 0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(size),
-            child: Image.asset(
-              assetPath,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: size,
-                  height: size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFEC008C),
-                      width: 2.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFEC008C).withOpacity(0.3),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                    color: const Color(0xFF160E22),
+            child: isNetwork
+                ? Image.network(
+                    avatarId,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return buildDefaultPlaceholder();
+                    },
+                  )
+                : Image.asset(
+                    assetPath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return buildDefaultPlaceholder();
+                    },
                   ),
-                  child: Center(
-                    child: SafeShaderMask(
-                      shaderCallback: (bounds) {
-                        return const LinearGradient(
-                          colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds);
-                      },
-                      child: Icon(
-                        Icons.face_3_outlined,
-                        size: size * 0.6,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
           ),
         ),
       ),
@@ -1887,31 +2103,57 @@ Widget buildCoverPhoto(BuildContext context, String? coverId, {required bool isP
             },
           ),
           Center(
-            child: SafeShaderMask(
-              shaderCallback: (bounds) {
-                return const LinearGradient(
-                  colors: [Color(0xFF00FFCC), Colors.white],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ).createShader(bounds);
-              },
-              child: Text(
-                'DOLLDEX COLLECTOR',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2.5,
-                  color: Colors.white,
-                  fontFamily: 'Cinzel',
-                  shadows: [
-                    Shadow(
-                      color: const Color(0xFFEC008C).withOpacity(0.8),
-                      offset: const Offset(0, 2),
-                      blurRadius: 4,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SafeShaderMask(
+                  shaderCallback: (bounds) {
+                    return const LinearGradient(
+                      colors: [Color(0xFF00FFCC), Colors.white],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ).createShader(bounds);
+                  },
+                  child: Text(
+                    'DOLLDEX COLLECTOR',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.5,
+                      color: Colors.white,
+                      fontFamily: 'Cinzel',
+                      shadows: [
+                        Shadow(
+                          color: const Color(0xFFEC008C).withOpacity(0.8),
+                          offset: const Offset(0, 2),
+                          blurRadius: 4,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  AppLanguageScope.languageOf(context) == AppLanguage.tr
+                      ? 'Online Bebek Koleksiyonu'
+                      : 'Online Doll Collection',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.0,
+                    color: Colors.white.withOpacity(0.8),
+                    fontFamily: 'Outfit',
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(0, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1989,91 +2231,72 @@ Widget buildCoverPhotoPreview(String coverId) {
   );
 }
 
-class GuestLoginBanner extends StatefulWidget {
+class GuestLoginBanner extends StatelessWidget {
   const GuestLoginBanner({super.key});
 
   @override
-  State<GuestLoginBanner> createState() => _GuestLoginBannerState();
-}
-
-class _GuestLoginBannerState extends State<GuestLoginBanner> {
-  @override
   Widget build(BuildContext context) {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: Card(
+          elevation: 2,
+          color: isDark ? const Color(0xFF130B1E) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: const Color(0xFFEC008C).withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
               children: [
-                const Icon(Icons.stars_rounded, color: DollDexTheme.teal, size: 28),
-                const SizedBox(width: 10),
+                const Icon(
+                  Icons.cloud_upload_outlined,
+                  color: Color(0xFF00FFCC),
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tr ? 'Koleksiyonunu Bulutta Sakla!' : 'Save Your Collection in the Cloud!',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  child: Text(
+                    tr ? 'Koleksiyonunu yedeklemek için giriş yap' : 'Sign in to backup your collection',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10.5,
+                      fontFamily: 'Outfit',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 26,
+                  child: ElevatedButton(
+                    onPressed: () => context.push('/consent'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      backgroundColor: const Color(0xFFEC008C),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      tr ? 'Giriş Yap' : 'Sign In',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Outfit',
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        tr
-                            ? 'Google ile giriş yaparak bebeklerini takip et, yorum yaz ve sergile!'
-                            : 'Sign in with Google to track your dolls, post comments, and showcase your shelf!',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFEC008C), Color(0xFF7B2CBF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFEC008C).withOpacity(0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  context.go('/profile');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                icon: const Icon(Icons.login_rounded, color: Colors.white, size: 18),
-                label: Text(
-                  tr ? 'Google ile Hızlı Giriş Yap' : 'Quick Sign In with Google',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    fontFamily: 'Cinzel',
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -2119,10 +2342,29 @@ class AvatarOption extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(40),
       onTap: onTap,
-      child: buildAvatarHelper(
-        avatarId,
-        selected ? frameColor : '',
-        size: 56,
+      child: Container(
+        decoration: selected
+            ? BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF00FFCC),
+                  width: 3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00FFCC).withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
+              )
+            : null,
+        padding: selected ? const EdgeInsets.all(2) : EdgeInsets.zero,
+        child: buildAvatarHelper(
+          avatarId,
+          selected ? frameColor : '',
+          size: selected ? 52 : 56,
+        ),
       ),
     );
   }
@@ -2215,3 +2457,1169 @@ class GothicStatButton extends StatelessWidget {
     );
   }
 }
+
+class ProfileBadge {
+  const ProfileBadge({
+    required this.id,
+    required this.nameTr,
+    required this.nameEn,
+    required this.color,
+    required this.glowColor,
+    required this.textColor,
+    required this.descriptionTr,
+    required this.descriptionEn,
+    this.coinsPrice = 0,
+    this.isProOnly = false,
+    this.dollRequirement = 0,
+    this.boxedRequirement = 0,
+    this.characterRequirement = '',
+    this.charCountRequirement = 0,
+    this.commentsRequirement = 0,
+  });
+
+  final String id;
+  final String nameTr;
+  final String nameEn;
+  final Color color;
+  final Color glowColor;
+  final Color textColor;
+  final String descriptionTr;
+  final String descriptionEn;
+  final int coinsPrice;
+  final bool isProOnly;
+  final int dollRequirement;
+  final int boxedRequirement;
+  final String characterRequirement;
+  final int charCountRequirement;
+  final int commentsRequirement;
+
+  String name(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    return tr ? nameTr : nameEn;
+  }
+
+  String description(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    return tr ? descriptionTr : descriptionEn;
+  }
+}
+
+const List<ProfileBadge> allProfileBadges = [
+  ProfileBadge(
+    id: 'novice',
+    nameTr: 'Acemi',
+    nameEn: 'Novice',
+    color: Color(0xFF8E2DE2),
+    glowColor: Color(0xFF4A00E0),
+    textColor: Colors.white,
+    descriptionTr: 'Koleksiyonda en az 3 bebek olması.',
+    descriptionEn: 'At least 3 dolls in your collection.',
+    dollRequirement: 3,
+  ),
+  ProfileBadge(
+    id: 'collector',
+    nameTr: 'Koleksiyoner',
+    nameEn: 'Collector',
+    color: Color(0xFF00F2FE),
+    glowColor: Color(0xFF4FACFE),
+    textColor: Colors.black87,
+    descriptionTr: 'Koleksiyonda en az 15 bebek olması.',
+    descriptionEn: 'At least 15 dolls in your collection.',
+    dollRequirement: 15,
+  ),
+  ProfileBadge(
+    id: 'curator',
+    nameTr: 'Küratör',
+    nameEn: 'Curator',
+    color: Color(0xFFF000FF),
+    glowColor: Color(0xFF7B00FF),
+    textColor: Colors.white,
+    descriptionTr: 'Koleksiyonda en az 40 bebek olması.',
+    descriptionEn: 'At least 40 dolls in your collection.',
+    dollRequirement: 40,
+  ),
+  ProfileBadge(
+    id: 'museum_director',
+    nameTr: 'Müze Müdürü',
+    nameEn: 'Museum Director',
+    color: Color(0xFFEC008C),
+    glowColor: Color(0xFFFC6767),
+    textColor: Colors.white,
+    descriptionTr: 'Koleksiyonda en az 70 bebek olması.',
+    descriptionEn: 'At least 70 dolls in your collection.',
+    dollRequirement: 70,
+  ),
+  ProfileBadge(
+    id: 'box_lover',
+    nameTr: 'Kutucu',
+    nameEn: 'Box Lover',
+    color: Color(0xFF00FFCC),
+    glowColor: Color(0xFF00B38F),
+    textColor: Colors.black87,
+    descriptionTr: 'En az 5 adet Kutulu (Boxed) bebek olması.',
+    descriptionEn: 'At least 5 Mint-In-Box (Boxed) dolls.',
+    boxedRequirement: 5,
+  ),
+  ProfileBadge(
+    id: 'restorer',
+    nameTr: 'Yenilikçi',
+    nameEn: 'Restorer',
+    color: Color(0xFF11998E),
+    glowColor: Color(0xFF38EF7D),
+    textColor: Colors.white,
+    descriptionTr: 'En az 5 adet Açılmış/Eksiksiz bebek olması.',
+    descriptionEn: 'At least 5 Unboxed/Complete dolls.',
+  ),
+  ProfileBadge(
+    id: 'pro_member',
+    nameTr: 'Pro Üye',
+    nameEn: 'Pro Member',
+    color: Color(0xFFEC008C),
+    glowColor: Color(0xFFFF007F),
+    textColor: Colors.white,
+    descriptionTr: 'Aktif DollDex Pro Üyesi olmak.',
+    descriptionEn: 'Have an active DollDex Pro subscription.',
+    isProOnly: true,
+  ),
+  ProfileBadge(
+    id: 'doldex_vip',
+    nameTr: 'Doldex VIP',
+    nameEn: 'Doldex VIP',
+    color: Color(0xFFFFD700),
+    glowColor: Color(0xFFFFAA00),
+    textColor: Colors.black87,
+    descriptionTr: 'Pro Üyelik + Koleksiyonda 25 bebek olması.',
+    descriptionEn: 'Pro member with at least 25 dolls.',
+    isProOnly: true,
+    dollRequirement: 25,
+  ),
+  ProfileBadge(
+    id: 'queen',
+    nameTr: 'Kraliçe',
+    nameEn: 'Queen',
+    color: Color(0xFFFF0055),
+    glowColor: Color(0xFFFF00CC),
+    textColor: Colors.white,
+    descriptionTr: '1000 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 1000 Coins.',
+    coinsPrice: 1000,
+  ),
+  ProfileBadge(
+    id: 'princess',
+    nameTr: 'Prenses',
+    nameEn: 'Princess',
+    color: Color(0xFF00E5FF),
+    glowColor: Color(0xFF0077FF),
+    textColor: Colors.black87,
+    descriptionTr: '1000 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 1000 Coins.',
+    coinsPrice: 1000,
+  ),
+  ProfileBadge(
+    id: 'legendary',
+    nameTr: 'Efsanevi',
+    nameEn: 'Legendary',
+    color: Color(0xFFFFCC00),
+    glowColor: Color(0xFFFF4500),
+    textColor: Colors.black87,
+    descriptionTr: '1000 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 1000 Coins.',
+    coinsPrice: 1000,
+  ),
+  ProfileBadge(
+    id: 'star',
+    nameTr: 'Yıldız',
+    nameEn: 'Star',
+    color: Color(0xFF1E1E1E),
+    glowColor: Color(0xFF8338EC),
+    textColor: Colors.white,
+    descriptionTr: '5+ Yorum yapmış olmak veya 1000 Jeton.',
+    descriptionEn: '5+ comments posted or 1000 Coins.',
+    coinsPrice: 1000,
+    commentsRequirement: 5,
+  ),
+  ProfileBadge(
+    id: 'creepover',
+    nameTr: 'Pijama Partisi',
+    nameEn: 'Creepover Party',
+    color: Color(0xFF9D4EDD),
+    glowColor: Color(0xFFC77DFF),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'dawn_of_dance',
+    nameTr: 'Dansın Şafağı',
+    nameEn: 'Dawn of the Dance',
+    color: Color(0xFFFF007F),
+    glowColor: Color(0xFFFF52AF),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'sweet_1600',
+    nameTr: 'Tatlı 1600',
+    nameEn: 'Sweet 1600',
+    color: Color(0xFFFF0055),
+    glowColor: Color(0xFFFF66A3),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'ghouls_rule',
+    nameTr: 'Ucubeler Kuralı',
+    nameEn: 'Ghouls Rule',
+    color: Color(0xFFFF5500),
+    glowColor: Color(0xFFFF9933),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'skull_shores',
+    nameTr: 'Kafatası Sahili',
+    nameEn: 'Skull Shores',
+    color: Color(0xFF00FFCC),
+    glowColor: Color(0xFF33FFDD),
+    textColor: Colors.black87,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'thirteen_wishes',
+    nameTr: '13 Dilek',
+    nameEn: '13 Wishes',
+    color: Color(0xFFFFB703),
+    glowColor: Color(0xFFFB8500),
+    textColor: Colors.black87,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'frights_camera',
+    nameTr: 'Işık Kamera Dehşet',
+    nameEn: 'Frights, Camera, Action!',
+    color: Color(0xFF7209B7),
+    glowColor: Color(0xFFB5179E),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'freaky_fusion',
+    nameTr: 'Acayip Karışım',
+    nameEn: 'Freaky Fusion',
+    color: Color(0xFF4CC9F0),
+    glowColor: Color(0xFF4895EF),
+    textColor: Colors.black87,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'haunted_ghouls',
+    nameTr: 'Hayalet Okulu',
+    nameEn: 'Haunted',
+    color: Color(0xFFE2E2E2),
+    glowColor: Color(0xFFE2E2E2),
+    textColor: Colors.black87,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'boo_york',
+    nameTr: 'Acayip York',
+    nameEn: 'Boo York',
+    color: Color(0xFF3F37C9),
+    glowColor: Color(0xFF4361EE),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'great_scarrier',
+    nameTr: 'Büyük Resif',
+    nameEn: 'Great Scarrier Reef',
+    color: Color(0xFF073B4C),
+    glowColor: Color(0xFF118AB2),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+  ProfileBadge(
+    id: 'skulltimate',
+    nameTr: 'Kilitli Sırlar',
+    nameEn: 'Skulltimate Secrets',
+    color: Color(0xFFEF476F),
+    glowColor: Color(0xFFFF8FA3),
+    textColor: Colors.white,
+    descriptionTr: '100 Jeton karşılığında satın alınabilir.',
+    descriptionEn: 'Available for purchase with 100 Coins.',
+    coinsPrice: 100,
+  ),
+];
+
+bool checkBadgeRequirement(
+  ProfileBadge badge,
+  ProfileSetupStatus status,
+  List<CollectionEntry> collection,
+  int commentCount,
+) {
+  if (badge.id == 'novice') {
+    return collection.length >= 3;
+  }
+  if (badge.id == 'collector') {
+    return collection.length >= 15;
+  }
+  if (badge.id == 'curator') {
+    return collection.length >= 40;
+  }
+  if (badge.id == 'museum_director') {
+    return collection.length >= 70;
+  }
+  if (badge.id == 'box_lover') {
+    final boxed = collection.where((e) => e.condition == CollectionCondition.boxed).length;
+    return boxed >= 5;
+  }
+  if (badge.id == 'restorer') {
+    final opened = collection.where((e) => e.condition == CollectionCondition.unboxed || e.condition == CollectionCondition.complete).length;
+    return opened >= 5;
+  }
+  if (badge.id == 'pro_member') {
+    return status.isPro;
+  }
+  if (badge.id == 'doldex_vip') {
+    return status.isPro && collection.length >= 25;
+  }
+  if (badge.id == 'queen' ||
+      badge.id == 'princess' ||
+      badge.id == 'creepover' ||
+      badge.id == 'dawn_of_dance' ||
+      badge.id == 'sweet_1600' ||
+      badge.id == 'ghouls_rule' ||
+      badge.id == 'skull_shores' ||
+      badge.id == 'thirteen_wishes' ||
+      badge.id == 'frights_camera' ||
+      badge.id == 'freaky_fusion' ||
+      badge.id == 'haunted_ghouls' ||
+      badge.id == 'boo_york' ||
+      badge.id == 'great_scarrier' ||
+      badge.id == 'skulltimate') {
+    return true;
+  }
+  if (badge.id == 'star') {
+    return commentCount >= 5;
+  }
+  return false;
+}
+
+class ProfileBadgeWidget extends StatelessWidget {
+  const ProfileBadgeWidget({required this.badgeId, this.size = 9, super.key});
+
+  final String badgeId;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    if (badgeId.isEmpty) return const SizedBox.shrink();
+    final badge = allProfileBadges.firstWhere(
+      (b) => b.id == badgeId,
+      orElse: () => allProfileBadges.first,
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      decoration: BoxDecoration(
+        color: badge.color,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: badge.textColor.withOpacity(0.3), width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: badge.glowColor.withOpacity(0.6),
+            blurRadius: 4,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      child: Text(
+        badge.name(context).toUpperCase(),
+        style: TextStyle(
+          color: badge.textColor,
+          fontSize: size,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Outfit',
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+void showAnnouncementModalDetail(BuildContext context, {required String title, required String body}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+  showDialog<void>(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: 400,
+          constraints: const BoxConstraints(maxHeight: 500),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0E0818) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFFEC008C),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFEC008C).withOpacity(0.2),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDark ? const Color(0xFF2C1F45) : const Color(0xFFEC008C).withOpacity(0.1),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.campaign_rounded, color: Color(0xFFEC008C), size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        tr ? 'Duyuru Detayı' : 'Announcement Detail',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Outfit',
+                          color: Color(0xFFEC008C),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              // Body
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        body,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? const Color(0xFFE5DDF2) : const Color(0xFF6B5885),
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Footer / Action
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEC008C),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    tr ? 'Kapat' : 'Close',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+void showNotificationsModal(BuildContext context, {int? initialTab}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) {
+      return NotificationsModal(initialTab: initialTab);
+    },
+  );
+}
+
+class NotificationsModal extends StatefulWidget {
+  final int? initialTab;
+  const NotificationsModal({super.key, this.initialTab});
+
+  @override
+  State<NotificationsModal> createState() => _NotificationsModalState();
+}
+
+class _NotificationsModalState extends State<NotificationsModal> {
+  late int _activeTab;
+  static double _savedScrollOffset = 0.0;
+  static int _savedActiveTab = 0;
+  static bool _shouldRestoreScroll = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _activeTab = widget.initialTab ?? _savedActiveTab;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = authService.currentUser;
+    final userId = user?.uid ?? 'local-user';
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        if (_shouldRestoreScroll) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (scrollController.hasClients) {
+                try {
+                  scrollController.jumpTo(_savedScrollOffset);
+                } catch (_) {}
+              }
+              _shouldRestoreScroll = false;
+            });
+          });
+        }
+
+        return StreamBuilder<List<AppNotification>>(
+          stream: notificationRepository.watchForUser(userId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
+                ),
+              );
+            }
+
+            final notifications = snapshot.data ?? [];
+            final announcements = notifications.where((n) => n.deepLink.startsWith('/announcement')).toList();
+            final regularNotifications = notifications.where((n) => !n.deepLink.startsWith('/announcement')).toList();
+
+            return NotificationListener<ScrollNotification>(
+              onNotification: (scrollNotification) {
+                if (scrollNotification.metrics.axis == Axis.vertical) {
+                  _savedScrollOffset = scrollNotification.metrics.pixels;
+                }
+                return false;
+              },
+              child: ListView(
+                key: const PageStorageKey('notifications_modal_outer_scroll'),
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        tr ? 'Bildirimler' : 'Notifications',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFFEC008C),
+                            ),
+                      ),
+                      if (userId != 'local-user' && notifications.isNotEmpty && _activeTab != 1)
+                        TextButton.icon(
+                          icon: const Icon(Icons.done_all_rounded, size: 16, color: Color(0xFF00FFCC)),
+                          label: Text(
+                            tr ? 'Tümünü Oku' : 'Read All',
+                            style: const TextStyle(
+                              color: Color(0xFF00FFCC),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onPressed: () async {
+                            await notificationRepository.markAllRead(userId);
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (_activeTab != 1 && notifications.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF160E24) : const Color(0xFFFAF6FC),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF00FFCC).withValues(alpha: 0.2)
+                              : const Color(0xFFEC008C).withValues(alpha: 0.15),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              tr
+                                  ? 'Sola kaydır: Sil | Sağa kaydır: Oku'
+                                  : 'Swipe left: Delete | Swipe right: Read',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? const Color(0xFFE5DDF2) : const Color(0xFF6B5885),
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  // Sekmeler
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTabButton(
+                          label: tr ? 'Bildirimler (${regularNotifications.length})' : 'Notifications (${regularNotifications.length})',
+                          isActive: _activeTab == 0,
+                          onTap: () => setState(() {
+                            _activeTab = 0;
+                            _savedActiveTab = 0;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _buildTabButton(
+                          label: tr ? 'Akış' : 'Activity Feed',
+                          isActive: _activeTab == 1,
+                          onTap: () => setState(() {
+                            _activeTab = 1;
+                            _savedActiveTab = 1;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _buildTabButton(
+                          label: tr ? 'Duyurular (${announcements.length})' : 'Announcements (${announcements.length})',
+                          isActive: _activeTab == 2,
+                          onTap: () => setState(() {
+                            _activeTab = 2;
+                            _savedActiveTab = 2;
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_activeTab == 0)
+                    _buildNotificationsList(
+                      context,
+                      regularNotifications,
+                      canDelete: true,
+                      userId: userId,
+                      isTr: tr,
+                    )
+                  else if (_activeTab == 1)
+                    SocialFeedTab(
+                      userId: userId,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      onNavigate: (route) {
+                        _savedActiveTab = 1;
+                        _shouldRestoreScroll = true;
+                        final rootContext = Navigator.of(context, rootNavigator: true).context;
+                        Navigator.of(context).pop();
+                        rootContext.push(route).then((_) {
+                          showNotificationsModal(rootContext, initialTab: 1);
+                        });
+                      },
+                    )
+                  else
+                    _buildNotificationsList(
+                      context,
+                      announcements,
+                      canDelete: false,
+                      userId: userId,
+                      isTr: tr,
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTabButton({
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: isActive
+              ? const Color(0xFFEC008C).withValues(alpha: 0.15)
+              : (isDark ? const Color(0xFF160E22) : Colors.white),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFFEC008C)
+                : (isDark ? const Color(0xFF2C1F45) : const Color(0xFFEC008C).withValues(alpha: 0.2)),
+            width: 1.2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            color: isActive
+                ? (isDark ? Colors.white : const Color(0xFFEC008C))
+                : (isDark ? Colors.white70 : const Color(0xFF6B5885)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationsList(
+    BuildContext context,
+    List<AppNotification> list, {
+    required bool canDelete,
+    required String userId,
+    required bool isTr,
+  }) {
+    if (list.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40.0),
+        child: Center(
+          child: Text(
+            isTr ? 'Bu kategoride bildirim bulunmuyor.' : 'No notifications in this category.',
+            style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white54),
+          ),
+        ),
+      );
+    }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ListView.builder(
+      key: PageStorageKey('notifications_list_${canDelete ? "regular" : "announcements"}'),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        final notification = list[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Dismissible(
+            key: Key('modal-notification-${notification.id}-${notification.isRead}'),
+            direction: canDelete ? DismissDirection.horizontal : DismissDirection.startToEnd,
+            background: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF00FFCC).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 16),
+              child: const Icon(Icons.mark_email_read_rounded, color: Color(0xFF00FFCC), size: 18),
+            ),
+            secondaryBackground: canDelete
+                ? Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEC008C).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 16),
+                    child: const Icon(Icons.delete_forever_rounded, color: Color(0xFFEC008C), size: 18),
+                  )
+                : null,
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.startToEnd) {
+                await notificationRepository.markRead(notification.id);
+                return false;
+              } else if (direction == DismissDirection.endToStart && canDelete) {
+                await notificationRepository.delete(notification.id);
+                return true;
+              }
+              return false;
+            },
+            child: Card(
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: notification.isRead
+                      ? Colors.transparent
+                      : (isDark
+                          ? const Color(0xFFEC008C).withValues(alpha: 0.5)
+                          : const Color(0xFFEC008C).withValues(alpha: 0.25)),
+                  width: 1,
+                ),
+              ),
+              color: isDark
+                  ? (notification.isRead ? const Color(0xFF0F0918) : const Color(0xFF170D26))
+                  : (notification.isRead ? const Color(0xFFF9F6FC) : const Color(0xFFF0E6F5)),
+              child: ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                onTap: () async {
+                  final route = notification.deepLink;
+                  if (!notification.isRead) {
+                    notificationRepository.markRead(notification.id);
+                  }
+                  if (route.isNotEmpty) {
+                    if (route.startsWith('/announcement')) {
+                      showAnnouncementModalDetail(
+                        context,
+                        title: notification.title,
+                        body: notification.body,
+                      );
+                    } else {
+                      _savedActiveTab = _activeTab;
+                      _shouldRestoreScroll = true;
+                      final rootContext = Navigator.of(context, rootNavigator: true).context;
+                      Navigator.of(context).pop();
+                      rootContext.push(route).then((_) {
+                        showNotificationsModal(rootContext, initialTab: _savedActiveTab);
+                      });
+                    }
+                  }
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: notification.isRead
+                        ? Colors.grey.withValues(alpha: 0.1)
+                        : const Color(0xFFEC008C).withValues(alpha: 0.1),
+                  ),
+                  child: Icon(
+                    notificationTypeIcon(notification.type),
+                    color: notification.isRead ? Colors.grey : const Color(0xFFEC008C),
+                    size: 16,
+                  ),
+                ),
+                title: Text(
+                  notification.title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+                    color: isDark
+                        ? (notification.isRead ? const Color(0xFFB5A7C5) : Colors.white)
+                        : (notification.isRead ? const Color(0xFF6B5885) : Colors.black87),
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 2),
+                    Text(
+                      notification.body,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark
+                            ? (notification.isRead ? const Color(0xFF8E7E9D) : const Color(0xFFC4B2D9))
+                            : (notification.isRead ? const Color(0xFF8E7E9D) : const Color(0xFF6B5885)),
+                      ),
+                    ),
+                    if (notification.createdAt != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        formatMessageTime(notification.createdAt!),
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                trailing: notification.isRead
+                    ? null
+                    : Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF00FFCC),
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class GothicCampaignCountdown extends StatefulWidget {
+  final DateTime endTime;
+  const GothicCampaignCountdown({required this.endTime, super.key});
+
+  @override
+  State<GothicCampaignCountdown> createState() => _GothicCampaignCountdownState();
+}
+
+class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
+  late Timer _timer;
+  late Duration _remaining;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _calculateRemaining();
+        });
+      }
+    });
+  }
+
+  void _calculateRemaining() {
+    _remaining = widget.endTime.difference(DateTime.now());
+    if (_remaining.isNegative) {
+      _remaining = Duration.zero;
+      _timer.cancel();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  Widget _buildTimeBox(String value, String label, Color accentColor, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF160E26) : const Color(0xFFF3E8FF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.1),
+            blurRadius: 6,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: GoogleFonts.cinzel(
+              color: accentColor,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.outfit(
+              color: isDark ? Colors.white54 : Colors.black54,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final accentColor = const Color(0xFFFFD700);
+
+    if (_remaining.inSeconds == 0) {
+      return Text(
+        tr ? 'Kampanya Sona Erdi!' : 'Campaign Ended!',
+        style: GoogleFonts.cinzel(
+          color: Colors.redAccent,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    final days = _remaining.inDays.toString().padLeft(2, '0');
+    final hours = (_remaining.inHours % 24).toString().padLeft(2, '0');
+    final minutes = (_remaining.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (_remaining.inSeconds % 60).toString().padLeft(2, '0');
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildTimeBox(days, tr ? 'Gün' : 'Day', accentColor, isDark),
+        const SizedBox(width: 8),
+        _buildTimeBox(hours, tr ? 'Saat' : 'Hour', accentColor, isDark),
+        const SizedBox(width: 8),
+        _buildTimeBox(minutes, tr ? 'Dk' : 'Min', accentColor, isDark),
+        const SizedBox(width: 8),
+        _buildTimeBox(seconds, tr ? 'Sn' : 'Sec', accentColor, isDark),
+      ],
+    );
+  }
+}
+
+class PriceOptionCard extends StatelessWidget {
+  final String title;
+  final String price;
+  final String subtitle;
+  final bool isSelected;
+
+  const PriceOptionCard({
+    required this.title,
+    required this.price,
+    required this.subtitle,
+    this.isSelected = false,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final accentColor = const Color(0xFFFFD700);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1B0F2B) : const Color(0xFFFBF4FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? primaryColor : (isDark ? const Color(0xFF2C1F45) : const Color(0xFFE9D8FA)),
+          width: isSelected ? 2.0 : 1.2,
+        ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: primaryColor.withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                )
+              ]
+            : null,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.outfit(
+              color: isDark ? Colors.white70 : Colors.black54,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            price,
+            style: GoogleFonts.cinzel(
+              color: isDark ? accentColor : primaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(
+              color: isDark ? Colors.white38 : Colors.black38,
+              fontSize: 9,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+

@@ -13,9 +13,11 @@ import '../social/social_models.dart';
 import '../users/user_models.dart';
 import '../widgets/doll_widgets.dart';
 import '../catalog/catalog_models.dart';
+import 'catalog_detail_screen.dart';
 import '../comments/comment_models.dart';
 import '../users/profile_setup_repository.dart';
 import '../collection/collection_repository.dart';
+import '../auth/sign_in_panel.dart';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({this.chatUserId, super.key});
@@ -27,6 +29,23 @@ class SocialScreen extends StatefulWidget {
 }
 
 class _SocialScreenState extends State<SocialScreen> {
+  bool _isSigningIn = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isSigningIn = true;
+    });
+    try {
+      await performGoogleSignIn(context);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSigningIn = false;
+        });
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -39,111 +58,560 @@ class _SocialScreenState extends State<SocialScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = authService.currentUser;
+    final user = authService.currentUser!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
 
-    if (user == null) {
-      return Center(
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(t(context, 'socialSignInRequired')),
-          ),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PendingRequestsCard(userId: user.uid),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _GlobalChatCard(
+                userId: user.uid,
+              ),
+            ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    return DefaultTabController(
-      length: 2,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+}
+
+class _ShareItemSelectionModal extends StatefulWidget {
+  const _ShareItemSelectionModal({required this.userId});
+  final String userId;
+
+  @override
+  State<_ShareItemSelectionModal> createState() => _ShareItemSelectionModalState();
+}
+
+class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
+  String _catalogSearchQuery = '';
+  CatalogItemType? _catalogSelectedType;
+  
+  String _collectionSearchQuery = '';
+  String? _selectedCollectionStatus;
+
+  late Future<List<CollectionEntry>> _collectionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _collectionFuture = collectionRepository.listForUser(widget.userId);
+  }
+
+  String getStatusLabel(BuildContext context, String status) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    switch (status) {
+      case 'owned':
+        return tr ? 'Sahibim' : 'Owned';
+      case 'wanted':
+        return tr ? 'Arıyorum' : 'Looking For';
+      case 'trade':
+        return tr ? 'Takaslık' : 'Trade';
+      case 'selling':
+        return tr ? 'Satılık' : 'Selling';
+      default:
+        return status;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0E0818) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            TabBar(
+              labelColor: const Color(0xFFEC008C),
+              unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
+              indicatorColor: const Color(0xFFEC008C),
+              labelStyle: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 14),
+              tabs: [
+                Tab(text: tr ? 'Katalog' : 'Catalog'),
+                Tab(text: tr ? 'Koleksiyon' : 'Collection'),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildCatalogTab(tr, isDark),
+                  _buildCollectionTab(tr, isDark),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCatalogFilterSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        side: BorderSide(color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+      ),
+      builder: (context) {
+        final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+        final currentUser = authService.currentUser;
+
+        return StreamBuilder<ProfileSetupStatus>(
+          stream: currentUser != null
+              ? profileSetupRepository.watch(currentUser.uid)
+              : const Stream.empty(),
+          builder: (context, snap) {
+            final isPro = snap.data?.isPro == true || snap.data?.role == 'admin';
+
+            return Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    t(context, 'social'),
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          height: 1.05,
-                        ),
+                    tr ? 'Katalog Filtrele' : 'Filter Catalog',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const Spacer(),
-                  TabBar(
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    indicatorColor: Theme.of(context).colorScheme.primary,
-                    labelColor: Theme.of(context).colorScheme.primary,
-                    dividerColor: Colors.transparent,
-                    tabs: [
-                      Tab(text: tr ? 'Sohbet' : 'Chat'),
-                      Tab(text: tr ? 'Akış' : 'Feed'),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildFilterChipHelper(
+                        context: context,
+                        isSelected: _catalogSelectedType == null,
+                        label: tr ? 'Tümü' : 'All',
+                        onTap: () {
+                          setState(() {
+                            _catalogSelectedType = null;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      for (final type in CatalogItemType.values)
+                        _buildFilterChipHelper(
+                          context: context,
+                          isSelected: _catalogSelectedType == type,
+                          label: catalogTypeLabel(context, type),
+                          onTap: () {
+                            final isRestricted = type == CatalogItemType.set ||
+                                type == CatalogItemType.pet ||
+                                type == CatalogItemType.accessory;
+                            if (isRestricted && !isPro) {
+                              Navigator.of(context).pop();
+                              showGothicConfirmDialog(
+                                context,
+                                title: tr ? 'Pro Filtre Özelliği' : 'Pro Filter Feature',
+                                content: tr
+                                    ? 'Set, Pet ve Aksesuar filtreleri DollDex Pro üyelerine özeldir. Avantajları görmek ve Pro\'ya yükseltmek ister misiniz?'
+                                    : 'Set, Pet, and Accessory filters are exclusive to DollDex Pro members. Would you like to view the benefits and upgrade to Pro?',
+                                confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                cancelText: tr ? 'Vazgeç' : 'Cancel',
+                              ).then((confirmed) {
+                                if (confirmed && context.mounted) {
+                                  showProSubscriptionModal(context);
+                                }
+                              });
+                            } else {
+                              setState(() {
+                                _catalogSelectedType = type;
+                              });
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark
-                        ? const Color(0xFF00FFCC).withOpacity(0.25)
-                        : const Color(0xFFEC008C).withOpacity(0.15),
-                    width: 1.5,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterChipHelper({
+    required BuildContext context,
+    required bool isSelected,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final finalColor = isSelected ? const Color(0xFFEC008C) : Colors.transparent;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? finalColor.withOpacity(0.15)
+              : (isDark ? const Color(0xFF160E22) : Colors.white),
+          border: Border.all(
+            color: isSelected
+                ? finalColor
+                : (isDark ? const Color(0xFFEC008C).withOpacity(0.2) : Colors.black12),
+            width: 1.2,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: finalColor.withOpacity(0.25),
+                    blurRadius: 6,
+                    spreadRadius: 0.5,
+                  )
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? (isDark ? Colors.white : const Color(0xFFEC008C))
+                : (isDark ? Colors.white60 : Colors.black87),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCatalogTab(bool tr, bool isDark) {
+    final filteredCatalog = filterCatalogEntries(
+      catalogEntriesNotifier.value,
+      _catalogSearchQuery,
+      _catalogSelectedType,
+    );
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  onChanged: (val) => setState(() => _catalogSearchQuery = val),
+                  style: const TextStyle(fontSize: 13, fontFamily: 'Outfit'),
+                  decoration: InputDecoration(
+                    hintText: tr ? 'Bebek ara...' : 'Search dolls...',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C)).withOpacity(0.08),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    buildNeonIcon(context, Icons.info_outline_rounded, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        t(context, 'socialSubtitle'),
-                        style: TextStyle(
-                          color: isDark ? const Color(0xFFC4B2D9) : const Color(0xFF6B5885),
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              _PendingRequestsCard(userId: user.uid),
-              const SizedBox(height: 8),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _GlobalChatCard(
-                      userId: user.uid,
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () => _showCatalogFilterSheet(context),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  height: 38,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFFEC008C).withOpacity(isDark ? 0.5 : 0.25),
+                      width: 1.0,
                     ),
-                    _SocialFeedTab(
-                      userId: user.uid,
-                    ),
-                  ],
+                    color: isDark ? const Color(0xFF160E22) : Colors.white,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.tune_rounded,
+                        size: 16,
+                        color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _catalogSelectedType == null
+                            ? (tr ? 'Hepsi' : 'All')
+                            : catalogTypeLabel(context, _catalogSelectedType!),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFFEC008C),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 6),
+        Expanded(
+          child: filteredCatalog.isEmpty
+              ? Center(
+                  child: Text(
+                    tr ? 'Bebek bulunamadı.' : 'No dolls found.',
+                    style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: filteredCatalog.length,
+                  itemBuilder: (context, index) {
+                    final entry = filteredCatalog[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      color: isDark ? const Color(0xFF140C20) : Colors.grey[50],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: isDark ? const Color(0xFF2C1F45) : Colors.grey[200]!,
+                          width: 1,
+                        ),
+                      ),
+                      child: ListTile(
+                        dense: true,
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: entry.primaryImageUrl.isNotEmpty
+                              ? Image.network(
+                                  entry.primaryImageUrl,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                )
+                              : const Icon(Icons.image_not_supported_rounded, size: 24, color: Colors.grey),
+                        ),
+                        title: Text(
+                          entry.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          entry.series ?? '',
+                          style: const TextStyle(fontSize: 10, color: Colors.grey),
+                        ),
+                        trailing: const Icon(Icons.send_rounded, color: Color(0xFFEC008C), size: 16),
+                        onTap: () async {
+                          await socialRepository.sendGlobalMessage(
+                            senderId: widget.userId,
+                            text: '',
+                            sharedCatalogId: entry.id,
+                            sharedSource: 'catalog',
+                          );
+                          if (mounted) Navigator.of(context).pop();
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCollectionTab(bool tr, bool isDark) {
+    return FutureBuilder<List<CollectionEntry>>(
+      future: _collectionFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
+            ),
+          );
+        }
+
+        final collectionEntries = snapshot.data ?? [];
+
+        final List<MapEntry<CollectionEntry, CatalogEntry>> resolvedItems = [];
+        for (final entry in collectionEntries) {
+          final catalogItem = catalogEntriesNotifier.value.firstWhere(
+            (e) => e.id == entry.itemId,
+            orElse: () => const CatalogEntry(
+              id: '',
+              name: '',
+              type: CatalogItemType.doll,
+              subtitle: '',
+              imageUrls: [],
+            ),
+          );
+          if (catalogItem.id.isNotEmpty) {
+            resolvedItems.add(MapEntry(entry, catalogItem));
+          }
+        }
+
+        final filteredCollection = resolvedItems.where((pair) {
+          final entry = pair.key;
+          final catalogItem = pair.value;
+
+          final matchesSearch = catalogItem.name.toLowerCase().contains(_collectionSearchQuery.toLowerCase()) ||
+              (catalogItem.series?.toLowerCase().contains(_collectionSearchQuery.toLowerCase()) ?? false);
+          final matchesStatus = _selectedCollectionStatus == null || entry.status.name == _selectedCollectionStatus;
+
+          return matchesSearch && matchesStatus;
+        }).toList();
+
+        final statuses = ['owned', 'wanted', 'trade', 'selling'];
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+              child: TextField(
+                onChanged: (val) => setState(() => _collectionSearchQuery = val),
+                style: const TextStyle(fontSize: 13, fontFamily: 'Outfit'),
+                decoration: InputDecoration(
+                  hintText: tr ? 'Koleksiyonunda ara...' : 'Search your collection...',
+                  prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 38,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: statuses.length + 1,
+                itemBuilder: (context, index) {
+                  final isAll = index == 0;
+                  final statusName = isAll ? null : statuses[index - 1];
+                  final statusLabel = isAll ? (tr ? 'Tümü' : 'All') : getStatusLabel(context, statusName!);
+                  final isSelected = isAll ? (_selectedCollectionStatus == null) : (_selectedCollectionStatus == statusName);
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ChoiceChip(
+                      label: Text(
+                        statusLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                      ),
+                      selected: isSelected,
+                      selectedColor: const Color(0xFFEC008C),
+                      backgroundColor: isDark ? const Color(0xFF1B0F2A) : Colors.grey[200],
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedCollectionStatus = isAll ? null : statusName;
+                        });
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 6),
+            Expanded(
+              child: filteredCollection.isEmpty
+                  ? Center(
+                      child: Text(
+                        tr ? 'Koleksiyon öğesi bulunamadı.' : 'No collection items found.',
+                        style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: filteredCollection.length,
+                      itemBuilder: (context, pairIndex) {
+                        final pair = filteredCollection[pairIndex];
+                        final colEntry = pair.key;
+                        final catEntry = pair.value;
+                        final statusLabel = getStatusLabel(context, colEntry.status.name);
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          color: isDark ? const Color(0xFF140C20) : Colors.grey[50],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: isDark ? const Color(0xFF2C1F45) : Colors.grey[200]!,
+                              width: 1,
+                            ),
+                          ),
+                          child: ListTile(
+                            dense: true,
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: catEntry.primaryImageUrl.isNotEmpty
+                                  ? Image.network(
+                                      catEntry.primaryImageUrl,
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : const Icon(Icons.image_not_supported_rounded, size: 24, color: Colors.grey),
+                            ),
+                            title: Text(
+                              catEntry.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            subtitle: Row(
+                              children: [
+                                Text(
+                                  catEntry.series ?? '',
+                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF00FFCC).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    statusLabel,
+                                    style: const TextStyle(fontSize: 9, color: Color(0xFF00FFCC), fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: const Icon(Icons.send_rounded, color: Color(0xFFEC008C), size: 16),
+                            onTap: () async {
+                              await socialRepository.sendGlobalMessage(
+                                senderId: widget.userId,
+                                text: '',
+                                sharedCatalogId: catEntry.id,
+                                sharedCollectionId: colEntry.id,
+                                sharedCollectionStatus: colEntry.status.name,
+                                sharedSource: 'collection',
+                              );
+                              if (mounted) Navigator.of(context).pop();
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -161,60 +629,156 @@ class _GlobalChatCard extends StatefulWidget {
 
 class _GlobalChatCardState extends State<_GlobalChatCard> {
   final _globalMessageController = TextEditingController();
-  final _searchController = TextEditingController();
   final _globalMessageFocusNode = FocusNode();
-  List<AppUser> _results = const <AppUser>[];
-  bool _isSearching = false;
-  bool _showSearchInput = false;
+
+  String getStatusLabel(BuildContext context, String status) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    switch (status) {
+      case 'owned':
+        return tr ? 'Sahibim' : 'Owned';
+      case 'wanted':
+        return tr ? 'Arıyorum' : 'Looking For';
+      case 'trade':
+        return tr ? 'Takaslık' : 'Trade';
+      case 'selling':
+        return tr ? 'Satılık' : 'Selling';
+      default:
+        return status;
+    }
+  }
+
+  Widget _buildSharedItemCard(BuildContext context, ChatMessage msg, bool isMe) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final entry = catalogEntriesNotifier.value.firstWhere(
+      (e) => e.id == msg.sharedCatalogId,
+      orElse: () => const CatalogEntry(
+        id: '',
+        name: '',
+        type: CatalogItemType.doll,
+        subtitle: '',
+        imageUrls: [],
+      ),
+    );
+
+    if (entry.id.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final statusLabel = getStatusLabel(context, msg.sharedCollectionStatus);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 6, bottom: 2),
+      constraints: const BoxConstraints(maxWidth: 240),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black.withOpacity(0.4) : Colors.white.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFEC008C).withOpacity(0.3),
+          width: 1.0,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              context.push('/i/${entry.id}');
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF130B1E) : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark ? Colors.white10 : Colors.black12,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: entry.primaryImageUrl.isNotEmpty
+                          ? Image.network(
+                              entry.primaryImageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image_rounded, size: 20, color: Colors.grey),
+                            )
+                          : const Icon(Icons.image_not_supported_rounded, size: 20, color: Colors.grey),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        if (entry.series != null && entry.series!.isNotEmpty) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            entry.series!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isDark ? Colors.white54 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                        if (statusLabel.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00FFCC).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: const Color(0xFF00FFCC).withOpacity(0.4),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              statusLabel,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF00FFCC),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
     _globalMessageController.dispose();
-    _searchController.dispose();
     _globalMessageFocusNode.dispose();
     super.dispose();
-  }
-
-  Future<void> _searchUsers() async {
-    final query = _searchController.text;
-    if (query.trim().isEmpty) {
-      setState(() => _results = const []);
-      return;
-    }
-    setState(() {
-      _isSearching = true;
-    });
-    try {
-      final users = await socialRepository.searchUsers(query);
-      if (!mounted) return;
-      setState(() {
-        _results = users
-            .where((user) => user.id != widget.userId)
-            .toList(growable: false);
-      });
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${t(context, 'socialSearchFailed')} $error')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSearching = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _sendFriendRequest(String targetUserId) async {
-    await socialRepository.sendFriendRequest(
-      fromUserId: widget.userId,
-      toUserId: targetUserId,
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(t(context, 'friendRequestSent'))),
-    );
   }
 
   Future<void> _sendGlobalMessage() async {
@@ -247,124 +811,8 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                         fontWeight: FontWeight.w800,
                       ),
                 ),
-                const Spacer(),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  width: _showSearchInput ? 180.0 : 0.0,
-                  height: 36,
-                  curve: Curves.easeInOut,
-                  child: _showSearchInput
-                      ? TextField(
-                          controller: _searchController,
-                          onSubmitted: (_) => _searchUsers(),
-                          style: const TextStyle(fontSize: 12, fontFamily: 'Outfit', color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: t(context, 'searchUsername'),
-                            hintStyle: const TextStyle(fontSize: 12, color: Colors.white54),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            isDense: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(color: Color(0xFFEC008C), width: 1),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(color: Color(0xFF00FFCC), width: 1.5),
-                            ),
-                            suffixIcon: _isSearching
-                                ? const SizedBox.square(
-                                    dimension: 16,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.5,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
-                                      ),
-                                    ),
-                                  )
-                                : IconButton(
-                                    padding: EdgeInsets.zero,
-                                    icon: const Icon(Icons.clear_rounded, size: 16, color: Colors.white54),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {
-                                        _results = const [];
-                                        _showSearchInput = false;
-                                      });
-                                    },
-                                  ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                if (!_showSearchInput)
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _showSearchInput = true;
-                      });
-                    },
-                    icon: const Icon(Icons.search_rounded, color: Color(0xFF00FFCC), size: 20),
-                    label: Text(
-                      tr ? 'Kullanıcı Ara' : 'Search User',
-                      style: const TextStyle(
-                        color: Color(0xFF00FFCC),
-                        fontSize: 13,
-                        fontFamily: 'Outfit',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
               ],
             ),
-            if (_results.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                constraints: const BoxConstraints(maxHeight: 180),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF171026) : const Color(0xFFFAF2FF),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFEC008C).withOpacity(0.3)),
-                ),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _results.length,
-                  itemBuilder: (context, index) {
-                    final target = _results[index];
-                    return ListTile(
-                      dense: true,
-                      leading: buildAvatarHelper(target.avatarId, target.avatarFrameColor, size: 28),
-                      title: Text(
-                        target.username.isEmpty ? target.displayName : '@${target.username}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.person_add_alt_1_rounded, size: 18, color: Color(0xFF00FFCC)),
-                            onPressed: () => _sendFriendRequest(target.id),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.account_circle_outlined, size: 18, color: Color(0xFFEC008C)),
-                            onPressed: () => context.push('/users/${target.id}'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
             const SizedBox(height: 8),
             Expanded(
               child: StreamBuilder<List<ChatMessage>>(
@@ -381,6 +829,7 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                   }
 
                   return ListView.builder(
+                    key: const PageStorageKey('global_chat_scroll'),
                     reverse: true,
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: messages.length,
@@ -396,6 +845,24 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
             const SizedBox(height: 8),
             Row(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFFEC008C)),
+                  tooltip: tr ? 'Paylaş' : 'Share',
+                  onPressed: () {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      showDragHandle: true,
+                      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                      ),
+                      builder: (context) {
+                        return _ShareItemSelectionModal(userId: widget.userId);
+                      },
+                    );
+                  },
+                ),
                 Expanded(
                   child: TextField(
                     controller: _globalMessageController,
@@ -458,7 +925,14 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
         children: [
           if (!isMe) ...[
             GestureDetector(
-              onTap: () => context.push('/users/${msg.senderId}'),
+              onTap: () {
+                if (msg.senderUsername.isNotEmpty) {
+                  final uName = msg.senderUsername.replaceAll('@', '');
+                  context.push('/u/$uName');
+                } else {
+                  context.push('/users/${msg.senderId}');
+                }
+              },
               child: buildAvatarHelper(msg.senderAvatarId, msg.senderFrameColor, size: 32),
             ),
             const SizedBox(width: 8),
@@ -498,26 +972,54 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                   children: [
                     if (!isMe) ...[
                       GestureDetector(
-                        onTap: () => context.push('/users/${msg.senderId}'),
-                        child: Text(
-                          msg.senderUsername.isEmpty ? msg.senderId : '@${msg.senderUsername}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: isDark ? const Color(0xFF00FFCC) : const Color(0xFF8338EC),
-                          ),
+                        onTap: () {
+                          if (msg.senderUsername.isNotEmpty) {
+                            final uName = msg.senderUsername.replaceAll('@', '');
+                            context.push('/u/$uName');
+                          } else {
+                            context.push('/users/${msg.senderId}');
+                          }
+                        },
+                        child: StreamBuilder<ProfileSetupStatus>(
+                          stream: profileSetupRepository.watch(msg.senderId),
+                          builder: (context, snapshot) {
+                            final badge = snapshot.data?.selectedBadge ?? '';
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (badge.isNotEmpty) ...[
+                                  ProfileBadgeWidget(badgeId: badge, size: 7),
+                                  const SizedBox(height: 2),
+                                ],
+                                Text(
+                                  msg.senderUsername.isEmpty ? msg.senderId : '@${msg.senderUsername}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    color: isDark ? const Color(0xFF00FFCC) : const Color(0xFF8338EC),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 3),
                     ],
-                    Text(
-                      msg.text,
-                      style: TextStyle(
-                        fontFamily: 'Outfit',
-                        color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
-                        fontSize: 13,
+                    if (msg.text.isNotEmpty) ...[
+                      Text(
+                        msg.text,
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
+                    ],
+                    if (msg.sharedSource.isNotEmpty) ...[
+                      _buildSharedItemCard(context, msg, isMe),
+                    ],
                     const SizedBox(height: 2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -728,284 +1230,4 @@ class _PendingRequestsCard extends StatelessWidget {
   }
 }
 
-enum _ActivityType { collectionUpdate, comment }
 
-class _ActivityItem {
-  _ActivityItem({
-    required this.userId,
-    required this.timestamp,
-    required this.type,
-    this.entry,
-    this.comment,
-  });
-
-  final String userId;
-  final DateTime timestamp;
-  final _ActivityType type;
-  final CollectionEntry? entry;
-  final AppComment? comment;
-}
-
-class _SocialFeedTab extends StatelessWidget {
-  const _SocialFeedTab({required this.userId});
-
-  final String userId;
-
-  String _timeAgo(BuildContext context, DateTime dt) {
-    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return tr ? 'Az önce' : 'Just now';
-    if (diff.inMinutes < 60) return tr ? '${diff.inMinutes} dk önce' : '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return tr ? '${diff.inHours} saat önce' : '${diff.inHours}h ago';
-    return tr ? '${diff.inDays} gün önce' : '${diff.inDays}d ago';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return StreamBuilder<List<AppUser>>(
-      stream: socialRepository.watchFriendsList(userId),
-      builder: (context, friendsSnap) {
-        final friends = friendsSnap.data ?? [];
-        final friendUids = friends.map((u) => u.id).toSet();
-
-        return StreamBuilder<List<AppUser>>(
-          stream: socialRepository.watchFollowingList(userId),
-          builder: (context, followSnap) {
-            final followings = followSnap.data ?? [];
-            final followingUids = followings.map((u) => u.id).toSet();
-
-            final targetUids = {...friendUids, ...followingUids, userId};
-
-            return StreamBuilder<List<CollectionEntry>>(
-              stream: socialRepository.watchRecentPublicCollectionEntries(),
-              builder: (context, collectionSnap) {
-                final collections = collectionSnap.data ?? [];
-
-                return StreamBuilder<List<AppComment>>(
-                  stream: socialRepository.watchRecentComments(),
-                  builder: (context, commentsSnap) {
-                    final comments = commentsSnap.data ?? [];
-
-                    final List<_ActivityItem> feedItems = [];
-
-                    for (final entry in collections) {
-                      if (targetUids.contains(entry.userId)) {
-                        feedItems.add(_ActivityItem(
-                          userId: entry.userId,
-                          timestamp: entry.updatedAt ?? DateTime.now().subtract(const Duration(minutes: 5)),
-                          type: _ActivityType.collectionUpdate,
-                          entry: entry,
-                        ));
-                      }
-                    }
-
-                    for (final comment in comments) {
-                      if (targetUids.contains(comment.userId)) {
-                        feedItems.add(_ActivityItem(
-                          userId: comment.userId,
-                          timestamp: comment.createdAt,
-                          type: _ActivityType.comment,
-                          comment: comment,
-                        ));
-                      }
-                    }
-
-                    feedItems.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-                    if (feedItems.isEmpty) {
-                      return EmptyState(
-                        icon: Icons.dynamic_feed_rounded,
-                        title: tr ? 'Aktivite Yok' : 'No Activity',
-                        body: tr
-                            ? 'Takip ettiğin kişilerin veya arkadaşlarının koleksiyon güncellemeleri burada görünür.'
-                            : 'Collection updates from friends and followings will appear here.',
-                      );
-                    }
-
-                    return ListView.builder(
-                      itemCount: feedItems.length,
-                      padding: const EdgeInsets.only(top: 8, bottom: 20),
-                      itemBuilder: (context, index) {
-                        final item = feedItems[index];
-
-                        return StreamBuilder<ProfileSetupStatus>(
-                          stream: profileSetupRepository.watch(item.userId),
-                          builder: (context, userSnap) {
-                            if (!userSnap.hasData) return const SizedBox.shrink();
-                            final owner = userSnap.data!;
-                            final username = owner.username.isNotEmpty ? '@${owner.username}' : 'Collector';
-
-                            if (item.type == _ActivityType.collectionUpdate) {
-                              final entry = item.entry!;
-                              final catalogItem = findCatalogEntry(entry.itemId);
-
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                child: ListTile(
-                                  onTap: () => context.push('/collection/entry/${entry.id}'),
-                                  leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
-                                  title: RichText(
-                                    text: TextSpan(
-                                      style: TextStyle(
-                                        color: isDark ? Colors.white : Colors.black87,
-                                        fontSize: 12.5,
-                                        fontFamily: 'Outfit',
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '$username ',
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: tr
-                                              ? 'koleksiyonuna yeni bir bebek ekledi: '
-                                              : 'added a new doll to their collection: ',
-                                        ),
-                                        TextSpan(
-                                          text: entryName(context, catalogItem),
-                                          style: TextStyle(
-                                            color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 4.0),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          conditionLabel(context, entry.condition),
-                                          style: const TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _timeAgo(context, item.timestamp),
-                                          style: const TextStyle(fontSize: 10.5, color: Colors.white38),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-                                ),
-                              );
-                            } else {
-                              final comment = item.comment!;
-                              return _CommentActivityCard(
-                                comment: comment,
-                                owner: owner,
-                                timestamp: item.timestamp,
-                                username: username,
-                                isDark: isDark,
-                                tr: tr,
-                                timeAgo: _timeAgo(context, item.timestamp),
-                              );
-                            }
-                          },
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _CommentActivityCard extends StatelessWidget {
-  const _CommentActivityCard({
-    required this.comment,
-    required this.owner,
-    required this.timestamp,
-    required this.username,
-    required this.isDark,
-    required this.tr,
-    required this.timeAgo,
-  });
-
-  final AppComment comment;
-  final ProfileSetupStatus owner;
-  final DateTime timestamp;
-  final String username;
-  final bool isDark;
-  final bool tr;
-  final String timeAgo;
-
-  @override
-  Widget build(BuildContext context) {
-    if (comment.sharedCatalogEntryId.isNotEmpty) {
-      final catalogItem = findCatalogEntry(comment.sharedCatalogEntryId);
-      return _buildCard(context, catalogItem);
-    }
-
-    return FutureBuilder<CollectionEntry?>(
-      future: collectionRepository.fetch(comment.targetId),
-      builder: (context, snapshot) {
-        final entry = snapshot.data;
-        final catalogItem = entry != null ? findCatalogEntry(entry.itemId) : findCatalogEntry('missing');
-        return _buildCard(context, catalogItem);
-      },
-    );
-  }
-
-  Widget _buildCard(BuildContext context, CatalogEntry catalogItem) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        onTap: () => context.push('/catalog/${catalogItem.id}'),
-        leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
-        title: RichText(
-          text: TextSpan(
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontSize: 12.5,
-              fontFamily: 'Outfit',
-            ),
-            children: [
-              TextSpan(
-                text: '$username ',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              TextSpan(
-                text: tr ? 'bir bebek altına yorum yaptı: ' : 'commented on a doll: ',
-              ),
-              TextSpan(
-                text: entryName(context, catalogItem),
-                style: TextStyle(
-                  color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '"${comment.text}"',
-                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.white70),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                timeAgo,
-                style: const TextStyle(fontSize: 10, color: Colors.white38),
-              ),
-            ],
-          ),
-        ),
-        trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-      ),
-    );
-  }
-}

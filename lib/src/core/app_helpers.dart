@@ -118,91 +118,94 @@ Future<bool> showGothicConfirmDialog(
     builder: (context) {
       return Dialog(
         backgroundColor: Colors.transparent,
-        child: GothicIvyContainer(
-          borderRadius: 20,
-          color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cinzel',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFFEC008C),
-                  shadows: isDark ? [
-                    const Shadow(
-                      color: Color(0xFFEC008C),
-                      blurRadius: 10,
-                    ),
-                  ] : [],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                content,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFEC008C), width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: GothicIvyContainer(
+            borderRadius: 20,
+            color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Cinzel',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFFEC008C),
+                    shadows: isDark ? [
+                      const Shadow(
+                        color: Color(0xFFEC008C),
+                        blurRadius: 10,
                       ),
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(
-                        finalCancelText,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : const Color(0xFFEC008C),
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cinzel',
-                        ),
-                      ),
-                    ),
+                    ] : [],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  content,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFEC008C), width: 1.5),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        onPressed: () => Navigator.of(context).pop(true),
+                        onPressed: () => Navigator.of(context).pop(false),
                         child: Text(
-                          finalConfirmText,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          finalCancelText,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : const Color(0xFFEC008C),
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cinzel',
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: Text(
+                            finalConfirmText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Cinzel',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       );

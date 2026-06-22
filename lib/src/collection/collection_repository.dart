@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../catalog/catalog_models.dart';
+import '../core/local_storage_helper.dart';
 
 abstract class CollectionRepository {
   Future<void> save(CollectionEntry entry);
@@ -30,6 +32,53 @@ class FirestoreCollectionRepository implements CollectionRepository {
 
   final FirebaseFirestore? _firestore;
   final List<CollectionEntry> _entries = [];
+  bool _localLoaded = false;
+
+  Future<void> _saveLocalToStorage() async {
+    final List<Map<String, dynamic>> maps = _entries
+        .where((e) => e.userId == 'local-user')
+        .map((e) => {
+              'id': e.id,
+              ...e.toMap(),
+            })
+        .toList();
+    await LocalStorage.setString('local_collection_entries', jsonEncode(maps));
+  }
+
+  Future<void> _loadLocalFromStorage() async {
+    if (_localLoaded) return;
+    _localLoaded = true;
+    final jsonStr = await LocalStorage.getString('local_collection_entries');
+    if (jsonStr != null && jsonStr.isNotEmpty) {
+      try {
+        final List decoded = jsonDecode(jsonStr);
+        _entries.clear();
+        for (final item in decoded) {
+          if (item is Map) {
+            _entries.add(CollectionEntry(
+              id: item['id'] as String? ?? '',
+              userId: 'local-user',
+              itemId: item['itemId'] as String? ?? '',
+              status: CollectionStatus.values.firstWhere(
+                (status) => status.name == item['status'],
+                orElse: () => CollectionStatus.owned,
+              ),
+              condition: CollectionCondition.values.firstWhere(
+                (condition) => condition.name == item['condition'],
+                orElse: () => CollectionCondition.complete,
+              ),
+              quantity: item['quantity'] as int? ?? 1,
+              notes: item['notes'] as String? ?? '',
+              isPublic: item['visibility'] != 'private',
+              updatedAt: _dateFromValue(item['updatedAt']),
+            ));
+          }
+        }
+      } catch (e) {
+        print('Error loading local collection entries: $e');
+      }
+    }
+  }
 
   FirebaseFirestore? get _db {
     if (!_isFirebaseInitialized()) {
@@ -40,11 +89,15 @@ class FirestoreCollectionRepository implements CollectionRepository {
 
   @override
   Future<void> save(CollectionEntry entry) async {
+    if (entry.userId == 'local-user') {
+      await _loadLocalFromStorage();
+    }
     _entries.removeWhere((existing) => existing.id == entry.id);
     _entries.add(entry);
 
     final db = _db;
     if (db == null || entry.userId == 'local-user') {
+      await _saveLocalToStorage();
       return;
     }
 
@@ -63,10 +116,14 @@ class FirestoreCollectionRepository implements CollectionRepository {
 
   @override
   Future<void> delete(CollectionEntry entry) async {
+    if (entry.userId == 'local-user') {
+      await _loadLocalFromStorage();
+    }
     _entries.removeWhere((existing) => existing.id == entry.id);
 
     final db = _db;
     if (db == null || entry.userId == 'local-user') {
+      await _saveLocalToStorage();
       return;
     }
 
@@ -75,6 +132,9 @@ class FirestoreCollectionRepository implements CollectionRepository {
 
   @override
   Future<List<CollectionEntry>> listForUser(String userId) async {
+    if (userId == 'local-user') {
+      await _loadLocalFromStorage();
+    }
     final db = _db;
     if (db != null && userId != 'local-user') {
       final snapshot = await db
@@ -112,6 +172,9 @@ class FirestoreCollectionRepository implements CollectionRepository {
 
   @override
   Future<List<CollectionEntry>> listPublicForUser(String userId) async {
+    if (userId == 'local-user') {
+      await _loadLocalFromStorage();
+    }
     final db = _db;
     if (db != null && userId != 'local-user') {
       final snapshot = await db
@@ -150,6 +213,7 @@ class FirestoreCollectionRepository implements CollectionRepository {
 
   @override
   Future<CollectionEntry?> fetch(String id) async {
+    await _loadLocalFromStorage();
     final db = _db;
     if (db != null) {
       try {

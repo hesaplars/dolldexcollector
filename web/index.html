@@ -18,6 +18,12 @@
 
   <script>
     window.onerror = function (message, source, lineno, colno, error) {
+      var msgStr = String(message || '');
+      if (msgStr.includes('FIRESTORE') || msgStr.includes('google_sign_in') || msgStr.includes('Script error') || msgStr.includes('Cross-Origin-Opener-Policy')) {
+        console.warn('Ignored screen-level error overlay for:', message);
+        return false;
+      }
+
       var div = document.createElement('div');
       div.style.position = 'fixed';
       div.style.top = '0';
@@ -38,6 +44,12 @@
       return false;
     };
     window.addEventListener('unhandledrejection', function (event) {
+      var reasonStr = String(event.reason || '');
+      if (reasonStr.includes('FIRESTORE') || reasonStr.includes('google_sign_in') || reasonStr.includes('Google Identity Services') || reasonStr.includes('Permissions') || reasonStr.includes('Permission denied') || reasonStr.includes('PERMISSION_DENIED')) {
+        console.warn('Ignored screen-level unhandled rejection overlay for:', event.reason);
+        return;
+      }
+
       var div = document.createElement('div');
       div.style.position = 'fixed';
       div.style.top = '0';

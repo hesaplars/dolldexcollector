@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'notification_models.dart';
+import '../core/replay_stream.dart';
 
 abstract class NotificationRepository {
   Stream<List<AppNotification>> watchForUser(String userId);
@@ -17,6 +18,12 @@ abstract class NotificationRepository {
   Future<void> publishAnnouncement(String title, String body);
 
   Future<void> deleteAnnouncement(String deepLink);
+
+  Future<void> sendCustomNotification({
+    required String userId,
+    required String title,
+    required String body,
+  });
 }
 
 bool _isFirebaseInitialized() {
@@ -35,6 +42,7 @@ class FirestoreNotificationRepository implements NotificationRepository {
   final List<AppNotification> _notifications = [];
   final StreamController<List<AppNotification>> _controller =
       StreamController<List<AppNotification>>.broadcast();
+  final Map<String, ReplayStream<List<AppNotification>>> _watchCache = {};
 
   FirebaseFirestore? get _db {
     if (!_isFirebaseInitialized()) {
@@ -45,10 +53,16 @@ class FirestoreNotificationRepository implements NotificationRepository {
   }
 
   @override
-  Stream<List<AppNotification>> watchForUser(String userId) async* {
+  Stream<List<AppNotification>> watchForUser(String userId) {
+    if (_watchCache.containsKey(userId)) {
+      return _watchCache[userId]!;
+    }
+
     final db = _db;
+    late Stream<List<AppNotification>> source;
+
     if (db != null && userId != 'local-user') {
-      yield* db
+      source = db
           .collection('notifications')
           .where('userId', isEqualTo: userId)
           .snapshots()
@@ -63,11 +77,24 @@ class FirestoreNotificationRepository implements NotificationRepository {
               ),
           )
           .handleError((_) {});
-      return;
+    } else {
+      final localController = StreamController<List<AppNotification>>();
+      localController.add(_forUser(userId));
+      final sub = _controller.stream.listen((_) {
+        if (!localController.isClosed) {
+          localController.add(_forUser(userId));
+        }
+      });
+      localController.onCancel = () {
+        sub.cancel();
+        localController.close();
+      };
+      source = localController.stream;
     }
 
-    yield _forUser(userId);
-    yield* _controller.stream.map((_) => _forUser(userId));
+    final stream = ReplayStream<List<AppNotification>>(source);
+    _watchCache[userId] = stream;
+    return stream;
   }
 
   @override
@@ -198,6 +225,40 @@ class FirestoreNotificationRepository implements NotificationRepository {
       body: body,
       isRead: false,
       deepLink: deepLink,
+      createdAt: DateTime.now(),
+    );
+    _notifications.add(localNotif);
+    _controller.add(_notifications);
+  }
+
+  @override
+  Future<void> sendCustomNotification({
+    required String userId,
+    required String title,
+    required String body,
+  }) async {
+    final db = _db;
+    if (db != null) {
+      await db.collection('notifications').add({
+        'userId': userId,
+        'type': 'moderation',
+        'title': title,
+        'body': body,
+        'isRead': false,
+        'deepLink': '',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return;
+    }
+
+    final localNotif = AppNotification(
+      id: 'custom-${DateTime.now().millisecondsSinceEpoch}',
+      userId: userId,
+      type: AppNotificationType.moderation,
+      title: title,
+      body: body,
+      isRead: false,
+      deepLink: '',
       createdAt: DateTime.now(),
     );
     _notifications.add(localNotif);

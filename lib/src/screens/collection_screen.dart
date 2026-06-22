@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../main.dart';
 import '../catalog/catalog_models.dart';
-import '../collection/collection_repository.dart';
 import '../core/app_helpers.dart';
 import '../core/app_language.dart';
 import '../widgets/doll_widgets.dart';
@@ -71,8 +69,8 @@ class _CollectionScreenState extends State<CollectionScreen> {
     );
 
     if (confirmed == true) {
-      final userId = authService.currentUser?.uid;
-      if (userId != null) {
+      final userId = authService.currentUser?.uid ?? 'local-user';
+      if (true) {
         for (final entryId in _selectedEntryIds) {
           final dummyEntry = CollectionEntry(
             id: entryId,
@@ -104,72 +102,39 @@ class _CollectionScreenState extends State<CollectionScreen> {
   Widget build(BuildContext context) {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     return PageShell(
+      listViewKey: const PageStorageKey('collection_scroll'),
       title: t(context, 'collection'),
       subtitle: t(context, 'collectionSubtitle'),
-      child: StreamBuilder<User?>(
-        stream: authService.authStateChanges,
-        builder: (context, authSnapshot) {
-          final user = authSnapshot.data;
-          if (user == null) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 32),
-                buildGothicNeonIconButton(
-                  context: context,
-                  icon: Icons.inventory_2_outlined,
-                  size: 36,
-                  padding: const EdgeInsets.all(12),
-                  activeColor: DollDexTheme.teal,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  tr ? 'Koleksiyonunu Takip Et' : 'Track Your Collection',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  tr
-                      ? 'Kendi koleksiyon rafını oluşturmak ve bebekleri bulutla senkronize etmek için giriş yapmalısın.'
-                      : 'You must sign in to create your own collection shelf and sync dolls with the cloud.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const GuestLoginBanner(),
-              ],
-            );
-          }
+      child: ValueListenableBuilder<List<CollectionEntry>>(
+        valueListenable: collectionEntriesNotifier,
+        builder: (context, entries, _) {
+          final visibleEntries = _filter == null
+              ? entries
+              : entries
+                  .where((entry) => entry.status == _filter)
+                  .toList(growable: false);
+          final condEntries = _conditionFilter == null
+              ? visibleEntries
+              : visibleEntries
+                  .where((entry) => entry.condition == _conditionFilter)
+                  .toList(growable: false);
+          final filteredEntries = _query.isEmpty
+              ? condEntries
+              : condEntries.where((entry) {
+                  final item = findCatalogEntry(entry.itemId);
+                  final name = entryName(context, item).toLowerCase();
+                  return name.contains(_query.toLowerCase());
+                }).toList(growable: false);
 
-          return ValueListenableBuilder<List<CollectionEntry>>(
-            valueListenable: collectionEntriesNotifier,
-            builder: (context, entries, _) {
-              final visibleEntries = _filter == null
-                  ? entries
-                  : entries
-                      .where((entry) => entry.status == _filter)
-                      .toList(growable: false);
-              final condEntries = _conditionFilter == null
-                  ? visibleEntries
-                  : visibleEntries
-                      .where((entry) => entry.condition == _conditionFilter)
-                      .toList(growable: false);
-              final filteredEntries = _query.isEmpty
-                  ? condEntries
-                  : condEntries.where((entry) {
-                      final item = findCatalogEntry(entry.itemId);
-                      final name = entryName(context, item).toLowerCase();
-                      return name.contains(_query.toLowerCase());
-                    }).toList(growable: false);
-
-              return Column(
-                children: [
-                  StatRow(entries: entries),
-                  const SizedBox(height: 16),
+          return Column(
+            children: [
+              if (authService.currentUser == null)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: GuestLoginBanner(),
+                ),
+              StatRow(entries: entries),
+              const SizedBox(height: 16),
                   if (_isSelectionMode)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -254,12 +219,10 @@ class _CollectionScreenState extends State<CollectionScreen> {
                 ],
               );
             },
-          );
-        },
-      ),
-    );
-  }
-}
+          ),
+        );
+      }
+    }
 
 class CollectionSearchPanel extends StatelessWidget {
   const CollectionSearchPanel({
@@ -332,19 +295,19 @@ class CollectionSearchPanel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GothicIvyContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      borderRadius: 16,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      borderRadius: 12,
       child: Row(
         children: [
           Expanded(
             child: TextField(
               onChanged: onQueryChanged,
-              style: TextStyle(fontSize: 14, color: isDark ? Colors.white : Colors.black87, fontFamily: 'Outfit'),
+              style: TextStyle(fontSize: 12.5, color: isDark ? Colors.white : Colors.black87, fontFamily: 'Outfit'),
               decoration: InputDecoration(
                 hintText: tr ? 'Koleksiyonda ara...' : 'Search in shelf...',
-                hintStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, fontFamily: 'Outfit'),
-                prefixIcon: buildNeonIcon(context, Icons.search_rounded, size: 20),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                hintStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12.5, fontFamily: 'Outfit'),
+                prefixIcon: buildNeonIcon(context, Icons.search_rounded, size: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 6),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -352,32 +315,32 @@ class CollectionSearchPanel extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           InkWell(
             onTap: () => _showCollectionFilterSheet(context),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: const Color(0xFFEC008C).withOpacity(isDark ? 0.5 : 0.25),
-                  width: 1.2,
+                  width: 1.0,
                 ),
                 color: isDark ? const Color(0xFF160E22) : Colors.white,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  buildNeonIcon(context, Icons.tune_rounded, size: 18),
-                  const SizedBox(width: 6),
+                  buildNeonIcon(context, Icons.tune_rounded, size: 14),
+                  const SizedBox(width: 4),
                   Text(
                     selectedStatus == null && selectedCondition == null
                         ? (tr ? 'Filtre' : 'Filter')
                         : (tr ? 'Aktif' : 'Active'),
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : const Color(0xFFEC008C),
                     ),
@@ -540,7 +503,7 @@ class CollectionEntryList extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const columns = 3;
+        const columns = 4;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -563,7 +526,7 @@ class CollectionEntryList extends StatelessWidget {
                 if (isSelectionMode) {
                   onToggleSelect(entry.id);
                 } else {
-                  context.push('/collection/entry/${entry.id}');
+                  context.go('/c/${entry.id}?from=collection');
                 }
               },
               onLongPress: () {
@@ -629,6 +592,15 @@ class CollectionGridCard extends StatelessWidget {
                       DollImage(
                         imageUrl: item.primaryImageUrl,
                         label: entryName(context, item),
+                      ),
+                      Positioned.fill(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onTap,
+                            onLongPress: onLongPress,
+                          ),
+                        ),
                       ),
                       if (isSelected)
                         Container(
@@ -767,10 +739,14 @@ class StatCard extends StatelessWidget {
 class CollectionCategoryTab extends StatefulWidget {
   const CollectionCategoryTab({
     required this.entries,
+    this.from = 'collection',
+    this.userId,
     super.key,
   });
 
   final List<CollectionEntry> entries;
+  final String from;
+  final String? userId;
 
   @override
   State<CollectionCategoryTab> createState() => _CollectionCategoryTabState();
@@ -784,11 +760,21 @@ class _CollectionCategoryTabState extends State<CollectionCategoryTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return _buildCollectionCategoryTab(context, widget.entries);
+    return _buildCollectionCategoryTab(
+      context,
+      widget.entries,
+      from: widget.from,
+      userId: widget.userId,
+    );
   }
 }
 
-Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> categoryEntries) {
+Widget _buildCollectionCategoryTab(
+  BuildContext context,
+  List<CollectionEntry> categoryEntries, {
+  required String from,
+  String? userId,
+}) {
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
   if (categoryEntries.isEmpty) {
     return Center(
@@ -802,7 +788,7 @@ Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> c
   return GridView.builder(
     padding: const EdgeInsets.all(3),
     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 3,
+      crossAxisCount: 4,
       crossAxisSpacing: 5,
       mainAxisSpacing: 5,
       childAspectRatio: 0.58,
@@ -812,22 +798,42 @@ Widget _buildCollectionCategoryTab(BuildContext context, List<CollectionEntry> c
       final entry = categoryEntries[index];
       final item = findCatalogEntry(entry.itemId);
       final isPng = item.primaryImageUrl.toLowerCase().contains('.png');
+      
+      void handleTap() {
+        if (from == 'public_profile' && userId != null) {
+          context.go('/c/${entry.id}?from=public_profile&userId=$userId');
+        } else {
+          context.go('/c/${entry.id}?from=$from');
+        }
+      }
+
       return Card(
         color: isPng ? Colors.transparent : null,
         elevation: isPng ? 0 : 2,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => context.push('/collection/entry/${entry.id}'),
+          onTap: handleTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: DollImage(
-                    imageUrl: item.primaryImageUrl,
-                    label: entryName(context, item),
-                  ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: DollImage(
+                        imageUrl: item.primaryImageUrl,
+                        label: entryName(context, item),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: handleTap,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
