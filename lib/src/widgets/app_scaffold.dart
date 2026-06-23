@@ -1775,10 +1775,14 @@ class _AppScaffoldState extends State<AppScaffold> {
                       if (imageUrl.isNotEmpty)
                         ClipRRect(
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-                          child: getWebImage(
-                            imageUrl: imageUrl,
-                            label: 'Announcement Banner',
-                            fit: BoxFit.cover,
+                          child: SizedBox(
+                            height: 180,
+                            width: double.infinity,
+                            child: getWebImage(
+                              imageUrl: imageUrl,
+                              label: 'Announcement Banner',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       Padding(
