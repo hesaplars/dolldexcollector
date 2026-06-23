@@ -15,6 +15,8 @@ import '../core/local_storage_helper.dart';
 import '../notifications/notification_models.dart';
 import '../social/social_models.dart';
 import '../users/profile_setup_repository.dart';
+import '../core/url_launcher_helper.dart';
+import '../core/web_image_helper.dart';
 import 'doll_widgets.dart';
 
 class AppScaffold extends StatefulWidget {
@@ -54,6 +56,7 @@ class _AppScaffoldState extends State<AppScaffold> {
   int _unreadDMsCount = 0;
   StreamSubscription<DocumentSnapshot>? _monetizationSubscription;
   static bool _campaignPopupShown = false;
+  bool _popupAnnouncementChecked = false;
 
   @override
   void initState() {
@@ -863,6 +866,7 @@ class _AppScaffoldState extends State<AppScaffold> {
       if (mounted) {
         setState(() {});
       }
+      _checkAndShowPopupAnnouncement();
       return;
     }
 
@@ -900,12 +904,14 @@ class _AppScaffoldState extends State<AppScaffold> {
           appThemeKeyController.value != status.selectedTheme) {
         appThemeKeyController.value = status.selectedTheme;
       }
+      _checkAndShowPopupAnnouncement();
     }, onError: (err) {
       print('AppScaffold: Error watching profile: $err');
       if (mounted) {
         setState(() {
           _profileLoaded = true;
         });
+        _checkAndShowPopupAnnouncement();
       }
     });
 
@@ -1642,6 +1648,265 @@ class _AppScaffoldState extends State<AppScaffold> {
           ),
         ),
       ],
+    );
+  }
+
+  Color? _parseHexColor(String hex) {
+    if (hex.isEmpty) return null;
+    var path = hex.replaceAll('#', '');
+    if (path.length == 6) {
+      path = 'FF$path';
+    }
+    final val = int.tryParse(path, radix: 16);
+    if (val != null) {
+      return Color(val);
+    }
+    return null;
+  }
+
+  IconData _getAnnouncementIcon(String iconName) {
+    return switch (iconName) {
+      'info' => Icons.info_outline_rounded,
+      'star' => Icons.auto_awesome_rounded,
+      'gift' => Icons.card_giftcard_rounded,
+      'update' => Icons.new_releases_rounded,
+      'warning' => Icons.warning_amber_rounded,
+      'announcement' => Icons.campaign_rounded,
+      _ => Icons.campaign_rounded,
+    };
+  }
+
+  void _checkAndShowPopupAnnouncement() async {
+    if (_popupAnnouncementChecked) return;
+    _popupAnnouncementChecked = true;
+
+    try {
+      final data = await notificationRepository.getPopupAnnouncement();
+      if (data == null) return;
+
+      final isActive = data['isActive'] as bool? ?? false;
+      if (!isActive) return;
+
+      final id = data['id'] as String? ?? '';
+      if (id.isEmpty) return;
+
+      // Check start and end dates
+      final now = DateTime.now();
+      final startsAtVal = data['startsAt'];
+      final endsAtVal = data['endsAt'];
+      DateTime? startsAt;
+      DateTime? endsAt;
+      if (startsAtVal is Timestamp) startsAt = startsAtVal.toDate();
+      if (endsAtVal is Timestamp) endsAt = endsAtVal.toDate();
+      if (startsAtVal is String) startsAt = DateTime.tryParse(startsAtVal);
+      if (endsAtVal is String) endsAt = DateTime.tryParse(endsAtVal);
+
+      if (startsAt != null && now.isBefore(startsAt)) return;
+      if (endsAt != null && now.isAfter(endsAt)) return;
+
+      // Check if already viewed in LocalStorage
+      final lastViewedId = await LocalStorage.getString('last_viewed_announcement_id');
+      if (lastViewedId == id) return;
+
+      // Show the dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showPopupAnnouncementDialog(data);
+      });
+    } catch (e) {
+      print('AppScaffold: Error loading popup announcement: $e');
+    }
+  }
+
+  void _showPopupAnnouncementDialog(Map<String, dynamic> data) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final id = data['id'] as String? ?? '';
+    final title = data['title'] as String? ?? '';
+    final body = data['body'] as String? ?? '';
+    final imageUrl = data['imageUrl'] as String? ?? '';
+    final titleColorStr = data['titleColor'] as String? ?? '';
+    final bodyColorStr = data['bodyColor'] as String? ?? '';
+    final backgroundColorStr = data['backgroundColor'] as String? ?? '';
+    final buttonText = data['buttonText'] as String? ?? (tr ? 'Anladım' : 'Got it');
+    final buttonUrl = data['buttonUrl'] as String? ?? '';
+    final iconName = data['iconName'] as String? ?? 'announcement';
+
+    final Color? customBgColor = _parseHexColor(backgroundColorStr);
+    final Color? customTitleColor = _parseHexColor(titleColorStr);
+    final Color? customBodyColor = _parseHexColor(bodyColorStr);
+
+    final dialogBg = customBgColor ?? Theme.of(context).colorScheme.surface;
+    final titleColor = customTitleColor ?? Theme.of(context).colorScheme.primary;
+    final bodyColor = customBodyColor ?? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85);
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false, // Must explicitly close to set viewed ID
+      builder: (context) {
+        return Dialog(
+          backgroundColor: dialogBg,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Container(
+            constraints: const BoxConstraints(
+              maxWidth: 420,
+            ),
+            decoration: BoxDecoration(
+              color: dialogBg,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+                  blurRadius: 20,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Banner Image if present
+                      if (imageUrl.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                          child: getWebImage(
+                            imageUrl: imageUrl,
+                            label: 'Announcement Banner',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          24,
+                          imageUrl.isNotEmpty ? 20 : 36,
+                          24,
+                          24,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Icon if no banner image
+                            if (imageUrl.isEmpty) ...[
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  _getAnnouncementIcon(iconName),
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 36,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                            ],
+                            Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: titleColor,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              body,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: bodyColor,
+                                height: 1.5,
+                                fontFamily: 'Outfit',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Action Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  // Mark as viewed
+                                  await LocalStorage.setString('last_viewed_announcement_id', id);
+                                  if (context.mounted) {
+                                    Navigator.of(context).pop();
+                                    if (buttonUrl.isNotEmpty) {
+                                      if (buttonUrl.startsWith('http://') || buttonUrl.startsWith('https://')) {
+                                        launchExternalUrl(buttonUrl);
+                                      } else {
+                                        _goGuarded(buttonUrl);
+                                      }
+                                    }
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 2,
+                                ),
+                                child: Text(
+                                  buttonText,
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // X Close Button in top right
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withOpacity(imageUrl.isNotEmpty ? 0.4 : 0.0),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: imageUrl.isNotEmpty
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        size: 20,
+                      ),
+                      onPressed: () async {
+                        // Mark as viewed
+                        await LocalStorage.setString('last_viewed_announcement_id', id);
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -24,6 +24,10 @@ abstract class NotificationRepository {
     required String title,
     required String body,
   });
+
+  Future<void> savePopupAnnouncement(Map<String, dynamic> data);
+  Future<Map<String, dynamic>?> getPopupAnnouncement();
+  Future<void> clearPopupAnnouncement();
 }
 
 bool _isFirebaseInitialized() {
@@ -264,6 +268,38 @@ class FirestoreNotificationRepository implements NotificationRepository {
     );
     _notifications.add(localNotif);
     _controller.add(_notifications);
+  }
+
+  Map<String, dynamic>? _localPopupAnnouncement;
+
+  @override
+  Future<void> savePopupAnnouncement(Map<String, dynamic> data) async {
+    final db = _db;
+    if (db != null) {
+      await db.collection('announcements').doc('popup').set(data);
+      return;
+    }
+    _localPopupAnnouncement = data;
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getPopupAnnouncement() async {
+    final db = _db;
+    if (db != null) {
+      final doc = await db.collection('announcements').doc('popup').get();
+      return doc.data();
+    }
+    return _localPopupAnnouncement;
+  }
+
+  @override
+  Future<void> clearPopupAnnouncement() async {
+    final db = _db;
+    if (db != null) {
+      await db.collection('announcements').doc('popup').delete();
+      return;
+    }
+    _localPopupAnnouncement = null;
   }
 
   List<AppNotification> _forUser(String userId) {

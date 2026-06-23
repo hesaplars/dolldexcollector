@@ -84,7 +84,9 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
       subtitle: entrySubtitle(context, item),
       showBackButton: true,
       onBack: () {
-        if (context.canPop()) {
+        if (from == 'admin_catalog_modal') {
+          context.go('/admin?open_catalog_modal=true');
+        } else if (context.canPop()) {
           context.pop();
         } else {
           if (from == 'collection') {

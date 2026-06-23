@@ -521,10 +521,28 @@ class _AdminScreenState extends State<AdminScreen> {
       },
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final userId = authService.currentUser?.uid;
+
+    try {
+      final uri = GoRouterState.of(context).uri;
+      if (uri.queryParameters['open_catalog_modal'] == 'true') {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          final newUri = uri.replace(
+            queryParameters: Map<String, String>.from(uri.queryParameters)
+              ..remove('open_catalog_modal'),
+          );
+          GoRouter.of(context).replace(newUri.toString());
+          _showAdminCatalogModal(context, (entry) {
+            setState(() {
+              _editingEntry = entry;
+            });
+          });
+        });
+      }
+    } catch (_) {}
     if (userId == null) {
       return PageShell(
         title: 'Admin',
@@ -667,9 +685,11 @@ class _AdminScreenState extends State<AdminScreen> {
                 iconColor: Theme.of(context).colorScheme.primary,
                 onUserSelected: _openModerationBottomSheet,
               );
-
               final announcementCard = const AnnouncementForm(
                   key: ValueKey('admin-announcement-form'));
+
+              final popupAnnouncementCard = const AdminPopupAnnouncementCard(
+                  key: ValueKey('admin-popup-announcement-card'));
 
               if (wide) {
                 return Row(
@@ -694,6 +714,8 @@ class _AdminScreenState extends State<AdminScreen> {
                         children: [
                           announcementCard,
                           const SizedBox(height: 16),
+                          popupAnnouncementCard,
+                          const SizedBox(height: 16),
                           coinManagementCard,
                           const SizedBox(height: 16),
                           userManagementCard,
@@ -715,6 +737,8 @@ class _AdminScreenState extends State<AdminScreen> {
                   moderationQueue,
                   const SizedBox(height: 16),
                   announcementCard,
+                  const SizedBox(height: 16),
+                  popupAnnouncementCard,
                   const SizedBox(height: 16),
                   coinManagementCard,
                   const SizedBox(height: 16),
@@ -802,29 +826,23 @@ class AdminCatalogManager extends StatelessWidget {
                                 ),
                                 IconButton(
                                   tooltip: t(context, 'deleteEntry'),
-                                  onPressed: isTemplateEntry(entry)
-                                      ? null
-                                      : () async {
-                                          final tr =
-                                              AppLanguageScope.languageOf(
-                                                      context) ==
-                                                  AppLanguage.tr;
-                                          final confirmed =
-                                              await showGothicConfirmDialog(
-                                            context,
-                                            title: tr
-                                                ? 'Öğeyi Sil'
-                                                : 'Delete Item',
-                                            content: tr
-                                                ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
-                                                : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
-                                          );
-                                          if (confirmed) {
-                                            deleteCatalogEntry(entry.id);
-                                          }
-                                        },
-                                  icon:
-                                      const Icon(Icons.delete_outline_rounded),
+                                  onPressed: () async {
+                                    final tr =
+                                        AppLanguageScope.languageOf(context) ==
+                                            AppLanguage.tr;
+                                    final confirmed =
+                                        await showGothicConfirmDialog(
+                                      context,
+                                      title: tr ? 'Öğeyi Sil' : 'Delete Item',
+                                      content: tr
+                                          ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
+                                          : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
+                                    );
+                                    if (confirmed) {
+                                      deleteCatalogEntry(entry.id);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.delete_outline_rounded),
                                 ),
                               ],
                             ),
@@ -892,6 +910,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
   String _searchQuery = '';
   final Set<String> _selectedIds = {};
   bool _isSelectionMode = false;
+  CatalogItemType? _selectedTypeFilter;
 
   void _toggleSelect(String id) {
     setState(() {
@@ -937,12 +956,9 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
           : 'Are you sure you want to delete ${_selectedIds.length} catalog items?',
       confirmText: tr ? 'Toplu Sil' : 'Bulk Delete',
     );
-
     if (confirmed == true) {
       for (final id in _selectedIds) {
-        if (!_isTemplateEntryById(id)) {
-          deleteCatalogEntry(id);
-        }
+        deleteCatalogEntry(id);
       }
       setState(() {
         _selectedIds.clear();
@@ -964,9 +980,132 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
         id == 'template-accessory';
   }
 
+  void _showCatalogFilterSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        side: BorderSide(
+            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+            width: 1.0),
+      ),
+      builder: (context) {
+        final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tr ? 'Katalog Filtrele' : 'Filter Catalog',
+                style: TextStyle(
+                  color: isDark ? Colors.white : DollDexTheme.ink,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildFilterChip(
+                    context: context,
+                    isSelected: _selectedTypeFilter == null,
+                    label: tr ? 'Hepsi' : 'All',
+                    onTap: () {
+                      setState(() {
+                        _selectedTypeFilter = null;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  for (final type in CatalogItemType.values)
+                    _buildFilterChip(
+                      context: context,
+                      isSelected: _selectedTypeFilter == type,
+                      label: catalogTypeLabel(context, type),
+                      onTap: () {
+                        setState(() {
+                          _selectedTypeFilter = type;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterChip({
+    required BuildContext context,
+    required bool isSelected,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final finalColor = isSelected ? primaryColor : Colors.transparent;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? finalColor.withOpacity(0.15)
+              : (isDark ? DollDexTheme.darkPanel : DollDexTheme.panel),
+          border: Border.all(
+            color: isSelected
+                ? finalColor
+                : (isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+            width: 1.2,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: finalColor.withOpacity(0.25),
+                    blurRadius: 6,
+                    spreadRadius: 0.5,
+                  )
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontFamily: 'Outfit',
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected
+                ? primaryColor
+                : (isDark ? Colors.white70 : DollDexTheme.cocoa),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ValueListenableBuilder<List<CatalogEntry>>(
       valueListenable: catalogEntriesNotifier,
       builder: (context, entries, _) {
@@ -974,33 +1113,102 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
           final query = _searchQuery.toLowerCase();
           final name = entryName(context, entry).toLowerCase();
           final id = entry.id.toLowerCase();
-          return name.contains(query) || id.contains(query);
+          final matchesQuery = name.contains(query) || id.contains(query);
+          if (_selectedTypeFilter != null) {
+            return matchesQuery && entry.type == _selectedTypeFilter;
+          }
+          return matchesQuery;
         }).toList();
 
         return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                    color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.22 : 0.09),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Row(
                 children: [
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.search_rounded,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
-                      style: const TextStyle(fontFamily: 'Outfit'),
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white : DollDexTheme.ink,
+                          fontFamily: 'Outfit'),
                       decoration: InputDecoration(
                         hintText: tr ? 'Katalogda ara...' : 'Search catalog...',
-                        hintStyle: const TextStyle(fontFamily: 'Outfit'),
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        hintStyle: TextStyle(
+                            color: isDark ? Colors.white60 : DollDexTheme.cocoa,
+                            fontSize: 13,
+                            fontFamily: 'Outfit'),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        isDense: true,
                       ),
                       onChanged: (val) {
                         setState(() {
                           _searchQuery = val;
                         });
                       },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    onTap: () => _showCatalogFilterSheet(context),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      height: 34,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+                          width: 1.0,
+                        ),
+                        color: isDark ? DollDexTheme.darkPaper : DollDexTheme.mist,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.tune_rounded,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _selectedTypeFilter == null
+                                ? (tr ? 'Hepsi' : 'All')
+                                : catalogTypeLabel(context, _selectedTypeFilter!),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : DollDexTheme.cocoa,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -1105,10 +1313,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                               if (_isSelectionMode) {
                                 _toggleSelect(entry.id);
                               } else {
-                                final router = GoRouter.of(context);
-                                Navigator.of(context).pop(); // Close modal
-                                router
-                                    .go('/i/${entry.id}'); // Route to item page
+                                context.push('/i/${entry.id}?from=admin_catalog_modal');
                               }
                             },
                             onLongPress: () {
@@ -1192,28 +1397,26 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                               constraints: const BoxConstraints(),
                                               icon: const Icon(
                                                   Icons.delete_outline_rounded),
-                                              onPressed: isTemplateEntry(entry)
-                                                  ? null
-                                                  : () async {
-                                                      final tr = AppLanguageScope
-                                                              .languageOf(
-                                                                  context) ==
-                                                          AppLanguage.tr;
-                                                      final confirmed =
-                                                          await showGothicConfirmDialog(
-                                                        context,
-                                                        title: tr
-                                                            ? 'Öğeyi Sil'
-                                                            : 'Delete Item',
-                                                        content: tr
-                                                            ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
-                                                            : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
-                                                      );
-                                                      if (confirmed) {
-                                                        deleteCatalogEntry(
-                                                            entry.id);
-                                                      }
-                                                    },
+                                              onPressed: () async {
+                                                final tr = AppLanguageScope
+                                                        .languageOf(
+                                                            context) ==
+                                                    AppLanguage.tr;
+                                                final confirmed =
+                                                    await showGothicConfirmDialog(
+                                                  context,
+                                                  title: tr
+                                                      ? 'Öğeyi Sil'
+                                                      : 'Delete Item',
+                                                  content: tr
+                                                      ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
+                                                      : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
+                                                );
+                                                if (confirmed) {
+                                                  deleteCatalogEntry(
+                                                      entry.id);
+                                                }
+                                              },
                                             ),
                                             SizedBox(width: isMobile ? 2 : 4),
                                           ],
@@ -2680,6 +2883,547 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AdminPopupAnnouncementCard extends StatefulWidget {
+  const AdminPopupAnnouncementCard({super.key});
+
+  @override
+  State<AdminPopupAnnouncementCard> createState() =>
+      _AdminPopupAnnouncementCardState();
+}
+
+class _AdminPopupAnnouncementCardState extends State<AdminPopupAnnouncementCard> {
+  final _formKey = GlobalKey<FormState>();
+  final _idController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _bodyController = TextEditingController();
+  final _imageUrlController = TextEditingController();
+  final _titleColorController = TextEditingController();
+  final _bodyColorController = TextEditingController();
+  final _backgroundColorController = TextEditingController();
+  final _buttonTextController = TextEditingController();
+  final _buttonUrlController = TextEditingController();
+
+  String _selectedIcon = 'announcement';
+  bool _isActive = false;
+  DateTime? _startsAt;
+  DateTime? _endsAt;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentAnnouncement();
+  }
+
+  @override
+  void dispose() {
+    _idController.dispose();
+    _titleController.dispose();
+    _bodyController.dispose();
+    _imageUrlController.dispose();
+    _titleColorController.dispose();
+    _bodyColorController.dispose();
+    _backgroundColorController.dispose();
+    _buttonTextController.dispose();
+    _buttonUrlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentAnnouncement() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await notificationRepository.getPopupAnnouncement();
+      if (data != null && mounted) {
+        _idController.text = data['id'] as String? ?? '';
+        _titleController.text = data['title'] as String? ?? '';
+        _bodyController.text = data['body'] as String? ?? '';
+        _imageUrlController.text = data['imageUrl'] as String? ?? '';
+        _titleColorController.text = data['titleColor'] as String? ?? '';
+        _bodyColorController.text = data['bodyColor'] as String? ?? '';
+        _backgroundColorController.text = data['backgroundColor'] as String? ?? '';
+        _buttonTextController.text = data['buttonText'] as String? ?? '';
+        _buttonUrlController.text = data['buttonUrl'] as String? ?? '';
+        _selectedIcon = data['iconName'] as String? ?? 'announcement';
+        _isActive = data['isActive'] as bool? ?? false;
+
+        final startsAtVal = data['startsAt'];
+        final endsAtVal = data['endsAt'];
+        if (startsAtVal is Timestamp) _startsAt = startsAtVal.toDate();
+        if (endsAtVal is Timestamp) _endsAt = endsAtVal.toDate();
+        if (startsAtVal is String) _startsAt = DateTime.tryParse(startsAtVal);
+        if (endsAtVal is String) _endsAt = DateTime.tryParse(endsAtVal);
+      }
+    } catch (e) {
+      print('AdminPopupAnnouncementCard: Error loading current popup: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<DateTime?> _pickDateTime(
+      BuildContext context, DateTime? initial) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (date == null) return null;
+
+    if (!context.mounted) return null;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial ?? DateTime.now()),
+    );
+    if (time == null) return null;
+
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    try {
+      final data = {
+        'id': _idController.text.trim().isNotEmpty
+            ? _idController.text.trim()
+            : 'popup-${DateTime.now().millisecondsSinceEpoch}',
+        'title': _titleController.text.trim(),
+        'body': _bodyController.text.trim(),
+        'imageUrl': _imageUrlController.text.trim(),
+        'titleColor': _titleColorController.text.trim(),
+        'bodyColor': _bodyColorController.text.trim(),
+        'backgroundColor': _backgroundColorController.text.trim(),
+        'buttonText': _buttonTextController.text.trim().isNotEmpty
+            ? _buttonTextController.text.trim()
+            : (tr ? 'Anladım' : 'Got it'),
+        'buttonUrl': _buttonUrlController.text.trim(),
+        'iconName': _selectedIcon,
+        'isActive': _isActive,
+        'startsAt': _startsAt != null ? Timestamp.fromDate(_startsAt!) : null,
+        'endsAt': _endsAt != null ? Timestamp.fromDate(_endsAt!) : null,
+      };
+
+      await notificationRepository.savePopupAnnouncement(data);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(tr
+                  ? 'Duyuru başarıyla kaydedildi!'
+                  : 'Announcement successfully saved!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr ? 'Hata: $e' : 'Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _clear() async {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    setState(() => _isLoading = true);
+    try {
+      await notificationRepository.clearPopupAnnouncement();
+      _idController.clear();
+      _titleController.clear();
+      _bodyController.clear();
+      _imageUrlController.clear();
+      _titleColorController.clear();
+      _bodyColorController.clear();
+      _backgroundColorController.clear();
+      _buttonTextController.clear();
+      _buttonUrlController.clear();
+      _startsAt = null;
+      _endsAt = null;
+      _isActive = false;
+      _selectedIcon = 'announcement';
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(tr
+                  ? 'Duyuru temizlendi ve kaldırıldı.'
+                  : 'Announcement cleared and deleted.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr ? 'Hata: $e' : 'Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  InputDecoration _buildInputDecoration(
+      BuildContext context, String label, IconData icon) {
+    final theme = Theme.of(context);
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon,
+          size: 20, color: Theme.of(context).colorScheme.primary),
+      labelStyle: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: theme.dividerColor, width: 1.2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.8),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    if (_isLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    return Card(
+      child: ExpansionTile(
+        title: Text(
+          tr ? 'Pop-up Duyuru Yönetimi' : 'Pop-up Announcement Management',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+        subtitle: Text(
+          tr
+              ? 'Uygulama açılışında ekranda görünecek özel duyuruyu ayarlayın'
+              : 'Configure custom popup announcement shown at app startup',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        childrenPadding: const EdgeInsets.all(16),
+        children: [
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SwitchListTile(
+                  title:
+                      Text(tr ? 'Duyuru Aktif mi?' : 'Is Announcement Active?'),
+                  value: _isActive,
+                  onChanged: (val) {
+                    setState(() {
+                      _isActive = val;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _idController,
+                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                  decoration: _buildInputDecoration(
+                    context,
+                    tr
+                        ? 'Duyuru Kimliği (ID - Benzersiz)'
+                        : 'Announcement ID (Unique)',
+                    Icons.fingerprint_rounded,
+                  ),
+                  validator: (value) {
+                    if ((value ?? '').trim().isEmpty) {
+                      return tr ? 'ID gerekli' : 'ID is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _titleController,
+                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                  decoration: _buildInputDecoration(
+                    context,
+                    tr ? 'Duyuru Başlığı' : 'Announcement Title',
+                    Icons.title_rounded,
+                  ),
+                  validator: (value) {
+                    if ((value ?? '').trim().isEmpty) {
+                      return tr ? 'Başlık gerekli' : 'Title is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _bodyController,
+                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                  decoration: _buildInputDecoration(
+                    context,
+                    tr ? 'Duyuru İçeriği' : 'Announcement Content',
+                    Icons.campaign_outlined,
+                  ),
+                  minLines: 2,
+                  maxLines: 4,
+                  validator: (value) {
+                    if ((value ?? '').trim().isEmpty) {
+                      return tr ? 'İçerik gerekli' : 'Content is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _imageUrlController,
+                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                  decoration: _buildInputDecoration(
+                    context,
+                    tr ? 'Görsel URL (Fotoğraf)' : 'Image URL (Photo)',
+                    Icons.image_outlined,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedIcon,
+                  decoration: _buildInputDecoration(
+                    context,
+                    tr ? 'Duyuru Simgesi' : 'Announcement Icon',
+                    Icons.star_outline_rounded,
+                  ),
+                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                  items: [
+                    DropdownMenuItem(
+                        value: 'announcement',
+                        child: Text(tr ? 'Duyuru (Kampanya)' : 'Announcement')),
+                    DropdownMenuItem(
+                        value: 'info', child: Text(tr ? 'Bilgi (Mavi)' : 'Info')),
+                    DropdownMenuItem(
+                        value: 'warning',
+                        child: Text(tr ? 'Uyarı (Sarı)' : 'Warning')),
+                    DropdownMenuItem(
+                        value: 'star',
+                        child: Text(tr ? 'Yıldız / Yeni' : 'Star / New')),
+                    DropdownMenuItem(
+                        value: 'premium',
+                        child: Text(tr ? 'Premium / Pro' : 'Premium / Pro')),
+                    DropdownMenuItem(
+                        value: 'gift',
+                        child: Text(tr ? 'Hediye / Ödül' : 'Gift / Reward')),
+                    DropdownMenuItem(
+                        value: 'update',
+                        child: Text(tr ? 'Güncelleme' : 'Update')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedIcon = val;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _titleColorController,
+                        style:
+                            const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                        decoration: _buildInputDecoration(
+                          context,
+                          tr ? 'Başlık Rengi (Hex)' : 'Title Color (Hex)',
+                          Icons.color_lens_outlined,
+                        ).copyWith(hintText: '#FFFFFF'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _bodyColorController,
+                        style:
+                            const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                        decoration: _buildInputDecoration(
+                          context,
+                          tr ? 'İçerik Rengi (Hex)' : 'Body Color (Hex)',
+                          Icons.color_lens_outlined,
+                        ).copyWith(hintText: '#E0E0E0'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _backgroundColorController,
+                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                  decoration: _buildInputDecoration(
+                    context,
+                    tr
+                        ? 'Arka Plan Rengi (Hex, örn: #1A0D2E)'
+                        : 'Background Color (Hex, e.g. #1A0D2E)',
+                    Icons.format_color_fill_rounded,
+                  ).copyWith(hintText: '#15120F'),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _buttonTextController,
+                        style:
+                            const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                        decoration: _buildInputDecoration(
+                          context,
+                          tr ? 'Buton Yazısı' : 'Button Text',
+                          Icons.smart_button_rounded,
+                        ).copyWith(hintText: tr ? 'Anladım' : 'Got it'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _buttonUrlController,
+                        style:
+                            const TextStyle(fontFamily: 'Outfit', fontSize: 13),
+                        decoration: _buildInputDecoration(
+                          context,
+                          tr ? 'Buton Linki / Rota' : 'Button Link / Route',
+                          Icons.link_rounded,
+                        ).copyWith(hintText: '/collection veya https://...'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  tr
+                      ? 'Yayınlanma Zaman Ayarı'
+                      : 'Publish Timing Configuration',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      fontFamily: 'Outfit'),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.date_range_rounded, size: 16),
+                        label: Text(
+                          _startsAt == null
+                              ? (tr ? 'Başlangıç Seç' : 'Pick Start')
+                              : _startsAt!.toString().substring(0, 16),
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onPressed: () async {
+                          final dt = await _pickDateTime(context, _startsAt);
+                          if (dt != null) {
+                            setState(() => _startsAt = dt);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.date_range_rounded, size: 16),
+                        label: Text(
+                          _endsAt == null
+                              ? (tr ? 'Bitiş Seç' : 'Pick End')
+                              : _endsAt!.toString().substring(0, 16),
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onPressed: () async {
+                          final dt = await _pickDateTime(context, _endsAt);
+                          if (dt != null) {
+                            setState(() => _endsAt = dt);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                if (_startsAt != null || _endsAt != null) ...[
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact),
+                      onPressed: () {
+                        setState(() {
+                          _startsAt = null;
+                          _endsAt = null;
+                        });
+                      },
+                      child: Text(tr ? 'Zamanlamayı Kaldır' : 'Clear Timing',
+                          style: const TextStyle(
+                              fontSize: 11, color: Colors.redAccent)),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: const Icon(Icons.save_rounded, size: 16),
+                        label: Text(tr ? 'Kaydet / Yayınla' : 'Save / Publish',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: _clear,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        side: const BorderSide(color: Colors.redAccent),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.delete_forever_rounded, size: 16),
+                      label: Text(tr ? 'Temizle' : 'Clear',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
