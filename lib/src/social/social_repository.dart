@@ -55,6 +55,22 @@ class SocialRepository {
         .toList(growable: false);
   }
 
+  Future<List<AppUser>> fetchAdmins() async {
+    final db = _db;
+    if (db == null) {
+      return const <AppUser>[];
+    }
+    final snapshot = await db
+        .collection('users')
+        .where('role', isEqualTo: 'admin')
+        .limit(40)
+        .get();
+    return snapshot.docs
+        .map((doc) => AppUser.fromMap(doc.id, doc.data()))
+        .where((user) => user.username.isNotEmpty)
+        .toList(growable: false);
+  }
+
   Future<void> sendFriendRequest({
     required String fromUserId,
     required String toUserId,

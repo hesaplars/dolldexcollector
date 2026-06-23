@@ -57,6 +57,33 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     if (myUid.isEmpty) return;
 
     if (_searchQuery.trim().isEmpty) {
+      if (_roleFilter == 'admin') {
+        if (!mounted) return;
+        setState(() {
+          _isSearching = true;
+        });
+        try {
+          final admins = await socialRepository.fetchAdmins();
+          var filtered = admins.where((u) => u.id != myUid).toList();
+          if (!mounted) return;
+          setState(() {
+            _filteredResults = filtered;
+          });
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Yöneticiler yüklenirken hata oluştu: $e')),
+          );
+        } finally {
+          if (mounted) {
+            setState(() {
+              _isSearching = false;
+            });
+          }
+        }
+        return;
+      }
+
       if (mounted) {
         setState(() {
           _filteredResults = const <AppUser>[];
@@ -129,79 +156,51 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       ),
       builder: (context) {
         final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-        final currentUser = authService.currentUser;
 
-        return StreamBuilder<ProfileSetupStatus>(
-          stream: currentUser != null
-              ? profileSetupRepository.watch(currentUser.uid)
-              : const Stream.empty(),
-          builder: (context, snap) {
-            final isPro = snap.data?.isPro == true;
-
-            return GothicIvyContainer(
-              borderRadius: 20,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr ? 'Kullanıcı Filtresi' : 'User Filter',
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildFilterOption(context, null,
-                      tr ? 'Tüm Kullanıcılar' : 'All Users', isPro),
-                  const SizedBox(height: 8),
-                  _buildFilterOption(context, 'pro',
-                      tr ? 'Sadece Pro Üyeler' : 'Pro Members Only', isPro),
-                  const SizedBox(height: 8),
-                  _buildFilterOption(context, 'admin',
-                      tr ? 'Yöneticiler' : 'Staff / Admins', isPro),
-                ],
+        return GothicIvyContainer(
+          borderRadius: 20,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tr ? 'Kullanıcı Filtresi' : 'User Filter',
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
-            );
-          },
+              const SizedBox(height: 16),
+              _buildFilterOption(context, null,
+                  tr ? 'Tüm Kullanıcılar' : 'All Users'),
+              const SizedBox(height: 8),
+              _buildFilterOption(context, 'pro',
+                  tr ? 'Sadece Pro Üyeler' : 'Pro Members Only'),
+              const SizedBox(height: 8),
+              _buildFilterOption(context, 'admin',
+                  tr ? 'Yöneticiler' : 'Staff / Admins'),
+            ],
+          ),
         );
       },
     );
   }
 
   Widget _buildFilterOption(
-      BuildContext context, String? type, String label, bool isPro) {
+      BuildContext context, String? type, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _roleFilter == type;
-    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
 
     return InkWell(
       onTap: () {
-        if (type != null && !isPro) {
-          Navigator.of(context).pop();
-          showGothicConfirmDialog(
-            context,
-            title: tr ? 'Pro Arama Filtresi' : 'Pro Search Filter',
-            content: tr
-                ? 'Pro ve Yönetici filtrelerini kullanabilmek için DollDex Pro üyesi olmalısınız.'
-                : 'You must be a DollDex Pro member to use Pro and Staff filters.',
-            confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
-            cancelText: tr ? 'Vazgeç' : 'Cancel',
-          ).then((confirmed) {
-            if (confirmed && context.mounted) {
-              showProSubscriptionModal(context);
-            }
-          });
-        } else {
-          setState(() {
-            _roleFilter = type;
-          });
-          Navigator.of(context).pop();
-          _performSearch();
-        }
+        setState(() {
+          _roleFilter = type;
+        });
+        Navigator.of(context).pop();
+        _performSearch();
       },
       borderRadius: BorderRadius.circular(10),
       child: Container(
@@ -238,12 +237,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 ),
               ),
             ),
-            if (type != null && !isPro)
-              Icon(
-                Icons.lock_rounded,
-                size: 14,
-                color: isDark ? Colors.white54 : Colors.black45,
-              ),
           ],
         ),
       ),

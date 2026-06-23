@@ -1070,20 +1070,26 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                       controller: widget.scrollController,
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 0.66,
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 6 : 4,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.62,
                       ),
                       itemCount: filteredEntries.length,
                       itemBuilder: (context, index) {
                         final entry = filteredEntries[index];
                         final isSelected = _selectedIds.contains(entry.id);
+                        final isMobile = MediaQuery.of(context).size.width <= 600;
+                        final titleSize = isMobile ? 9.5 : 12.0;
+                        final typeSize = isMobile ? 8.0 : 10.0;
+                        final iconSize = isMobile ? 14.0 : 18.0;
+                        final paddingVal = isMobile ? 4.0 : 8.0;
+
                         return Card(
                           clipBehavior: Clip.antiAlias,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                             side: BorderSide(
                               color: isSelected
                                   ? Theme.of(context).colorScheme.primary
@@ -1091,7 +1097,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                           Brightness.dark
                                       ? DollDexTheme.darkLine
                                       : DollDexTheme.line),
-                              width: isSelected ? 3.0 : 1.0,
+                              width: isSelected ? 2.5 : 1.0,
                             ),
                           ),
                           child: InkWell(
@@ -1118,7 +1124,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                       child: ClipRRect(
                                         borderRadius:
                                             const BorderRadius.vertical(
-                                                top: Radius.circular(12)),
+                                                top: Radius.circular(8)),
                                         child: Image.network(
                                           entry.primaryImageUrl,
                                           fit: BoxFit.cover,
@@ -1127,16 +1133,16 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                             return Container(
                                               color: Colors.grey
                                                   .withValues(alpha: 0.1),
-                                              child: const Icon(
+                                              child: Icon(
                                                   Icons.broken_image_outlined,
-                                                  size: 36),
+                                                  size: isMobile ? 24 : 36),
                                             );
                                           },
                                         ),
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.all(8),
+                                      padding: EdgeInsets.all(paddingVal),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -1145,15 +1151,15 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                             entryName(context, entry),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 12),
+                                                fontSize: titleSize),
                                           ),
                                           Text(
                                             catalogTypeLabel(
                                                 context, entry.type),
                                             style: TextStyle(
-                                                fontSize: 10,
+                                                fontSize: typeSize,
                                                 color: Theme.of(context)
                                                     .hintColor),
                                           ),
@@ -1161,54 +1167,57 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                       ),
                                     ),
                                     if (!_isSelectionMode)
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          IconButton(
-                                            iconSize: 18,
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon:
-                                                const Icon(Icons.edit_outlined),
-                                            onPressed: () {
-                                              widget.onEdit(entry);
-                                              Navigator.of(context)
-                                                  .pop(); // Close the modal
-                                            },
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            iconSize: 18,
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: const Icon(
-                                                Icons.delete_outline_rounded),
-                                            onPressed: isTemplateEntry(entry)
-                                                ? null
-                                                : () async {
-                                                    final tr = AppLanguageScope
-                                                            .languageOf(
-                                                                context) ==
-                                                        AppLanguage.tr;
-                                                    final confirmed =
-                                                        await showGothicConfirmDialog(
-                                                      context,
-                                                      title: tr
-                                                          ? 'Öğeyi Sil'
-                                                          : 'Delete Item',
-                                                      content: tr
-                                                          ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
-                                                          : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
-                                                    );
-                                                    if (confirmed) {
-                                                      deleteCatalogEntry(
-                                                          entry.id);
-                                                    }
-                                                  },
-                                          ),
-                                          const SizedBox(width: 8),
-                                        ],
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: paddingVal),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            IconButton(
+                                              iconSize: iconSize,
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              icon:
+                                                  const Icon(Icons.edit_outlined),
+                                              onPressed: () {
+                                                widget.onEdit(entry);
+                                                Navigator.of(context)
+                                                    .pop(); // Close the modal
+                                              },
+                                            ),
+                                            SizedBox(width: isMobile ? 4 : 8),
+                                            IconButton(
+                                              iconSize: iconSize,
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              icon: const Icon(
+                                                  Icons.delete_outline_rounded),
+                                              onPressed: isTemplateEntry(entry)
+                                                  ? null
+                                                  : () async {
+                                                      final tr = AppLanguageScope
+                                                              .languageOf(
+                                                                  context) ==
+                                                          AppLanguage.tr;
+                                                      final confirmed =
+                                                          await showGothicConfirmDialog(
+                                                        context,
+                                                        title: tr
+                                                            ? 'Öğeyi Sil'
+                                                            : 'Delete Item',
+                                                        content: tr
+                                                            ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
+                                                            : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
+                                                      );
+                                                      if (confirmed) {
+                                                        deleteCatalogEntry(
+                                                            entry.id);
+                                                      }
+                                                    },
+                                            ),
+                                            SizedBox(width: isMobile ? 2 : 4),
+                                          ],
+                                        ),
                                       ),
                                     const SizedBox(height: 4),
                                   ],
@@ -1225,7 +1234,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .primary,
-                                        size: 40,
+                                        size: isMobile ? 24 : 40,
                                       ),
                                     ),
                                   ),

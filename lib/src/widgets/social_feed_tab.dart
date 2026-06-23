@@ -83,8 +83,19 @@ class SocialFeedTab extends StatelessWidget {
                 return StreamBuilder<List<AppComment>>(
                   stream: socialRepository.watchRecentComments(),
                   builder: (context, commentsSnap) {
-                    final comments = commentsSnap.data ?? [];
+                    if ((friendsSnap.connectionState == ConnectionState.waiting && !friendsSnap.hasData) ||
+                        (followSnap.connectionState == ConnectionState.waiting && !followSnap.hasData) ||
+                        (collectionSnap.connectionState == ConnectionState.waiting && !collectionSnap.hasData) ||
+                        (commentsSnap.connectionState == ConnectionState.waiting && !commentsSnap.hasData)) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
 
+                    final comments = commentsSnap.data ?? [];
                     final List<ActivityItem> feedItems = [];
 
                     for (final entry in collections) {

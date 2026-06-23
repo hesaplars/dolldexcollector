@@ -403,7 +403,9 @@ class _AppScaffoldState extends State<AppScaffold> {
             'assets/icons/nav_catalog.png',
             width: 28,
             height: 28,
-            color: selectedIndex == 0 ? DollDexTheme.teal : DollDexTheme.cocoa,
+            color: selectedIndex == 0
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.secondary,
           ),
         ),
         label: t(context, 'catalog'),
@@ -415,7 +417,9 @@ class _AppScaffoldState extends State<AppScaffold> {
             'assets/icons/nav_collection.png',
             width: 28,
             height: 28,
-            color: selectedIndex == 1 ? DollDexTheme.teal : DollDexTheme.cocoa,
+            color: selectedIndex == 1
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.secondary,
           ),
         ),
         label: t(context, 'collection'),
@@ -424,15 +428,16 @@ class _AppScaffoldState extends State<AppScaffold> {
         icon: Badge(
           isLabelVisible: _unreadDMsCount > 0,
           label: Text('$_unreadDMsCount'),
-          backgroundColor: DollDexTheme.teal,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           child: Opacity(
             opacity: selectedIndex == 2 ? 1.0 : 0.45,
             child: Image.asset(
               'assets/icons/nav_messages.png',
               width: 28,
               height: 28,
-              color:
-                  selectedIndex == 2 ? DollDexTheme.teal : DollDexTheme.cocoa,
+              color: selectedIndex == 2
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.secondary,
             ),
           ),
         ),
@@ -441,7 +446,13 @@ class _AppScaffoldState extends State<AppScaffold> {
       NavigationDestination(
         icon: Opacity(
           opacity: selectedIndex == 3 ? 1.0 : 0.45,
-          child: _buildNeonIcon(context, Icons.person_search_rounded, size: 28),
+          child: Icon(
+            Icons.person_search_rounded,
+            size: 28,
+            color: selectedIndex == 3
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.secondary,
+          ),
         ),
         label: tr ? 'Ara' : 'Search',
       ),
@@ -452,7 +463,9 @@ class _AppScaffoldState extends State<AppScaffold> {
             'assets/icons/nav_social.png',
             width: 28,
             height: 28,
-            color: selectedIndex == 4 ? DollDexTheme.teal : DollDexTheme.cocoa,
+            color: selectedIndex == 4
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.secondary,
           ),
         ),
         label: tr ? 'Sohbet' : 'Chat',
@@ -465,8 +478,9 @@ class _AppScaffoldState extends State<AppScaffold> {
               'assets/icons/nav_admin.png',
               width: 28,
               height: 28,
-              color:
-                  selectedIndex == 5 ? DollDexTheme.teal : DollDexTheme.cocoa,
+              color: selectedIndex == 5
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.secondary,
             ),
           ),
           label: t(context, 'admin'),

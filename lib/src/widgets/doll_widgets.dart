@@ -1063,7 +1063,7 @@ class SafeShaderMask extends StatelessWidget {
           icon.icon,
           key: icon.key,
           size: icon.size,
-          color: fallbackColor ?? const Color(0xFFEC008C),
+          color: fallbackColor ?? Theme.of(context).colorScheme.primary,
           semanticLabel: icon.semanticLabel,
           textDirection: icon.textDirection,
           shadows: icon.shadows,
@@ -1072,7 +1072,7 @@ class SafeShaderMask extends StatelessWidget {
         final text = child as Text;
         final originalStyle = text.style;
         final newStyle = (originalStyle ?? const TextStyle()).copyWith(
-          color: fallbackColor ?? const Color(0xFFEC008C),
+          color: fallbackColor ?? Theme.of(context).colorScheme.primary,
         );
         return Text(
           text.data ?? '',
