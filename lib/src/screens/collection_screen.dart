@@ -317,7 +317,7 @@ class CollectionSearchPanel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
         borderRadius: BorderRadius.circular(22),
@@ -333,6 +333,9 @@ class CollectionSearchPanel extends StatelessWidget {
       ),
       child: Row(
         children: [
+          const SizedBox(width: 4),
+          buildNeonIcon(context, Icons.search_rounded, size: 16),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               onChanged: onQueryChanged,
@@ -346,13 +349,12 @@ class CollectionSearchPanel extends StatelessWidget {
                     color: isDark ? Colors.white60 : DollDexTheme.cocoa,
                     fontSize: 13,
                     fontFamily: 'Outfit'),
-                prefixIcon:
-                    buildNeonIcon(context, Icons.search_rounded, size: 16),
-                contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 filled: false,
+                isDense: true,
               ),
             ),
           ),
@@ -622,12 +624,8 @@ class CollectionGridCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: isSelected
-              ? const Color(0xFFEC008C)
-              : (isPng
-                  ? Colors.transparent
-                  : (isDark
-                      ? const Color(0xFF2C1F45)
-                      : const Color(0xFFE9D8FA))),
+              ? Theme.of(context).colorScheme.primary
+              : (isPng ? Colors.transparent : Theme.of(context).dividerColor),
           width: isSelected ? 3.0 : (isPng ? 0.0 : 1.5),
         ),
       ),
@@ -658,12 +656,14 @@ class CollectionGridCard extends StatelessWidget {
                       ),
                       if (isSelected)
                         Container(
-                          color:
-                              const Color(0xFFEC008C).withValues(alpha: 0.25),
-                          child: const Center(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.25),
+                          child: Center(
                             child: Icon(
                               Icons.check_circle_rounded,
-                              color: Color(0xFFEC008C),
+                              color: Theme.of(context).colorScheme.primary,
                               size: 40,
                             ),
                           ),
@@ -714,9 +714,9 @@ class CollectionGridCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF2C1F45)
-                                  : const Color(0xFFE9D8FA),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondaryContainer,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -754,7 +754,7 @@ class CollectionGridCard extends StatelessWidget {
       icon: icon,
       size: 10,
       padding: const EdgeInsets.all(3),
-      activeColor: const Color(0xFF00FFCC),
+      activeColor: Theme.of(context).colorScheme.secondary,
     );
   }
 }

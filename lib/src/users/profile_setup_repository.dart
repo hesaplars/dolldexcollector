@@ -67,7 +67,7 @@ class ProfileSetupStatus {
   factory ProfileSetupStatus.fromMap(String userId, Map<String, Object?> map) {
     final roleVal = map['role'] as String? ?? 'user';
     final isProVal = map['isPro'] as bool? ?? false;
-    
+
     DateTime? parsedDailyClaim;
     final rawClaim = map['lastDailyClaim'];
     if (rawClaim is Timestamp) {
@@ -86,7 +86,9 @@ class ProfileSetupStatus {
 
     final rawAvatarId = map['avatarId'] as String? ?? '';
     final photoUrlVal = map['photoUrl'] as String? ?? '';
-    final finalAvatarId = (rawAvatarId.isEmpty && photoUrlVal.isNotEmpty) ? photoUrlVal : rawAvatarId;
+    final finalAvatarId = (rawAvatarId.isEmpty && photoUrlVal.isNotEmpty)
+        ? photoUrlVal
+        : rawAvatarId;
 
     return ProfileSetupStatus(
       userId: userId,
@@ -101,15 +103,18 @@ class ProfileSetupStatus {
       avatarFrameColor: map['avatarFrameColor'] as String? ?? '',
       coverId: map['coverId'] as String? ?? 'default',
       photoUrl: photoUrlVal,
-      featuredEntryIds: List<String>.from(map['featuredEntryIds'] as List? ?? []),
+      featuredEntryIds:
+          List<String>.from(map['featuredEntryIds'] as List? ?? []),
       coins: map['coins'] as int? ?? 20,
-      unlockedBadges: List<String>.from(map['unlockedBadges'] as List? ?? ['novice']),
+      unlockedBadges:
+          List<String>.from(map['unlockedBadges'] as List? ?? ['novice']),
       selectedBadge: map['selectedBadge'] as String? ?? '',
       unlockedAvatars: List<String>.from(map['unlockedAvatars'] as List? ?? []),
       unlockedFrames: List<String>.from(map['unlockedFrames'] as List? ?? []),
       unlockedCovers: List<String>.from(map['unlockedCovers'] as List? ?? []),
       lastDailyClaim: parsedDailyClaim,
-      lastCommentCoinsClaimDate: map['lastCommentCoinsClaimDate'] as String? ?? '',
+      lastCommentCoinsClaimDate:
+          map['lastCommentCoinsClaimDate'] as String? ?? '',
       dailyCommentCoinsClaimed: map['dailyCommentCoinsClaimed'] as int? ?? 0,
       isBanned: map['isBanned'] as bool? ?? false,
       banUntil: parsedBanUntil,
@@ -178,7 +183,8 @@ class ProfileSetupRepository {
       );
     }
 
-    final source = db.collection('users').doc(userId).snapshots().map((snapshot) {
+    final source =
+        db.collection('users').doc(userId).snapshots().map((snapshot) {
       return ProfileSetupStatus.fromMap(userId, snapshot.data() ?? {});
     });
 
@@ -287,7 +293,8 @@ class ProfileSetupRepository {
         throw const UsernameChangeLockedException();
       }
 
-      if (previousUsername.isNotEmpty && previousUsername != normalizedUsername) {
+      if (previousUsername.isNotEmpty &&
+          previousUsername != normalizedUsername) {
         transaction.delete(db.collection('usernames').doc(previousUsername));
       }
 
@@ -349,15 +356,19 @@ class ProfileSetupRepository {
       final snapshot = await transaction.get(docRef);
       final data = snapshot.data() ?? {};
       final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(docRef, {
-        'unlockedBadges': FieldValue.arrayUnion([badgeId]),
-        if (coinCost > 0) 'coins': currentCoins - coinCost,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          docRef,
+          {
+            'unlockedBadges': FieldValue.arrayUnion([badgeId]),
+            if (coinCost > 0) 'coins': currentCoins - coinCost,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
-  Future<void> unlockAvatar(String userId, String avatarId, int coinCost) async {
+  Future<void> unlockAvatar(
+      String userId, String avatarId, int coinCost) async {
     final db = _db;
     if (db == null) return;
     final docRef = db.collection('users').doc(userId);
@@ -365,15 +376,19 @@ class ProfileSetupRepository {
       final snapshot = await transaction.get(docRef);
       final data = snapshot.data() ?? {};
       final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(docRef, {
-        'unlockedAvatars': FieldValue.arrayUnion([avatarId]),
-        if (coinCost > 0) 'coins': currentCoins - coinCost,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          docRef,
+          {
+            'unlockedAvatars': FieldValue.arrayUnion([avatarId]),
+            if (coinCost > 0) 'coins': currentCoins - coinCost,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
-  Future<void> unlockFrame(String userId, String frameColor, int coinCost) async {
+  Future<void> unlockFrame(
+      String userId, String frameColor, int coinCost) async {
     final db = _db;
     if (db == null) return;
     final docRef = db.collection('users').doc(userId);
@@ -381,11 +396,14 @@ class ProfileSetupRepository {
       final snapshot = await transaction.get(docRef);
       final data = snapshot.data() ?? {};
       final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(docRef, {
-        'unlockedFrames': FieldValue.arrayUnion([frameColor]),
-        if (coinCost > 0) 'coins': currentCoins - coinCost,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          docRef,
+          {
+            'unlockedFrames': FieldValue.arrayUnion([frameColor]),
+            if (coinCost > 0) 'coins': currentCoins - coinCost,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
@@ -406,11 +424,14 @@ class ProfileSetupRepository {
       final snapshot = await transaction.get(docRef);
       final data = snapshot.data() ?? {};
       final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(docRef, {
-        'unlockedCovers': FieldValue.arrayUnion([coverId]),
-        if (coinCost > 0) 'coins': currentCoins - coinCost,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          docRef,
+          {
+            'unlockedCovers': FieldValue.arrayUnion([coverId]),
+            if (coinCost > 0) 'coins': currentCoins - coinCost,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
@@ -422,11 +443,14 @@ class ProfileSetupRepository {
       final snapshot = await transaction.get(docRef);
       final data = snapshot.data() ?? {};
       final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(docRef, {
-        'coins': currentCoins + 5,
-        'lastDailyClaim': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          docRef,
+          {
+            'coins': currentCoins + 5,
+            'lastDailyClaim': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
@@ -438,10 +462,13 @@ class ProfileSetupRepository {
       final snapshot = await transaction.get(docRef);
       final data = snapshot.data() ?? {};
       final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(docRef, {
-        'coins': currentCoins + coinsAmount,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          docRef,
+          {
+            'coins': currentCoins + coinsAmount,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
@@ -462,7 +489,8 @@ class ProfileSetupRepository {
     }, SetOptions(merge: true));
   }
 
-  Future<void> updateBanStatus(String userId, {required bool isBanned, DateTime? banUntil}) async {
+  Future<void> updateBanStatus(String userId,
+      {required bool isBanned, DateTime? banUntil}) async {
     final db = _db;
     if (db == null) return;
     await db.collection('users').doc(userId).set({
@@ -472,7 +500,8 @@ class ProfileSetupRepository {
     }, SetOptions(merge: true));
   }
 
-  Future<void> updateRoleAndPro(String userId, {required String role, required bool isPro}) async {
+  Future<void> updateRoleAndPro(String userId,
+      {required String role, required bool isPro}) async {
     final db = _db;
     if (db == null) return;
     await db.collection('users').doc(userId).set({

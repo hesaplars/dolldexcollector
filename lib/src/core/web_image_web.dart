@@ -47,7 +47,8 @@ class _WebImageWrapperState extends State<_WebImageWrapper> {
         img.style.width = '100%';
         img.style.height = '100%';
         img.style.pointerEvents = 'none';
-        img.style.objectFit = widget.fit == BoxFit.contain ? 'contain' : 'cover';
+        img.style.objectFit =
+            widget.fit == BoxFit.contain ? 'contain' : 'cover';
 
         img.onError.listen((_) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,7 +67,7 @@ class _WebImageWrapperState extends State<_WebImageWrapper> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
-      color: isDark ? const Color(0xFF1E152C) : const Color(0xFFFAF2FF),
+      color: Theme.of(context).colorScheme.surface,
       alignment: Alignment.center,
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -74,7 +75,7 @@ class _WebImageWrapperState extends State<_WebImageWrapper> {
         children: [
           Icon(
             Icons.image_not_supported_outlined,
-            color: isDark ? const Color(0xFFEC008C) : const Color(0xFF8338EC),
+            color: Theme.of(context).colorScheme.primary,
             size: 32,
           ),
           const SizedBox(height: 8),

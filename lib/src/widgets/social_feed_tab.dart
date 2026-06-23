@@ -49,8 +49,10 @@ class SocialFeedTab extends StatelessWidget {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final diff = DateTime.now().difference(dt);
     if (diff.inMinutes < 1) return tr ? 'Az önce' : 'Just now';
-    if (diff.inMinutes < 60) return tr ? '${diff.inMinutes} dk önce' : '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return tr ? '${diff.inHours} saat önce' : '${diff.inHours}h ago';
+    if (diff.inMinutes < 60)
+      return tr ? '${diff.inMinutes} dk önce' : '${diff.inMinutes}m ago';
+    if (diff.inHours < 24)
+      return tr ? '${diff.inHours} saat önce' : '${diff.inHours}h ago';
     return tr ? '${diff.inDays} gün önce' : '${diff.inDays}d ago';
   }
 
@@ -89,7 +91,9 @@ class SocialFeedTab extends StatelessWidget {
                       if (targetUids.contains(entry.userId)) {
                         feedItems.add(ActivityItem(
                           userId: entry.userId,
-                          timestamp: entry.updatedAt ?? DateTime.now().subtract(const Duration(minutes: 5)),
+                          timestamp: entry.updatedAt ??
+                              DateTime.now()
+                                  .subtract(const Duration(minutes: 5)),
                           type: ActivityType.collectionUpdate,
                           entry: entry,
                         ));
@@ -107,7 +111,8 @@ class SocialFeedTab extends StatelessWidget {
                       }
                     }
 
-                    feedItems.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                    feedItems
+                        .sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
                     if (feedItems.isEmpty) {
                       return EmptyState(
@@ -132,13 +137,17 @@ class SocialFeedTab extends StatelessWidget {
                         return StreamBuilder<ProfileSetupStatus>(
                           stream: profileSetupRepository.watch(item.userId),
                           builder: (context, userSnap) {
-                            if (!userSnap.hasData) return const SizedBox.shrink();
+                            if (!userSnap.hasData)
+                              return const SizedBox.shrink();
                             final owner = userSnap.data!;
-                            final username = owner.username.isNotEmpty ? '@${owner.username}' : 'Collector';
+                            final username = owner.username.isNotEmpty
+                                ? '@${owner.username}'
+                                : 'Collector';
 
                             if (item.type == ActivityType.collectionUpdate) {
                               final entry = item.entry!;
-                              final catalogItem = findCatalogEntry(entry.itemId);
+                              final catalogItem =
+                                  findCatalogEntry(entry.itemId);
 
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 10),
@@ -163,31 +172,41 @@ class SocialFeedTab extends StatelessWidget {
                                         context.push(route);
                                       }
                                     },
-                                    child: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
+                                    child: buildAvatarHelper(context,
+                                        owner.avatarId, owner.avatarFrameColor,
+                                        size: 36),
                                   ),
                                   title: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (owner.selectedBadge.isNotEmpty) ...[
-                                        ProfileBadgeWidget(badgeId: owner.selectedBadge, size: 7),
+                                        ProfileBadgeWidget(
+                                            badgeId: owner.selectedBadge,
+                                            size: 7),
                                         const SizedBox(height: 2),
                                       ],
                                       RichText(
                                         text: TextSpan(
                                           style: TextStyle(
-                                            color: isDark ? Colors.white : Colors.black87,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
                                             fontSize: 12.5,
                                             fontFamily: 'Outfit',
                                           ),
                                           children: [
                                             TextSpan(
                                               text: '$username ',
-                                              style: const TextStyle(fontWeight: FontWeight.bold),
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold),
                                               recognizer: TapGestureRecognizer()
                                                 ..onTap = () {
-                                                  final username = owner.username.trim();
-                                                  final route = username.isNotEmpty
+                                                  final username =
+                                                      owner.username.trim();
+                                                  final route = username
+                                                          .isNotEmpty
                                                       ? '/u/$username?from=/social'
                                                       : '/users/${owner.userId}?from=/social';
                                                   if (onNavigate != null) {
@@ -203,9 +222,12 @@ class SocialFeedTab extends StatelessWidget {
                                                   : 'added a new doll to their collection: ',
                                             ),
                                             TextSpan(
-                                              text: entryName(context, catalogItem),
+                                              text: entryName(
+                                                  context, catalogItem),
                                               style: TextStyle(
-                                                color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -219,18 +241,29 @@ class SocialFeedTab extends StatelessWidget {
                                     child: Row(
                                       children: [
                                         Text(
-                                          conditionLabel(context, entry.condition),
-                                          style: const TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic),
+                                          conditionLabel(
+                                              context, entry.condition),
+                                          style: const TextStyle(
+                                              fontSize: 10.5,
+                                              fontStyle: FontStyle.italic),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
                                           _timeAgo(context, item.timestamp),
-                                          style: const TextStyle(fontSize: 10.5, color: Colors.white38),
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.4),
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+                                  trailing: const Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 18),
                                 ),
                               );
                             } else {
@@ -294,7 +327,9 @@ class CommentActivityCard extends StatelessWidget {
       future: collectionRepository.fetch(comment.targetId),
       builder: (context, snapshot) {
         final entry = snapshot.data;
-        final catalogItem = entry != null ? findCatalogEntry(entry.itemId) : findCatalogEntry('missing');
+        final catalogItem = entry != null
+            ? findCatalogEntry(entry.itemId)
+            : findCatalogEntry('missing');
         return _buildCard(context, catalogItem);
       },
     );
@@ -324,7 +359,9 @@ class CommentActivityCard extends StatelessWidget {
               context.push(route);
             }
           },
-          child: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 36),
+          child: buildAvatarHelper(
+              context, owner.avatarId, owner.avatarFrameColor,
+              size: 36),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,12 +396,14 @@ class CommentActivityCard extends StatelessWidget {
                       },
                   ),
                   TextSpan(
-                    text: tr ? 'bir bebek altına yorum yaptı: ' : 'commented on a doll: ',
+                    text: tr
+                        ? 'bir bebek altına yorum yaptı: '
+                        : 'commented on a doll: ',
                   ),
                   TextSpan(
                     text: entryName(context, catalogItem),
                     style: TextStyle(
-                      color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -380,12 +419,21 @@ class CommentActivityCard extends StatelessWidget {
             children: [
               Text(
                 '"${comment.text}"',
-                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.white70),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 timeAgo,
-                style: const TextStyle(fontSize: 10, color: Colors.white38),
+                style: TextStyle(
+                  fontSize: 10,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                ),
               ),
             ],
           ),

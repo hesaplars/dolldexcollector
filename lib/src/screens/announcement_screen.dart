@@ -38,27 +38,27 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
     super.dispose();
   }
 
-  InputDecoration _buildInputDecoration(BuildContext context, String label, IconData icon) {
+  InputDecoration _buildInputDecoration(
+      BuildContext context, String label, IconData icon) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return InputDecoration(
       labelText: label,
       prefixIcon: buildNeonIcon(context, icon, size: 20),
       alignLabelWithHint: true,
-      labelStyle: const TextStyle(fontFamily: 'Cinzel'),
+      labelStyle: const TextStyle(fontFamily: 'Outfit'),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: isDark ? const Color(0xFF2C1F45) : const Color(0xFFE9D8FA),
+          color: theme.dividerColor,
           width: 1.5,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: Color(0xFFEC008C),
+        borderSide: BorderSide(
+          color: theme.colorScheme.primary,
           width: 2.0,
         ),
       ),
@@ -88,14 +88,17 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEC008C), Color(0xFF7B2CBF)],
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEC008C).withOpacity(0.4),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -117,7 +120,7 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
-            fontFamily: 'Cinzel',
+            fontFamily: 'Outfit',
             fontSize: 14,
             letterSpacing: 1.0,
           ),
@@ -139,10 +142,11 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
       context: context,
       builder: (dialogCtx) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF130820),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFEC008C), width: 1.5),
+            side: BorderSide(
+                color: Theme.of(context).colorScheme.primary, width: 1.5),
           ),
           title: Text(
             tr ? 'Duyuru Yayınlama Onayı' : 'Publish Announcement Confirmation',
@@ -153,7 +157,7 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
             ),
           ),
           content: Text(
-            tr 
+            tr
                 ? 'Bu duyuruyu tüm kullanıcılara bildirim olarak göndermek istediğinize emin misiniz?'
                 : 'Are you sure you want to publish this announcement to all users as a notification?',
             style: const TextStyle(color: Colors.white70),
@@ -163,13 +167,14 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
               onPressed: () => Navigator.of(dialogCtx).pop(false),
               child: Text(
                 tr ? 'Vazgeç' : 'Cancel',
-                style: const TextStyle(color: Color(0xFF00FFCC)),
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.secondary),
               ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogCtx).pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEC008C),
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
               ),
               child: Text(tr ? 'Yayınla' : 'Publish'),
@@ -188,8 +193,8 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              tr 
-                  ? 'Duyuru başarıyla tüm kullanıcılara gönderildi.' 
+              tr
+                  ? 'Duyuru başarıyla tüm kullanıcılara gönderildi.'
                   : 'Announcement successfully published to all users.',
             ),
           ),
@@ -227,7 +232,7 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
               ),
         ),
         subtitle: Text(
-          tr 
+          tr
               ? 'Tüm kullanıcılara canlı bildirim olarak gidecek bir duyuru yayınlayın'
               : 'Publish an announcement that will go as a live notification to all users',
           style: Theme.of(context).textTheme.bodySmall,
@@ -313,8 +318,11 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
-                    tr ? 'Henüz yayınlanmış duyuru yok.' : 'No announcements published yet.',
-                    style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    tr
+                        ? 'Henüz yayınlanmış duyuru yok.'
+                        : 'No announcements published yet.',
+                    style: const TextStyle(
+                        fontSize: 12, fontStyle: FontStyle.italic),
                   ),
                 );
               }
@@ -329,31 +337,45 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       dense: true,
-                      title: Text(ann.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(ann.title,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(ann.body),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                        icon: const Icon(Icons.delete_outline,
+                            color: Colors.redAccent),
                         onPressed: () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (dialogCtx) => AlertDialog(
-                              title: Text(tr ? 'Duyuruyu Sil' : 'Delete Announcement'),
-                              content: Text(tr ? 'Bu duyuruyu tüm kullanıcılardan silmek istediğinize emin misiniz?' : 'Are you sure you want to delete this announcement from all users?'),
+                              title: Text(
+                                  tr ? 'Duyuruyu Sil' : 'Delete Announcement'),
+                              content: Text(tr
+                                  ? 'Bu duyuruyu tüm kullanıcılardan silmek istediğinize emin misiniz?'
+                                  : 'Are you sure you want to delete this announcement from all users?'),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: Text(tr ? 'İptal' : 'Cancel')),
                                 TextButton(
-                                  onPressed: () => Navigator.pop(dialogCtx, true),
-                                  style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                                    onPressed: () =>
+                                        Navigator.pop(dialogCtx, false),
+                                    child: Text(tr ? 'İptal' : 'Cancel')),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(dialogCtx, true),
+                                  style: TextButton.styleFrom(
+                                      foregroundColor: Colors.redAccent),
                                   child: Text(tr ? 'Sil' : 'Delete'),
                                 ),
                               ],
                             ),
                           );
                           if (confirm == true) {
-                            await notificationRepository.deleteAnnouncement(ann.deepLink);
+                            await notificationRepository
+                                .deleteAnnouncement(ann.deepLink);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(tr ? 'Duyuru silindi' : 'Announcement deleted')),
+                                SnackBar(
+                                    content: Text(tr
+                                        ? 'Duyuru silindi'
+                                        : 'Announcement deleted')),
                               );
                             }
                           }
@@ -388,22 +410,24 @@ class AnnouncementScreen extends StatelessWidget {
 
     return PageShell(
       title: tr ? 'Sistem Duyurusu' : 'System Announcement',
-      subtitle: tr ? 'Geliştiricilerden önemli güncellemeler' : 'Important updates from the developers',
+      subtitle: tr
+          ? 'Geliştiricilerden önemli güncellemeler'
+          : 'Important updates from the developers',
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF130820) : Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFFEC008C),
+                color: Theme.of(context).colorScheme.primary,
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEC008C).withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -424,14 +448,17 @@ class AnnouncementScreen extends StatelessWidget {
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                           color: isDark ? Colors.white : Colors.black87,
-                          fontFamily: 'Cinzel',
+                          fontFamily: 'Outfit',
                           letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const Divider(color: Color(0xFF2C1F45), height: 32, thickness: 1.2),
+                Divider(
+                    color: Theme.of(context).dividerColor,
+                    height: 32,
+                    thickness: 1.2),
                 Text(
                   body,
                   style: TextStyle(
@@ -446,13 +473,16 @@ class AnnouncementScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF160E24),
-                      foregroundColor: const Color(0xFF00FFCC),
-                      side: const BorderSide(color: Color(0xFF00FFCC), width: 1.2),
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      foregroundColor: Theme.of(context).colorScheme.secondary,
+                      side: BorderSide(
+                          color: Theme.of(context).colorScheme.secondary,
+                          width: 1.2),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
                     ),
                     child: Text(
                       tr ? 'Anladım' : 'Got it',

@@ -99,10 +99,7 @@ class CatalogEntry {
       }
     } else if (rawUrls is String) {
       parsedUrls.addAll(
-        rawUrls
-            .split(',')
-            .map((u) => u.trim())
-            .where((u) => u.isNotEmpty),
+        rawUrls.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty),
       );
     }
 
@@ -179,7 +176,11 @@ List<String> _stringList(Object? value) {
     );
   }
   if (value is String) {
-    return value.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    return value
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
   return const [];
 }

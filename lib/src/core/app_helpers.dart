@@ -106,6 +106,7 @@ Future<bool> showGothicConfirmDialog(
   required String content,
   String? confirmText,
   String? cancelText,
+  bool showCancel = true,
 }) async {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -162,30 +163,32 @@ Future<bool> showGothicConfirmDialog(
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                              color: isDark
-                                  ? DollDexTheme.darkLine
-                                  : DollDexTheme.line,
-                              width: 1.5),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: Text(
-                          finalCancelText,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : DollDexTheme.cocoa,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Outfit',
+                    if (showCancel) ...[
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                                color: isDark
+                                    ? DollDexTheme.darkLine
+                                    : DollDexTheme.line,
+                                width: 1.5),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: Text(
+                            finalCancelText,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : DollDexTheme.cocoa,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Outfit',
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
+                      const SizedBox(width: 12),
+                    ],
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(

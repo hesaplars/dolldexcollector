@@ -166,7 +166,7 @@ class SearchPanel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
         borderRadius: BorderRadius.circular(22),
@@ -182,6 +182,9 @@ class SearchPanel extends StatelessWidget {
       ),
       child: Row(
         children: [
+          const SizedBox(width: 4),
+          _buildNeonIcon(context, Icons.search_rounded, size: 16),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: controller,
@@ -196,13 +199,12 @@ class SearchPanel extends StatelessWidget {
                     color: isDark ? Colors.white60 : DollDexTheme.cocoa,
                     fontSize: 13,
                     fontFamily: 'Outfit'),
-                prefixIcon:
-                    _buildNeonIcon(context, Icons.search_rounded, size: 16),
-                contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 filled: false,
+                isDense: true,
               ),
             ),
           ),
@@ -652,7 +654,7 @@ class _CardActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final finalColor = activeColor ?? const Color(0xFFEC008C);
+    final finalColor = activeColor ?? Theme.of(context).colorScheme.primary;
 
     return Tooltip(
       message: tooltip,
@@ -673,7 +675,10 @@ class _CardActionButton extends StatelessWidget {
               color: isActive
                   ? finalColor
                   : (isNeonFlag
-                      ? const Color(0xFFEC008C).withOpacity(isDark ? 0.6 : 0.8)
+                      ? Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(isDark ? 0.6 : 0.8)
                       : finalColor.withOpacity(isDark ? 0.35 : 0.6)),
               width: 1.5,
             ),
@@ -695,7 +700,8 @@ class _CardActionButton extends StatelessWidget {
                       ? [finalColor, Colors.white]
                       : [
                           finalColor.withOpacity(isDark ? 0.5 : 0.85),
-                          (activeColor ?? const Color(0xFF00FFCC))
+                          (activeColor ??
+                                  Theme.of(context).colorScheme.secondary)
                               .withOpacity(isDark ? 0.5 : 0.85)
                         ],
                   begin: Alignment.topLeft,

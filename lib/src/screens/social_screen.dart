@@ -80,21 +80,28 @@ class _SocialScreenState extends State<SocialScreen> {
       ),
     );
   }
-
 }
 
-class _ShareItemSelectionModal extends StatefulWidget {
-  const _ShareItemSelectionModal({required this.userId});
+class ShareItemSelectionModal extends StatefulWidget {
+  const ShareItemSelectionModal({
+    required this.userId,
+    this.onShareCatalog,
+    this.onShareCollection,
+    super.key,
+  });
   final String userId;
+  final Future<void> Function(String catalogId)? onShareCatalog;
+  final Future<void> Function(String catalogId, String collectionId, String status)? onShareCollection;
 
   @override
-  State<_ShareItemSelectionModal> createState() => _ShareItemSelectionModalState();
+  State<ShareItemSelectionModal> createState() =>
+      ShareItemSelectionModalState();
 }
 
-class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
+class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
   String _catalogSearchQuery = '';
   CatalogItemType? _catalogSelectedType;
-  
+
   String _collectionSearchQuery = '';
   String? _selectedCollectionStatus;
 
@@ -130,7 +137,7 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0E0818) : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: DefaultTabController(
@@ -138,10 +145,14 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
         child: Column(
           children: [
             TabBar(
-              labelColor: const Color(0xFFEC008C),
-              unselectedLabelColor: isDark ? Colors.white60 : Colors.black54,
-              indicatorColor: const Color(0xFFEC008C),
-              labelStyle: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 14),
+              labelColor: Theme.of(context).colorScheme.primary,
+              unselectedLabelColor:
+                  Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              indicatorColor: Theme.of(context).colorScheme.primary,
+              labelStyle: const TextStyle(
+                  fontFamily: 'Outfit',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14),
               tabs: [
                 Tab(text: tr ? 'Katalog' : 'Catalog'),
                 Tab(text: tr ? 'Koleksiyon' : 'Collection'),
@@ -162,14 +173,13 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
   }
 
   void _showCatalogFilterSheet(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+        side: BorderSide(color: Theme.of(context).dividerColor, width: 1.0),
       ),
       builder: (context) {
         final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -180,7 +190,8 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
               ? profileSetupRepository.watch(currentUser.uid)
               : const Stream.empty(),
           builder: (context, snap) {
-            final isPro = snap.data?.isPro == true || snap.data?.role == 'admin';
+            final isPro =
+                snap.data?.isPro == true || snap.data?.role == 'admin';
 
             return Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -191,7 +202,7 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                   Text(
                     tr ? 'Katalog Filtrele' : 'Filter Catalog',
                     style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -225,11 +236,14 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                               Navigator.of(context).pop();
                               showGothicConfirmDialog(
                                 context,
-                                title: tr ? 'Pro Filtre Özelliği' : 'Pro Filter Feature',
+                                title: tr
+                                    ? 'Pro Filtre Özelliği'
+                                    : 'Pro Filter Feature',
                                 content: tr
                                     ? 'Set, Pet ve Aksesuar filtreleri DollDex Pro üyelerine özeldir. Avantajları görmek ve Pro\'ya yükseltmek ister misiniz?'
                                     : 'Set, Pet, and Accessory filters are exclusive to DollDex Pro members. Would you like to view the benefits and upgrade to Pro?',
-                                confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                confirmText:
+                                    tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
                                 cancelText: tr ? 'Vazgeç' : 'Cancel',
                               ).then((confirmed) {
                                 if (confirmed && context.mounted) {
@@ -261,8 +275,8 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
     required String label,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final finalColor = isSelected ? const Color(0xFFEC008C) : Colors.transparent;
+    final finalColor =
+        isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent;
 
     return InkWell(
       onTap: onTap,
@@ -272,11 +286,9 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
         decoration: BoxDecoration(
           color: isSelected
               ? finalColor.withOpacity(0.15)
-              : (isDark ? const Color(0xFF160E22) : Colors.white),
+              : Theme.of(context).colorScheme.surface,
           border: Border.all(
-            color: isSelected
-                ? finalColor
-                : (isDark ? const Color(0xFFEC008C).withOpacity(0.2) : Colors.black12),
+            color: isSelected ? finalColor : Theme.of(context).dividerColor,
             width: 1.2,
           ),
           borderRadius: BorderRadius.circular(20),
@@ -294,8 +306,8 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
           label,
           style: TextStyle(
             color: isSelected
-                ? (isDark ? Colors.white : const Color(0xFFEC008C))
-                : (isDark ? Colors.white60 : Colors.black87),
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -324,7 +336,8 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                   decoration: InputDecoration(
                     hintText: tr ? 'Bebek ara...' : 'Search dolls...',
                     prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
               ),
@@ -338,10 +351,10 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: const Color(0xFFEC008C).withOpacity(isDark ? 0.5 : 0.25),
+                      color: Theme.of(context).dividerColor,
                       width: 1.0,
                     ),
-                    color: isDark ? const Color(0xFF160E22) : Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -349,7 +362,7 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                       Icon(
                         Icons.tune_rounded,
                         size: 16,
-                        color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -359,7 +372,7 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFFEC008C),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ],
@@ -375,21 +388,23 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
               ? Center(
                   child: Text(
                     tr ? 'Bebek bulunamadı.' : 'No dolls found.',
-                    style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+                    style: const TextStyle(
+                        fontStyle: FontStyle.italic, color: Colors.grey),
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: filteredCatalog.length,
                   itemBuilder: (context, index) {
                     final entry = filteredCatalog[index];
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
-                      color: isDark ? const Color(0xFF140C20) : Colors.grey[50],
+                      color: Theme.of(context).colorScheme.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                          color: isDark ? const Color(0xFF2C1F45) : Colors.grey[200]!,
+                          color: Theme.of(context).dividerColor,
                           width: 1,
                         ),
                       ),
@@ -404,24 +419,33 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                                   height: 40,
                                   fit: BoxFit.cover,
                                 )
-                              : const Icon(Icons.image_not_supported_rounded, size: 24, color: Colors.grey),
+                              : const Icon(Icons.image_not_supported_rounded,
+                                  size: 24, color: Colors.grey),
                         ),
                         title: Text(
                           entry.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                         subtitle: Text(
                           entry.series ?? '',
-                          style: const TextStyle(fontSize: 10, color: Colors.grey),
+                          style:
+                              const TextStyle(fontSize: 10, color: Colors.grey),
                         ),
-                        trailing: const Icon(Icons.send_rounded, color: Color(0xFFEC008C), size: 16),
+                        trailing: Icon(Icons.send_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 16),
                         onTap: () async {
-                          await socialRepository.sendGlobalMessage(
-                            senderId: widget.userId,
-                            text: '',
-                            sharedCatalogId: entry.id,
-                            sharedSource: 'catalog',
-                          );
+                          if (widget.onShareCatalog != null) {
+                            await widget.onShareCatalog!(entry.id);
+                          } else {
+                            await socialRepository.sendGlobalMessage(
+                              senderId: widget.userId,
+                              text: '',
+                              sharedCatalogId: entry.id,
+                              sharedSource: 'catalog',
+                            );
+                          }
                           if (mounted) Navigator.of(context).pop();
                         },
                       ),
@@ -438,9 +462,10 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
       future: _collectionFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary),
             ),
           );
         }
@@ -468,9 +493,15 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
           final entry = pair.key;
           final catalogItem = pair.value;
 
-          final matchesSearch = catalogItem.name.toLowerCase().contains(_collectionSearchQuery.toLowerCase()) ||
-              (catalogItem.series?.toLowerCase().contains(_collectionSearchQuery.toLowerCase()) ?? false);
-          final matchesStatus = _selectedCollectionStatus == null || entry.status.name == _selectedCollectionStatus;
+          final matchesSearch = catalogItem.name
+                  .toLowerCase()
+                  .contains(_collectionSearchQuery.toLowerCase()) ||
+              (catalogItem.series
+                      ?.toLowerCase()
+                      .contains(_collectionSearchQuery.toLowerCase()) ??
+                  false);
+          final matchesStatus = _selectedCollectionStatus == null ||
+              entry.status.name == _selectedCollectionStatus;
 
           return matchesSearch && matchesStatus;
         }).toList();
@@ -482,12 +513,16 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
               child: TextField(
-                onChanged: (val) => setState(() => _collectionSearchQuery = val),
+                onChanged: (val) =>
+                    setState(() => _collectionSearchQuery = val),
                 style: const TextStyle(fontSize: 13, fontFamily: 'Outfit'),
                 decoration: InputDecoration(
-                  hintText: tr ? 'Koleksiyonunda ara...' : 'Search your collection...',
+                  hintText: tr
+                      ? 'Koleksiyonunda ara...'
+                      : 'Search your collection...',
                   prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
               ),
             ),
@@ -500,8 +535,12 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                 itemBuilder: (context, index) {
                   final isAll = index == 0;
                   final statusName = isAll ? null : statuses[index - 1];
-                  final statusLabel = isAll ? (tr ? 'Tümü' : 'All') : getStatusLabel(context, statusName!);
-                  final isSelected = isAll ? (_selectedCollectionStatus == null) : (_selectedCollectionStatus == statusName);
+                  final statusLabel = isAll
+                      ? (tr ? 'Tümü' : 'All')
+                      : getStatusLabel(context, statusName!);
+                  final isSelected = isAll
+                      ? (_selectedCollectionStatus == null)
+                      : (_selectedCollectionStatus == statusName);
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -510,13 +549,20 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                         statusLabel,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.7),
                         ),
                       ),
                       selected: isSelected,
-                      selectedColor: const Color(0xFFEC008C),
-                      backgroundColor: isDark ? const Color(0xFF1B0F2A) : Colors.grey[200],
+                      selectedColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.secondaryContainer,
                       onSelected: (selected) {
                         setState(() {
                           _selectedCollectionStatus = isAll ? null : statusName;
@@ -532,26 +578,31 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
               child: filteredCollection.isEmpty
                   ? Center(
                       child: Text(
-                        tr ? 'Koleksiyon öğesi bulunamadı.' : 'No collection items found.',
-                        style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+                        tr
+                            ? 'Koleksiyon öğesi bulunamadı.'
+                            : 'No collection items found.',
+                        style: const TextStyle(
+                            fontStyle: FontStyle.italic, color: Colors.grey),
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       itemCount: filteredCollection.length,
                       itemBuilder: (context, pairIndex) {
                         final pair = filteredCollection[pairIndex];
                         final colEntry = pair.key;
                         final catEntry = pair.value;
-                        final statusLabel = getStatusLabel(context, colEntry.status.name);
+                        final statusLabel =
+                            getStatusLabel(context, colEntry.status.name);
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
-                          color: isDark ? const Color(0xFF140C20) : Colors.grey[50],
+                          color: Theme.of(context).colorScheme.surface,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
-                              color: isDark ? const Color(0xFF2C1F45) : Colors.grey[200]!,
+                              color: Theme.of(context).dividerColor,
                               width: 1,
                             ),
                           ),
@@ -566,42 +617,66 @@ class _ShareItemSelectionModalState extends State<_ShareItemSelectionModal> {
                                       height: 40,
                                       fit: BoxFit.cover,
                                     )
-                                  : const Icon(Icons.image_not_supported_rounded, size: 24, color: Colors.grey),
+                                  : const Icon(
+                                      Icons.image_not_supported_rounded,
+                                      size: 24,
+                                      color: Colors.grey),
                             ),
                             title: Text(
                               catEntry.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                             subtitle: Row(
                               children: [
                                 Text(
                                   catEntry.series ?? '',
-                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                  style: const TextStyle(
+                                      fontSize: 10, color: Colors.grey),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 1),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF00FFCC).withOpacity(0.1),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     statusLabel,
-                                    style: const TextStyle(fontSize: 9, color: Color(0xFF00FFCC), fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            trailing: const Icon(Icons.send_rounded, color: Color(0xFFEC008C), size: 16),
+                            trailing: Icon(Icons.send_rounded,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 16),
                             onTap: () async {
-                              await socialRepository.sendGlobalMessage(
-                                senderId: widget.userId,
-                                text: '',
-                                sharedCatalogId: catEntry.id,
-                                sharedCollectionId: colEntry.id,
-                                sharedCollectionStatus: colEntry.status.name,
-                                sharedSource: 'collection',
-                              );
+                              if (widget.onShareCollection != null) {
+                                await widget.onShareCollection!(
+                                  catEntry.id,
+                                  colEntry.id,
+                                  colEntry.status.name,
+                                );
+                              } else {
+                                await socialRepository.sendGlobalMessage(
+                                  senderId: widget.userId,
+                                  text: '',
+                                  sharedCatalogId: catEntry.id,
+                                  sharedCollectionId: colEntry.id,
+                                  sharedCollectionStatus: colEntry.status.name,
+                                  sharedSource: 'collection',
+                                );
+                              }
                               if (mounted) Navigator.of(context).pop();
                             },
                           ),
@@ -647,7 +722,8 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
     }
   }
 
-  Widget _buildSharedItemCard(BuildContext context, ChatMessage msg, bool isMe) {
+  Widget _buildSharedItemCard(
+      BuildContext context, ChatMessage msg, bool isMe) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final entry = catalogEntriesNotifier.value.firstWhere(
@@ -671,10 +747,12 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
       margin: const EdgeInsets.only(top: 6, bottom: 2),
       constraints: const BoxConstraints(maxWidth: 240),
       decoration: BoxDecoration(
-        color: isDark ? Colors.black.withOpacity(0.4) : Colors.white.withOpacity(0.6),
+        color: isDark
+            ? Colors.black.withOpacity(0.4)
+            : Colors.white.withOpacity(0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFFEC008C).withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
           width: 1.0,
         ),
       ),
@@ -694,7 +772,7 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF130B1E) : Colors.grey[100],
+                      color: Theme.of(context).colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isDark ? Colors.white10 : Colors.black12,
@@ -708,9 +786,11 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                               entry.primaryImageUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image_rounded, size: 20, color: Colors.grey),
+                                  const Icon(Icons.broken_image_rounded,
+                                      size: 20, color: Colors.grey),
                             )
-                          : const Icon(Icons.image_not_supported_rounded, size: 20, color: Colors.grey),
+                          : const Icon(Icons.image_not_supported_rounded,
+                              size: 20, color: Colors.grey),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -728,7 +808,8 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                             color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
-                        if (entry.series != null && entry.series!.isNotEmpty) ...[
+                        if (entry.series != null &&
+                            entry.series!.isNotEmpty) ...[
                           const SizedBox(height: 1),
                           Text(
                             entry.series!,
@@ -743,21 +824,28 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                         if (statusLabel.isNotEmpty) ...[
                           const SizedBox(height: 3),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF00FFCC).withOpacity(0.15),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: const Color(0xFF00FFCC).withOpacity(0.4),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.4),
                                 width: 0.5,
                               ),
                             ),
                             child: Text(
                               statusLabel,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF00FFCC),
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ),
@@ -846,19 +934,22 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFFEC008C)),
+                  icon: Icon(Icons.add_circle_outline_rounded,
+                      color: Theme.of(context).colorScheme.primary),
                   tooltip: tr ? 'Paylaş' : 'Share',
                   onPressed: () {
                     showModalBottomSheet<void>(
                       context: context,
                       isScrollControlled: true,
                       showDragHandle: true,
-                      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24)),
+                        side: BorderSide(color: Theme.of(context).dividerColor),
                       ),
                       builder: (context) {
-                        return _ShareItemSelectionModal(userId: widget.userId);
+                        return ShareItemSelectionModal(userId: widget.userId);
                       },
                     );
                   },
@@ -874,7 +965,8 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     style: const TextStyle(fontFamily: 'Outfit', fontSize: 13),
                     decoration: InputDecoration(
                       labelText: t(context, 'globalMessage'),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                     ),
                   ),
                 ),
@@ -887,21 +979,21 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: Theme.of(context).colorScheme.primary,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFEC008C).withOpacity(0.4),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.4),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
                     child: const Center(
-                      child: Icon(Icons.send_rounded, size: 18, color: Colors.white),
+                      child: Icon(Icons.send_rounded,
+                          size: 18, color: Colors.white),
                     ),
                   ),
                 ),
@@ -913,14 +1005,16 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
     );
   }
 
-  Widget _buildGlobalMsgBubble(BuildContext context, ChatMessage msg, bool isMe) {
+  Widget _buildGlobalMsgBubble(
+      BuildContext context, ChatMessage msg, bool isMe) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isMe) ...[
@@ -933,7 +1027,9 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                   context.push('/users/${msg.senderId}');
                 }
               },
-              child: buildAvatarHelper(msg.senderAvatarId, msg.senderFrameColor, size: 32),
+              child: buildAvatarHelper(
+                  context, msg.senderAvatarId, msg.senderFrameColor,
+                  size: 32),
             ),
             const SizedBox(width: 8),
           ],
@@ -944,7 +1040,8 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                   maxWidth: MediaQuery.of(context).size.width * 0.65,
                   minWidth: 60,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(16),
@@ -952,19 +1049,9 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     bottomLeft: Radius.circular(isMe ? 16 : 4),
                     bottomRight: Radius.circular(isMe ? 4 : 16),
                   ),
-                  gradient: isMe
-                      ? const LinearGradient(
-                          colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : LinearGradient(
-                          colors: isDark
-                              ? [const Color(0xFF2C1F45), const Color(0xFF1C1330)]
-                              : [const Color(0xFFF3E8FF), const Color(0xFFE9D5FF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                  color: isMe
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.secondaryContainer,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -974,7 +1061,8 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                       GestureDetector(
                         onTap: () {
                           if (msg.senderUsername.isNotEmpty) {
-                            final uName = msg.senderUsername.replaceAll('@', '');
+                            final uName =
+                                msg.senderUsername.replaceAll('@', '');
                             context.push('/u/$uName');
                           } else {
                             context.push('/users/${msg.senderId}');
@@ -993,11 +1081,14 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                                   const SizedBox(height: 2),
                                 ],
                                 Text(
-                                  msg.senderUsername.isEmpty ? msg.senderId : '@${msg.senderUsername}',
+                                  msg.senderUsername.isEmpty
+                                      ? msg.senderId
+                                      : '@${msg.senderUsername}',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w900,
-                                    color: isDark ? const Color(0xFF00FFCC) : const Color(0xFF8338EC),
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                               ],
@@ -1012,7 +1103,9 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                         msg.text,
                         style: TextStyle(
                           fontFamily: 'Outfit',
-                          color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                          color: isMe
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurface,
                           fontSize: 13,
                         ),
                       ),
@@ -1030,7 +1123,15 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                           style: TextStyle(
                             fontFamily: 'Outfit',
                             fontSize: 8.5,
-                            color: isMe ? Colors.white70 : (isDark ? Colors.white38 : Colors.black38),
+                            color: isMe
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary
+                                    .withOpacity(0.7)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.5),
                           ),
                         ),
                       ],
@@ -1088,19 +1189,24 @@ class _PendingRequestsCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      buildNeonIcon(context, Icons.people_outline_rounded, size: 20),
+                      buildNeonIcon(context, Icons.people_outline_rounded,
+                          size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        tr ? 'Gelen Arkadaşlık İstekleri' : 'Incoming Friend Requests',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        tr
+                            ? 'Gelen Arkadaşlık İstekleri'
+                            : 'Incoming Friend Requests',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC008C),
+                          color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -1119,12 +1225,15 @@ class _PendingRequestsCard extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: requests.length,
-                    separatorBuilder: (context, index) => const Divider(height: 16),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 16),
                     itemBuilder: (context, index) {
                       final req = requests[index];
                       return Row(
                         children: [
-                          buildAvatarHelper(req.sender.avatarId, req.sender.avatarFrameColor, size: 36),
+                          buildAvatarHelper(context, req.sender.avatarId,
+                              req.sender.avatarFrameColor,
+                              size: 36),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -1141,7 +1250,9 @@ class _PendingRequestsCard extends StatelessWidget {
                                 Text(
                                   '@${req.sender.username}',
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                     fontSize: 12,
                                     fontFamily: 'Outfit',
                                   ),
@@ -1152,12 +1263,20 @@ class _PendingRequestsCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           // Accept Button
                           ElevatedButton(
-                            onPressed: () => _respond(context, req.sender.id, true),
+                            onPressed: () =>
+                                _respond(context, req.sender.id, true),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF00FFCC).withOpacity(0.15),
-                              foregroundColor: const Color(0xFF00FFCC),
-                              side: const BorderSide(color: Color(0xFF00FFCC), width: 1),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.15),
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              side: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 1),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -1174,11 +1293,16 @@ class _PendingRequestsCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           // Decline Button
                           OutlinedButton(
-                            onPressed: () => _respond(context, req.sender.id, false),
+                            onPressed: () =>
+                                _respond(context, req.sender.id, false),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFEC008C),
-                              side: const BorderSide(color: Color(0xFFEC008C), width: 1),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.error,
+                              side: BorderSide(
+                                  color: Theme.of(context).colorScheme.error,
+                                  width: 1),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -1205,7 +1329,8 @@ class _PendingRequestsCard extends StatelessWidget {
     );
   }
 
-  Future<void> _respond(BuildContext context, String fromUserId, bool accept) async {
+  Future<void> _respond(
+      BuildContext context, String fromUserId, bool accept) async {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final confirmed = await showGothicConfirmDialog(
       context,
@@ -1229,5 +1354,3 @@ class _PendingRequestsCard extends StatelessWidget {
     );
   }
 }
-
-

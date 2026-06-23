@@ -44,7 +44,8 @@ class _UserCollectionEntryDetailScreenState
     super.dispose();
   }
 
-  void _showEditCollectionSheet(BuildContext context, CatalogEntry item, CollectionEntry entry) {
+  void _showEditCollectionSheet(
+      BuildContext context, CatalogEntry item, CollectionEntry entry) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -180,7 +181,9 @@ class _UserCollectionEntryDetailScreenState
 
     return PageShell(
       title: tr ? 'Koleksiyon Parçası Detayı' : 'Collection Item Detail',
-      subtitle: tr ? 'Koleksiyoner rafındaki detaylı bilgiler' : 'Detailed information on collector shelf',
+      subtitle: tr
+          ? 'Koleksiyoner rafındaki detaylı bilgiler'
+          : 'Detailed information on collector shelf',
       showBackButton: true,
       onBack: () {
         if (context.canPop()) {
@@ -211,7 +214,8 @@ class _UserCollectionEntryDetailScreenState
                 padding: const EdgeInsets.all(24.0),
                 child: Text(
                   'Hata / Error: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.redAccent, fontWeight: FontWeight.bold),
                 ),
               ),
             );
@@ -242,7 +246,8 @@ class _UserCollectionEntryDetailScreenState
                             itemCount: item.imageUrls.length,
                             itemBuilder: (context, index) {
                               return GestureDetector(
-                                onTap: () => showPhotoGalleryDialog(context, item.imageUrls, index),
+                                onTap: () => showPhotoGalleryDialog(
+                                    context, item.imageUrls, index),
                                 child: DollImage(
                                   imageUrl: item.imageUrls[index],
                                   label: entryName(context, item),
@@ -253,7 +258,9 @@ class _UserCollectionEntryDetailScreenState
                         : GestureDetector(
                             onTap: () => showPhotoGalleryDialog(
                               context,
-                              item.imageUrls.isNotEmpty ? item.imageUrls : [item.primaryImageUrl],
+                              item.imageUrls.isNotEmpty
+                                  ? item.imageUrls
+                                  : [item.primaryImageUrl],
                               0,
                             ),
                             child: DollImage(
@@ -269,12 +276,16 @@ class _UserCollectionEntryDetailScreenState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         StreamBuilder<int>(
-                          stream: socialRepository.watchLikesCount('collectionEntry', entry.id),
+                          stream: socialRepository.watchLikesCount(
+                              'collectionEntry', entry.id),
                           builder: (context, likesSnap) {
                             final count = likesSnap.data ?? 0;
                             return StreamBuilder<bool>(
                               stream: currentUser != null
-                                  ? socialRepository.watchIsLiked(currentUser.uid, 'collectionEntry', entry.id)
+                                  ? socialRepository.watchIsLiked(
+                                      currentUser.uid,
+                                      'collectionEntry',
+                                      entry.id)
                                   : Stream.value(false),
                               builder: (context, isLikedSnap) {
                                 final isLiked = isLikedSnap.data ?? false;
@@ -283,20 +294,24 @@ class _UserCollectionEntryDetailScreenState
                                   children: [
                                     buildGothicNeonIconButton(
                                       context: context,
-                                      icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                      icon: isLiked
+                                          ? Icons.favorite_rounded
+                                          : Icons.favorite_border_rounded,
                                       size: 16,
                                       padding: const EdgeInsets.all(8),
                                       onPressed: currentUser == null
                                           ? null
                                           : () async {
                                               if (isLiked) {
-                                                await socialRepository.unlikeTarget(
+                                                await socialRepository
+                                                    .unlikeTarget(
                                                   userId: currentUser.uid,
                                                   targetType: 'collectionEntry',
                                                   targetId: entry.id,
                                                 );
                                               } else {
-                                                await socialRepository.likeTarget(
+                                                await socialRepository
+                                                    .likeTarget(
                                                   userId: currentUser.uid,
                                                   targetType: 'collectionEntry',
                                                   targetId: entry.id,
@@ -308,7 +323,11 @@ class _UserCollectionEntryDetailScreenState
                                     Text(
                                       '$count',
                                       style: TextStyle(
-                                        color: isDark ? Colors.white : const Color(0xFFEC008C),
+                                        color: isDark
+                                            ? Colors.white
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .primary,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -335,19 +354,28 @@ class _UserCollectionEntryDetailScreenState
                                   icon: Icons.mode_comment_outlined,
                                   size: 16,
                                   padding: const EdgeInsets.all(8),
-                                  activeColor: const Color(0xFF00FFCC),
-                                  onPressed: () => showCommentsSheet(context, entry.id, catalogEntryId: entry.itemId),
+                                  activeColor:
+                                      Theme.of(context).colorScheme.secondary,
+                                  onPressed: () => showCommentsSheet(
+                                      context, entry.id,
+                                      catalogEntryId: entry.itemId),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '$count',
                                   style: TextStyle(
-                                    color: isDark ? Colors.white : const Color(0xFFEC008C),
+                                    color: isDark
+                                        ? Colors.white
+                                        : Theme.of(context).colorScheme.primary,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    shadows: isDark ? [
-                                      const Shadow(color: Colors.black87, blurRadius: 4),
-                                    ] : null,
+                                    shadows: isDark
+                                        ? [
+                                            const Shadow(
+                                                color: Colors.black87,
+                                                blurRadius: 4),
+                                          ]
+                                        : null,
                                   ),
                                 ),
                               ],
@@ -373,9 +401,10 @@ class _UserCollectionEntryDetailScreenState
                       Expanded(
                         child: Text(
                           entryName(context, item),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                  ),
                         ),
                       ),
                       buildNeonIcon(context, _typeIcon(item.type), size: 24),
@@ -405,18 +434,26 @@ class _UserCollectionEntryDetailScreenState
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.08),
                       side: BorderSide(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.4),
                         width: 1.0,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 0),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                       onPressed: () {
-                        context.push('/?q=${Uri.encodeComponent(item.series!)}');
+                        context
+                            .push('/?q=${Uri.encodeComponent(item.series!)}');
                       },
                     ),
                   ],
@@ -443,76 +480,124 @@ class _UserCollectionEntryDetailScreenState
                     children: [
                       Text(
                         tr ? 'Koleksiyon Durumu' : 'Collection Status',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
                       ),
-                      if ((currentUser != null && entry.userId == currentUser.uid) || (entry.userId == 'local-user'))
+                      if ((currentUser != null &&
+                              entry.userId == currentUser.uid) ||
+                          (entry.userId == 'local-user'))
                         StreamBuilder<ProfileSetupStatus>(
-                          stream: profileSetupRepository.watch(currentUser?.uid ?? 'local-user'),
+                          stream: profileSetupRepository
+                              .watch(currentUser?.uid ?? 'local-user'),
                           builder: (context, userSnap) {
-                            final isFeatured = userSnap.data?.featuredEntryIds.contains(entry.id) ?? false;
+                            final isFeatured = userSnap.data?.featuredEntryIds
+                                    .contains(entry.id) ??
+                                false;
                             return Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 TextButton(
-                                  onPressed: currentUser == null
-                                      ? null
-                                      : () async {
-                                          final currentFeatured = List<String>.from(userSnap.data?.featuredEntryIds ?? []);
-                                          if (isFeatured) {
-                                            currentFeatured.remove(entry.id);
-                                          } else {
-                                            final isPro = userSnap.data?.isPro == true || userSnap.data?.role == 'admin';
-                                            final limit = isPro ? 999999 : 30;
-                                            if (currentFeatured.length >= limit) {
-                                              if (!isPro) {
-                                                showGothicConfirmDialog(
-                                                  context,
-                                                  title: tr ? 'Pro Vitrin Limiti' : 'Pro Showcase Limit',
-                                                  content: tr
-                                                      ? 'Ücretsiz kullanıcılar vitrine en fazla 30 parça ekleyebilir. Sınırı kaldırmak ve sınırsız vitrin alanı kazanmak için DollDex Pro\'ya yükseltmek ister misiniz?'
-                                                      : 'Free users can feature up to 30 items. Would you like to upgrade to DollDex Pro to unlock unlimited showcase space?',
-                                                  confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
-                                                  cancelText: tr ? 'Vazgeç' : 'Cancel',
-                                                ).then((confirmed) {
-                                                  if (confirmed && context.mounted) {
-                                                    showProSubscriptionModal(context);
-                                                  }
-                                                });
-                                              }
-                                              return;
+                                  onPressed: () async {
+                                    if (currentUser == null) {
+                                      final currentUri = GoRouterState.of(context).uri.toString();
+                                      GoRouter.of(context).push('/consent?from=${Uri.encodeComponent(currentUri)}');
+                                      return;
+                                    }
+                                    final currentFeatured =
+                                        List<String>.from(userSnap
+                                                .data?.featuredEntryIds ??
+                                            []);
+                                    if (isFeatured) {
+                                      currentFeatured.remove(entry.id);
+                                    } else {
+                                      final isPro =
+                                          userSnap.data?.isPro == true ||
+                                              userSnap.data?.role ==
+                                                  'admin';
+                                      final limit = isPro ? 15 : 3;
+                                      if (currentFeatured.length >= limit) {
+                                        if (!isPro) {
+                                          showGothicConfirmDialog(
+                                            context,
+                                            title: tr
+                                                ? 'Pro Vitrin Limiti'
+                                                : 'Pro Showcase Limit',
+                                            content: tr
+                                                ? 'Ücretsiz kullanıcılar vitrine en fazla 3 parça ekleyebilir. Sınırı 15\'e çıkarmak ve premium avantajlardan faydalanmak için DollDex Pro\'ya yükseltmek ister misiniz?'
+                                                : 'Free users can feature up to 3 items. Would you like to upgrade to DollDex Pro to feature up to 15 items?',
+                                            confirmText: tr
+                                                ? 'Pro\'ya Geç'
+                                                : 'Upgrade to Pro',
+                                            cancelText:
+                                                tr ? 'Vazgeç' : 'Cancel',
+                                          ).then((confirmed) {
+                                            if (confirmed &&
+                                                context.mounted) {
+                                              showProSubscriptionModal(
+                                                  context);
                                             }
-                                            currentFeatured.add(entry.id);
-                                          }
-                                          await profileSetupRepository.updateFeaturedEntries(
-                                            userId: currentUser.uid,
-                                            entryIds: currentFeatured,
+                                          });
+                                        } else {
+                                          showGothicConfirmDialog(
+                                            context,
+                                            title: tr
+                                                ? 'Vitrin Sınırı'
+                                                : 'Showcase Limit',
+                                            content: tr
+                                                ? 'Vitrin kapasiteniz dolu (En fazla 15 parça). Yeni bir parça eklemek için önce vitrindeki bebeklerinizden birini kaldırmalısınız.'
+                                                : 'Your showcase is full (Max 15 items). To add a new item, you must first remove an item from your showcase.',
+                                            confirmText: 'Tamam',
+                                            showCancel: false,
                                           );
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                isFeatured
-                                                    ? (tr ? 'Vitrinden kaldırıldı.' : 'Removed from showcase.')
-                                                    : (tr ? 'Vitrine eklendi!' : 'Added to showcase!'),
-                                              ),
-                                            ),
-                                          );
-                                        },
+                                        }
+                                        return;
+                                      }
+                                      currentFeatured.add(entry.id);
+                                    }
+                                    await profileSetupRepository
+                                        .updateFeaturedEntries(
+                                      userId: currentUser.uid,
+                                      entryIds: currentFeatured,
+                                    );
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          isFeatured
+                                              ? (tr
+                                                  ? 'Vitrinden kaldırıldı.'
+                                                  : 'Removed from showcase.')
+                                              : (tr
+                                                  ? 'Vitrine eklendi!'
+                                                  : 'Added to showcase!'),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                   style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    side: const BorderSide(color: Color(0xFFFFCC00), width: 1),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    side: const BorderSide(
+                                        color: Color(0xFFFFCC00), width: 1),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    backgroundColor: const Color(0xFFFFCC00).withOpacity(0.08),
+                                    backgroundColor: const Color(0xFFFFCC00)
+                                        .withOpacity(0.08),
                                   ),
                                   child: Text(
                                     isFeatured
-                                        ? (tr ? 'Vitrinden Kaldır' : 'Remove from Showcase')
-                                        : (tr ? 'Vitrine Ekle' : 'Add to Showcase'),
-                                    style: const TextStyle(
-                                      color: Color(0xFFFFCC00),
+                                        ? (tr
+                                            ? 'Vitrinden Kaldır'
+                                            : 'Remove from Showcase')
+                                        : (tr
+                                            ? 'Vitrine Ekle'
+                                            : 'Add to Showcase'),
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'Outfit',
@@ -525,9 +610,11 @@ class _UserCollectionEntryDetailScreenState
                                   icon: Icons.edit_rounded,
                                   size: 16,
                                   padding: const EdgeInsets.all(8),
-                                  activeColor: const Color(0xFF00FFCC),
+                                  activeColor:
+                                      Theme.of(context).colorScheme.secondary,
                                   onPressed: () {
-                                    _showEditCollectionSheet(context, item, entry);
+                                    _showEditCollectionSheet(
+                                        context, item, entry);
                                   },
                                 ),
                               ],
@@ -565,9 +652,13 @@ class _UserCollectionEntryDetailScreenState
                       const SizedBox(width: 6),
                       Expanded(
                         child: GothicStatButton(
-                          icon: entry.isPublic ? Icons.public_rounded : Icons.lock_outline_rounded,
+                          icon: entry.isPublic
+                              ? Icons.public_rounded
+                              : Icons.lock_outline_rounded,
                           label: tr ? 'Erişim' : 'Access',
-                          value: entry.isPublic ? (tr ? 'Açık' : 'Public') : (tr ? 'Gizli' : 'Private'),
+                          value: entry.isPublic
+                              ? (tr ? 'Açık' : 'Public')
+                              : (tr ? 'Gizli' : 'Private'),
                         ),
                       ),
                     ],
@@ -601,28 +692,35 @@ class _UserCollectionEntryDetailScreenState
               final owner = ownerSnap.data!;
               return Card(
                 child: ListTile(
-                  leading: buildAvatarHelper(owner.avatarId, owner.avatarFrameColor, size: 40),
+                  leading: buildAvatarHelper(
+                      context, owner.avatarId, owner.avatarFrameColor,
+                      size: 40),
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (owner.selectedBadge.isNotEmpty) ...[
-                        ProfileBadgeWidget(badgeId: owner.selectedBadge, size: 7),
+                        ProfileBadgeWidget(
+                            badgeId: owner.selectedBadge, size: 7),
                         const SizedBox(height: 2),
                       ],
-                      Text(owner.username.isEmpty ? 'Collector' : '@${owner.username}'),
+                      Text(owner.username.isEmpty
+                          ? 'Collector'
+                          : '@${owner.username}'),
                     ],
                   ),
-                  subtitle: Text(tr ? 'Koleksiyoncu profili için tıklayın' : 'Tap to view collector profile'),
+                  subtitle: Text(tr
+                      ? 'Koleksiyoncu profili için tıklayın'
+                      : 'Tap to view collector profile'),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                   onTap: () {
-                     final username = owner.username.trim();
-                     if (username.isNotEmpty) {
-                       context.go('/u/$username');
-                     } else {
-                       context.go('/users/${entry.userId}');
-                     }
-                   },
+                  onTap: () {
+                    final username = owner.username.trim();
+                    if (username.isNotEmpty) {
+                      context.go('/u/$username');
+                    } else {
+                      context.go('/users/${entry.userId}');
+                    }
+                  },
                 ),
               );
             },
@@ -734,20 +832,26 @@ class MyReportsCard extends StatelessWidget {
                           leading: buildNeonFlagIcon(context, size: 20),
                           title: Text(
                             '${reportReasonLabel(context, report.reason)}: $targetText',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                           subtitle: Text(
-                            report.details.isNotEmpty ? report.details : (tr ? 'Detay yok' : 'No details'),
+                            report.details.isNotEmpty
+                                ? report.details
+                                : (tr ? 'Detay yok' : 'No details'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 11),
                           ),
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: _statusColor(report.status).withOpacity(0.15),
+                              color:
+                                  _statusColor(report.status).withOpacity(0.15),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: _statusColor(report.status), width: 1),
+                              border: Border.all(
+                                  color: _statusColor(report.status), width: 1),
                             ),
                             child: Text(
                               reportStatusLabel(context, report.status),

@@ -78,11 +78,13 @@ class FirestoreCatalogRepository implements CatalogRepository {
 
         return entry.name.toLowerCase().contains(normalizedQuery) ||
             entry.subtitle.toLowerCase().contains(normalizedQuery) ||
-            entry.tags.any((tag) => tag.toLowerCase().contains(normalizedQuery));
+            entry.tags
+                .any((tag) => tag.toLowerCase().contains(normalizedQuery));
       }).toList();
 
       // Sort alphabetically by name in memory
-      filteredList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      filteredList
+          .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       return filteredList;
     } catch (error) {
       print('Firestore catalog search error: $error');

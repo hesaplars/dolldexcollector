@@ -113,11 +113,11 @@ class _SplashScreenState extends State<SplashScreen>
                         const SizedBox(height: 18),
                         Text(
                           t(context, 'appName'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Outfit',
                             fontSize: 36,
                             fontWeight: FontWeight.w900,
-                            color: DollDexTheme.ink,
+                            color: isDark ? const Color(0xFFE7D2B8) : DollDexTheme.ink,
                             letterSpacing: 0,
                           ),
                         ),
@@ -129,7 +129,7 @@ class _SplashScreenState extends State<SplashScreen>
                           style: TextStyle(
                             fontSize: 14,
                             color: isDark
-                                ? const Color(0xFFE7D2B8)
+                                ? const Color(0xFFE7D2B8).withOpacity(0.8)
                                 : DollDexTheme.cocoa,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0,

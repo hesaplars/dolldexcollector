@@ -50,7 +50,9 @@ class AppUser {
     final roleVal = map['role'] as String? ?? 'user';
     final rawAvatarId = map['avatarId'] as String? ?? '';
     final photoUrlVal = map['photoUrl'] as String? ?? '';
-    final finalAvatarId = (rawAvatarId.isEmpty && photoUrlVal.isNotEmpty) ? photoUrlVal : rawAvatarId;
+    final finalAvatarId = (rawAvatarId.isEmpty && photoUrlVal.isNotEmpty)
+        ? photoUrlVal
+        : rawAvatarId;
 
     return AppUser(
       id: id,
@@ -63,7 +65,8 @@ class AppUser {
       username: map['username'] as String? ?? '',
       avatarId: finalAvatarId,
       avatarFrameColor: map['avatarFrameColor'] as String? ?? '',
-      featuredEntryIds: List<String>.from(map['featuredEntryIds'] as List? ?? []),
+      featuredEntryIds:
+          List<String>.from(map['featuredEntryIds'] as List? ?? []),
       selectedBadge: map['selectedBadge'] as String? ?? '',
     );
   }

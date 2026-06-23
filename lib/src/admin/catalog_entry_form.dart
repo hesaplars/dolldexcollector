@@ -85,7 +85,8 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
     super.dispose();
   }
 
-  InputDecoration _buildInputDecoration(BuildContext context, String label, IconData icon) {
+  InputDecoration _buildInputDecoration(
+      BuildContext context, String label, IconData icon) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -102,14 +103,14 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: isDark ? const Color(0xFF2C1F45) : const Color(0xFFE9D8FA),
+          color: Theme.of(context).dividerColor,
           width: 1.5,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: Color(0xFFEC008C),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
           width: 2.0,
         ),
       ),
@@ -139,14 +140,17 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEC008C), Color(0xFF7B2CBF)],
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEC008C).withOpacity(0.4),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -189,7 +193,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             style: const TextStyle(fontFamily: 'Outfit'),
             decoration: _buildInputDecoration(
               context,
-              AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Ad' : 'Name',
+              AppLanguageScope.languageOf(context) == AppLanguage.tr
+                  ? 'Ad'
+                  : 'Name',
               Icons.badge_outlined,
             ),
             textInputAction: TextInputAction.next,
@@ -207,12 +213,16 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             initialValue: _type,
             style: TextStyle(
               fontFamily: 'Outfit',
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.black87,
               fontSize: 14,
             ),
             decoration: _buildInputDecoration(
               context,
-              AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Tür' : 'Type',
+              AppLanguageScope.languageOf(context) == AppLanguage.tr
+                  ? 'Tür'
+                  : 'Type',
               Icons.category_outlined,
             ),
             items: CatalogItemType.values
@@ -237,7 +247,7 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             key: ValueKey(widget.editingEntry?.id),
             builder: (context) {
               final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-              
+
               // Suggestion pool:
               final existingSeries = catalogEntriesNotifier.value
                   .map((e) => e.series)
@@ -264,13 +274,15 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                 'ghouls alive!': 'Acayipler Canlanıyor! (Ghouls Alive!)',
                 'picture day': 'Albüm Günü (Picture Day)',
                 'dance class': 'Dans Sınıfı (Dance Class)',
-                'scaris: city of frights': 'Korku Şehri Scaris (Scaris: City of Frights)',
+                'scaris: city of frights':
+                    'Korku Şehri Scaris (Scaris: City of Frights)',
                 'music festival': 'Müzik Festivali (Music Festival)',
                 '13 wishes': '13 Dilek (13 Wishes)',
                 'ghouls night out': 'Acayiplerin Gecesi (Ghouls\' Night Out)',
                 'power ghouls': 'Güçlü Acayipler (Power Ghouls)',
                 'sweet screams': 'Tatlı Çığlıklar (Sweet Screams)',
-                'frights, camera, action!': 'Dehşet, Kamera, Motor! (Frights, Camera, Action!)',
+                'frights, camera, action!':
+                    'Dehşet, Kamera, Motor! (Frights, Camera, Action!)',
                 'swim class': 'Yüzme Sınıfı (Swim Class)',
                 'coffin bean': 'Tabut Cafe (Coffin Bean)',
                 'art class': 'Resim Sınıfı (Art Class)',
@@ -282,29 +294,36 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                 'freaky field trip': 'Acayip Okul Gezisi (Freaky Field Trip)',
                 'ghoul sports': 'Acayip Sporlar (Ghoul Sports)',
                 'inner monster': 'İçimdeki Canavar (Inner Monster)',
-                'student disembody council': 'Okul Öğrenci Temsilcileri (Student Disembody Council)',
+                'student disembody council':
+                    'Okul Öğrenci Temsilcileri (Student Disembody Council)',
                 'haunted': 'Hayaletli (Haunted)',
                 'gloom and bloom': 'Karanlık Çiçek Açımı (Gloom and Bloom)',
-                'monster exchange': 'Canavar Değişim Programı (Monster Exchange)',
+                'monster exchange':
+                    'Canavar Değişim Programı (Monster Exchange)',
                 'geek shriek': 'İnek Acayipler (Geek Shriek)',
                 'freak du chic': 'Şık Ucubeler (Freak du Chic)',
                 'brand boo students': 'Yepyeni Acayipler (Brand Boo Students)',
-                'welcome to monster high': 'Monster High\'a Hoş Geldiniz (Welcome to Monster High)',
-                'monsters in training': 'Eğitimdeki Canavarlar (Monsters in Training)',
+                'welcome to monster high':
+                    'Monster High\'a Hoş Geldiniz (Welcome to Monster High)',
+                'monsters in training':
+                    'Eğitimdeki Canavarlar (Monsters in Training)',
                 'shriekwrecked': 'Korsan Macerası (Shriekwrecked)',
                 'electrified': 'Neon Şıklık (Electrified)',
 
                 // Generation 2 (G2)
                 'how do you boo?': 'Nasıl Ürkütürsün? (How Do You Boo?)',
-                'ghouls beast pet': 'Acayip Evcil Hayvanları (Ghoul\'s Beast Pet)',
+                'ghouls beast pet':
+                    'Acayip Evcil Hayvanları (Ghoul\'s Beast Pet)',
                 'garden ghouls': 'Bahçe Acayipleri (Garden Ghouls)',
                 'monster family': 'Canavar Ailesi (Monster Family)',
                 'party ghouls': 'Parti Acayipleri (Party Ghouls)',
                 'ballerina ghouls': 'Balerin Acayipleri (Ballerina Ghouls)',
                 'swimsuit': 'Mayo Serisi (Swimsuit)',
-                'transforming ghouls': 'Dönüşen Acayipler (Transforming Ghouls)',
+                'transforming ghouls':
+                    'Dönüşen Acayipler (Transforming Ghouls)',
                 'lots of looks': 'Farklı Görünümler (Lots of Looks)',
-                'one team, one scream': 'Tek Takım, Tek Çığlık (One Team, One Scream)',
+                'one team, one scream':
+                    'Tek Takım, Tek Çığlık (One Team, One Scream)',
                 'teen hangout': 'Gençlerin Mekanı (Teen Hangout)',
                 'comic book': 'Çizgi Roman (Comic Book)',
 
@@ -346,8 +365,11 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                 onSelected: (String selection) {
                   _seriesController.text = selection;
                 },
-                fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
-                  if (textEditingController.text != _seriesController.text && _seriesController.text.isNotEmpty && textEditingController.text.isEmpty) {
+                fieldViewBuilder: (context, textEditingController, focusNode,
+                    onFieldSubmitted) {
+                  if (textEditingController.text != _seriesController.text &&
+                      _seriesController.text.isNotEmpty &&
+                      textEditingController.text.isEmpty) {
                     textEditingController.text = _seriesController.text;
                   }
                   textEditingController.addListener(() {
@@ -359,7 +381,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                     onFieldSubmitted: (value) => onFieldSubmitted(),
                     decoration: _buildInputDecoration(
                       context,
-                      tr ? 'Konsept / Seri (Örn: Pijama Partisi)' : 'Concept / Series (e.g. Dead Tired)',
+                      tr
+                          ? 'Konsept / Seri (Örn: Pijama Partisi)'
+                          : 'Concept / Series (e.g. Dead Tired)',
                       Icons.category_rounded,
                     ),
                     style: const TextStyle(fontFamily: 'Outfit'),
@@ -373,7 +397,8 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                     child: Material(
                       elevation: 4.0,
                       borderRadius: BorderRadius.circular(12),
-                      color: theme.cardTheme.color ?? (isDark ? const Color(0xFF150A21) : Colors.white),
+                      color: theme.cardTheme.color ??
+                          (isDark ? const Color(0xFF150A21) : Colors.white),
                       child: Container(
                         width: 320,
                         constraints: const BoxConstraints(maxHeight: 200),
@@ -386,12 +411,14 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                             return InkWell(
                               onTap: () => onSelected(option),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0, vertical: 12.0),
                                 child: Text(
                                   option,
                                   style: TextStyle(
                                     fontFamily: 'Outfit',
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
                                   ),
                                 ),
                               ),
@@ -410,20 +437,29 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             builder: (context) {
               final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
               final parentCandidates = catalogEntriesNotifier.value
-                  .where((e) => e.type == CatalogItemType.doll || e.type == CatalogItemType.set)
+                  .where((e) =>
+                      e.type == CatalogItemType.doll ||
+                      e.type == CatalogItemType.set)
                   .toList();
 
               return DropdownButtonFormField<String?>(
                 value: _parentId,
-                dropdownColor: Theme.of(context).cardTheme.color ?? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF150A21) : Colors.white),
+                dropdownColor: Theme.of(context).cardTheme.color ??
+                    (Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF150A21)
+                        : Colors.white),
                 style: TextStyle(
                   fontFamily: 'Outfit',
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
                   fontSize: 14,
                 ),
                 decoration: _buildInputDecoration(
                   context,
-                  tr ? 'Ana Bebek / Set (İsteğe Bağlı)' : 'Parent Doll / Set (Optional)',
+                  tr
+                      ? 'Ana Bebek / Set (İsteğe Bağlı)'
+                      : 'Parent Doll / Set (Optional)',
                   Icons.link_rounded,
                 ),
                 items: [
@@ -456,7 +492,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             style: const TextStyle(fontFamily: 'Outfit'),
             decoration: _buildInputDecoration(
               context,
-              AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Kısa açıklama' : 'Short description',
+              AppLanguageScope.languageOf(context) == AppLanguage.tr
+                  ? 'Kısa açıklama'
+                  : 'Short description',
               Icons.short_text_rounded,
             ),
             textInputAction: TextInputAction.next,
@@ -475,7 +513,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             style: const TextStyle(fontFamily: 'Outfit'),
             decoration: _buildInputDecoration(
               context,
-              AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Görsel URL' : 'Image URL',
+              AppLanguageScope.languageOf(context) == AppLanguage.tr
+                  ? 'Görsel URL'
+                  : 'Image URL',
               Icons.link_rounded,
             ).copyWith(
               helperText: AppLanguageScope.languageOf(context) == AppLanguage.tr
@@ -487,7 +527,11 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             textInputAction: TextInputAction.next,
             validator: ImageUrlValidator.validate,
             onChanged: (value) {
-              final urls = value.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList();
+              final urls = value
+                  .split(',')
+                  .map((u) => u.trim())
+                  .where((u) => u.isNotEmpty)
+                  .toList();
               setState(() {
                 if (_previewPageIndex >= urls.length) {
                   _previewPageIndex = 0;
@@ -498,7 +542,11 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
           Builder(
             builder: (context) {
               final val = _imageUrlController.text.trim();
-              final urls = val.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList();
+              final urls = val
+                  .split(',')
+                  .map((u) => u.trim())
+                  .where((u) => u.isNotEmpty)
+                  .toList();
               return _buildImagePreview(context, urls);
             },
           ),
@@ -511,7 +559,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                   style: const TextStyle(fontFamily: 'Outfit'),
                   decoration: _buildInputDecoration(
                     context,
-                    AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Yıl' : 'Year',
+                    AppLanguageScope.languageOf(context) == AppLanguage.tr
+                        ? 'Yıl'
+                        : 'Year',
                     Icons.calendar_today_outlined,
                   ),
                   keyboardType: TextInputType.number,
@@ -524,7 +574,8 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
 
                     final year = int.tryParse(trimmed);
                     if (year == null || year < 1900 || year > 2100) {
-                      return AppLanguageScope.languageOf(context) == AppLanguage.tr
+                      return AppLanguageScope.languageOf(context) ==
+                              AppLanguage.tr
                           ? 'Geçersiz yıl'
                           : 'Invalid year';
                     }
@@ -539,7 +590,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                   style: const TextStyle(fontFamily: 'Outfit'),
                   decoration: _buildInputDecoration(
                     context,
-                    AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Etiketler' : 'Tags',
+                    AppLanguageScope.languageOf(context) == AppLanguage.tr
+                        ? 'Etiketler'
+                        : 'Tags',
                     Icons.sell_outlined,
                   ),
                   textInputAction: TextInputAction.next,
@@ -553,7 +606,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
             style: const TextStyle(fontFamily: 'Outfit'),
             decoration: _buildInputDecoration(
               context,
-              AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Wiki notları' : 'Wiki notes',
+              AppLanguageScope.languageOf(context) == AppLanguage.tr
+                  ? 'Wiki notları'
+                  : 'Wiki notes',
               Icons.notes_rounded,
             ),
             minLines: 3,
@@ -571,13 +626,14 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
     );
   }
 
-  Widget _buildNeonIcon(BuildContext context, IconData icon, {double size = 24}) {
+  Widget _buildNeonIcon(BuildContext context, IconData icon,
+      {double size = 24}) {
     return ShaderMask(
       shaderCallback: (bounds) {
-        return const LinearGradient(
+        return LinearGradient(
           colors: [
-            Color(0xFFEC008C),
-            Color(0xFF00FFCC),
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -613,7 +669,9 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
         tags: tags,
         description: _descriptionController.text.trim(),
         parentId: _parentId,
-        series: _seriesController.text.trim().isEmpty ? null : _seriesController.text.trim(),
+        series: _seriesController.text.trim().isEmpty
+            ? null
+            : _seriesController.text.trim(),
       ),
     );
     _nameController.clear();
@@ -677,12 +735,12 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFFEC008C).withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFEC008C).withOpacity(0.15),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -733,7 +791,7 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _previewPageIndex == index
-                                ? const Color(0xFF00FFCC)
+                                ? Theme.of(context).colorScheme.secondary
                                 : Colors.white.withOpacity(0.5),
                           ),
                         );
@@ -744,7 +802,8 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                     top: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(8),

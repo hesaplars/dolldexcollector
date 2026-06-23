@@ -134,11 +134,11 @@ class _AppScaffoldState extends State<AppScaffold> {
                           tr
                               ? 'DollDex Rehberi & Yasal Bilgiler'
                               : 'DollDex Guide & Legal Info',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Outfit',
-                            color: DollDexTheme.ink,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -148,10 +148,10 @@ class _AppScaffoldState extends State<AppScaffold> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: DollDexTheme.mist,
+                      color: Theme.of(context).colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: DollDexTheme.line,
+                        color: Theme.of(context).dividerColor,
                         width: 1,
                       ),
                     ),
@@ -163,7 +163,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : DollDexTheme.ink,
+                            color: Theme.of(context).colorScheme.onSurface,
                             letterSpacing: 0,
                           ),
                         ),
@@ -171,20 +171,25 @@ class _AppScaffoldState extends State<AppScaffold> {
                         Text(
                           'TR: DollDex, ticari amaç gütmeyen bir hayran sitesidir. Monster High ve ilgili tüm ticari markalar Mattel, Inc. şirketine aittir. Bu site hiçbir şekilde Mattel, Inc. ile ilişkili değildir veya sponsorluğunda değildir.',
                           style: TextStyle(
-                              fontSize: 11,
-                              height: 1.4,
-                              color:
-                                  isDark ? Colors.white70 : DollDexTheme.cocoa),
+                            fontSize: 11,
+                            height: 1.4,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.8),
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           'EN: DollDex is a non-commercial, fan-made site. Monster High and all related trademarks are owned by Mattel, Inc. This site is in no way affiliated with or sponsored by Mattel, Inc.',
                           style: TextStyle(
-                              fontSize: 11,
-                              height: 1.4,
-                              color: isDark
-                                  ? Colors.white60
-                                  : DollDexTheme.cocoa.withOpacity(0.8)),
+                            fontSize: 11,
+                            height: 1.4,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                          ),
                         ),
                       ],
                     ),
@@ -285,7 +290,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : DollDexTheme.ink,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -294,8 +299,10 @@ class _AppScaffoldState extends State<AppScaffold> {
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.45,
-                    color:
-                        isDark ? const Color(0xFFE7D2B8) : DollDexTheme.cocoa,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -356,7 +363,9 @@ class _AppScaffoldState extends State<AppScaffold> {
       );
     }
     final location = GoRouterState.of(context).uri.path;
-    final showTopBackButton = (GoRouter.of(context).canPop() ||
+    const mainTabs = {'/', '/collection', '/messages', '/user_search', '/social', '/admin'};
+    final showTopBackButton = !mainTabs.contains(location) &&
+        (GoRouter.of(context).canPop() ||
             Navigator.of(context).canPop() ||
             location == '/profile' ||
             location.startsWith('/u/') ||
@@ -495,7 +504,9 @@ class _AppScaffoldState extends State<AppScaffold> {
                           style: GoogleFonts.outfit(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
-                            color: DollDexTheme.ink,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFFE7D2B8)
+                                : DollDexTheme.ink,
                             letterSpacing: 0,
                           ),
                         ),
@@ -506,7 +517,9 @@ class _AppScaffoldState extends State<AppScaffold> {
                           style: TextStyle(
                             fontFamily: 'Outfit',
                             fontSize: 10,
-                            color: DollDexTheme.cocoa.withOpacity(0.72),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFFE7D2B8).withOpacity(0.72)
+                                : DollDexTheme.cocoa.withOpacity(0.72),
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0,
                           ),
@@ -637,6 +650,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                             push: true),
                         borderRadius: BorderRadius.circular(20),
                         child: buildAvatarHelper(
+                          context,
                           authService.currentUser != null ? _avatarId : '',
                           authService.currentUser != null
                               ? _avatarFrameColor
@@ -1008,15 +1022,16 @@ class _AppScaffoldState extends State<AppScaffold> {
         child: Material(
           elevation: 12,
           borderRadius: BorderRadius.circular(16),
-          color: const Color(0xFF0E0818),
+          color: Theme.of(context).colorScheme.surface,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEC008C), width: 1.5),
+              border: Border.all(
+                  color: Theme.of(context).colorScheme.primary, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEC008C).withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   blurRadius: 10,
                   spreadRadius: 1,
                 ),
@@ -1035,8 +1050,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                     children: [
                       Text(
                         notification.title,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w900,
                           fontSize: 13,
                         ),
@@ -1044,8 +1059,11 @@ class _AppScaffoldState extends State<AppScaffold> {
                       const SizedBox(height: 2),
                       Text(
                         notification.body,
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -1053,8 +1071,12 @@ class _AppScaffoldState extends State<AppScaffold> {
                   ),
                 ),
                 IconButton(
-                  icon:
-                      const Icon(Icons.close, size: 16, color: Colors.white54),
+                  icon: Icon(Icons.close,
+                      size: 16,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6)),
                   onPressed: () {
                     setState(() {
                       _showHudBanner = false;
@@ -1205,10 +1227,10 @@ class _AppScaffoldState extends State<AppScaffold> {
       dealsList.add(Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFEC008C).withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
             width: 1,
           ),
         ),
@@ -1226,8 +1248,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                 Expanded(
                   child: Text(
                     tr ? 'Jeton Paketlerinde Bonus!' : 'Bonus on Coin Packs!',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Outfit',
@@ -1238,15 +1260,16 @@ class _AppScaffoldState extends State<AppScaffold> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEC008C).withOpacity(0.2),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
-                    border:
-                        Border.all(color: const Color(0xFFEC008C), width: 1),
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.primary, width: 1),
                   ),
                   child: Text(
                     '${coinMultiplier.toStringAsFixed(1)}x',
-                    style: const TextStyle(
-                      color: Color(0xFFEC008C),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Outfit',
@@ -1292,26 +1315,17 @@ class _AppScaffoldState extends State<AppScaffold> {
               maxHeight: MediaQuery.of(context).size.height * 0.85,
             ),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0F071A), Color(0xFF1B0B2E)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFFEC008C),
+                color: Theme.of(context).colorScheme.primary,
                 width: 2.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEC008C).withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   blurRadius: 15,
                   spreadRadius: 2,
-                ),
-                BoxShadow(
-                  color: const Color(0xFF00FFCC).withOpacity(0.15),
-                  blurRadius: 25,
-                  spreadRadius: -5,
                 ),
               ],
             ),
@@ -1327,16 +1341,25 @@ class _AppScaffoldState extends State<AppScaffold> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFFEC008C).withOpacity(0.1),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.1),
                             border: Border.all(
-                              color: const Color(0xFFEC008C).withOpacity(0.3),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.3),
                               width: 1,
                             ),
                           ),
                           child: SafeShaderMask(
                             shaderCallback: (bounds) {
-                              return const LinearGradient(
-                                colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+                              return LinearGradient(
+                                colors: [
+                                  Theme.of(context).colorScheme.primary,
+                                  Theme.of(context).colorScheme.secondary
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ).createShader(bounds);
@@ -1352,7 +1375,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                         Text(
                           campaignTitle,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.cinzel(
+                          style: GoogleFonts.outfit(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFFFFD700),
@@ -1369,8 +1392,11 @@ class _AppScaffoldState extends State<AppScaffold> {
                         Text(
                           campaignText,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.8),
                             fontSize: 14,
                             height: 1.5,
                             fontFamily: 'Outfit',
@@ -1385,8 +1411,8 @@ class _AppScaffoldState extends State<AppScaffold> {
                         if (dealsList.isNotEmpty) ...[
                           Text(
                             tr ? 'AKTİF KAMPANYALAR' : 'ACTIVE DEALS',
-                            style: GoogleFonts.cinzel(
-                              color: const Color(0xFFEC008C),
+                            style: GoogleFonts.outfit(
+                              color: Theme.of(context).colorScheme.primary,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.5,
@@ -1404,11 +1430,14 @@ class _AppScaffoldState extends State<AppScaffold> {
                               showProSubscriptionModal(context);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFEC008C),
-                              foregroundColor: Colors.white,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               elevation: 5,
-                              shadowColor: const Color(0xFFEC008C),
+                              shadowColor:
+                                  Theme.of(context).colorScheme.primary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -1643,30 +1672,36 @@ class GothicAccessDeniedScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFEC008C).withOpacity(0.3),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .error
+                              .withOpacity(0.3),
                           blurRadius: 30,
                           spreadRadius: 10,
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.gavel_rounded,
                       size: 80,
-                      color: Color(0xFFEC008C),
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                   const SizedBox(height: 32),
                   Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.cinzel(
+                    style: GoogleFonts.outfit(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
-                      color: const Color(0xFF00FFCC),
+                      color: Theme.of(context).colorScheme.error,
                       letterSpacing: 2,
                       shadows: [
                         Shadow(
-                          color: const Color(0xFF00FFCC).withOpacity(0.8),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .error
+                              .withOpacity(0.8),
                           blurRadius: 15,
                         ),
                       ],
@@ -1679,7 +1714,10 @@ class GothicAccessDeniedScreen extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Outfit',
                       fontSize: 16,
-                      color: Colors.grey.shade300,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.8),
                       height: 1.5,
                     ),
                   ),
@@ -1689,15 +1727,16 @@ class GothicAccessDeniedScreen extends StatelessWidget {
                       await authService.signOut();
                     },
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFEC008C),
-                      side:
-                          const BorderSide(color: Color(0xFFEC008C), width: 2),
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      side: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 40, vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      shadowColor: const Color(0xFFEC008C),
+                      shadowColor: Theme.of(context).colorScheme.primary,
                       elevation: 5,
                     ),
                     child: Text(
@@ -1770,13 +1809,13 @@ class _DailyRewardGiftWidgetState extends State<DailyRewardGiftWidget> {
             tr
                 ? 'Bugünkü günlük ödülünüzü zaten aldınız.'
                 : 'You have already claimed today\'s daily reward.',
-            style: const TextStyle(
-              color: Color(0xFFFFD700),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
               fontFamily: 'Outfit',
             ),
           ),
-          backgroundColor: const Color(0xFF160E24),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -1799,13 +1838,13 @@ class _DailyRewardGiftWidgetState extends State<DailyRewardGiftWidget> {
               tr
                   ? 'Tebrikler! Günlük 5 Jeton kazandınız.'
                   : 'Congratulations! You claimed 5 daily Coins.',
-              style: const TextStyle(
-                color: Color(0xFF00FFCC),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Outfit',
               ),
             ),
-            backgroundColor: const Color(0xFF160E24),
+            backgroundColor: Theme.of(context).colorScheme.surface,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -1821,13 +1860,13 @@ class _DailyRewardGiftWidgetState extends State<DailyRewardGiftWidget> {
               tr
                   ? 'Ödül alınırken bir hata oluştu: $e'
                   : 'Error claiming reward: $e',
-              style: const TextStyle(
-                color: Colors.redAccent,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Outfit',
               ),
             ),
-            backgroundColor: const Color(0xFF160E24),
+            backgroundColor: Theme.of(context).colorScheme.surface,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),

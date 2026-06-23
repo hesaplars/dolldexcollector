@@ -86,7 +86,6 @@ class AuthService {
   }
 }
 
-
 Future<void> _syncUserProfile(User? user) async {
   if (user == null || !_isFirebaseInitialized()) {
     return;
@@ -99,12 +98,16 @@ Future<void> _syncUserProfile(User? user) async {
 
   final existingAvatarId = data?['avatarId'] as String?;
   final googlePhotoUrl = user.photoURL;
-  final bool hasExistingAvatar = existingAvatarId != null && existingAvatarId.isNotEmpty;
+  final bool hasExistingAvatar =
+      existingAvatarId != null && existingAvatarId.isNotEmpty;
 
-  final String? newAvatarId = (!hasExistingAvatar && googlePhotoUrl != null && googlePhotoUrl.isNotEmpty)
+  final String? newAvatarId = (!hasExistingAvatar &&
+          googlePhotoUrl != null &&
+          googlePhotoUrl.isNotEmpty)
       ? googlePhotoUrl
       : (existingAvatarId != null &&
-              (existingAvatarId.startsWith('http://') || existingAvatarId.startsWith('https://')) &&
+              (existingAvatarId.startsWith('http://') ||
+                  existingAvatarId.startsWith('https://')) &&
               googlePhotoUrl != null &&
               googlePhotoUrl.isNotEmpty)
           ? googlePhotoUrl

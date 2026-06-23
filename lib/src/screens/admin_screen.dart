@@ -37,7 +37,10 @@ class _AdminScreenState extends State<AdminScreen> {
     if (profile == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr ? 'Kullanıcı profili bulunamadı.' : 'User profile not found.')),
+          SnackBar(
+              content: Text(tr
+                  ? 'Kullanıcı profili bulunamadı.'
+                  : 'User profile not found.')),
         );
       }
       return;
@@ -55,15 +58,20 @@ class _AdminScreenState extends State<AdminScreen> {
           builder: (context, setDialogState) {
             return AlertDialog(
               title: Text(
-                tr ? '@${profile.username} Jeton Yönetimi' : 'Manage Coins for @${profile.username}',
+                tr
+                    ? '@${profile.username} Jeton Yönetimi'
+                    : 'Manage Coins for @${profile.username}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    tr ? 'Mevcut Bakiye: $currentCoins jeton' : 'Current Balance: $currentCoins coins',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    tr
+                        ? 'Mevcut Bakiye: $currentCoins jeton'
+                        : 'Current Balance: $currentCoins coins',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
                   Wrap(
@@ -73,7 +81,8 @@ class _AdminScreenState extends State<AdminScreen> {
                       return ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          backgroundColor: const Color(0xFFEC008C),
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
                         ),
                         onPressed: () {
                           setDialogState(() {
@@ -110,12 +119,16 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
                 FilledButton(
                   onPressed: () async {
-                    final newCoins = int.tryParse(coinController.text) ?? currentCoins;
-                    await profileSetupRepository.updateCoins(profile.userId, newCoins);
+                    final newCoins =
+                        int.tryParse(coinController.text) ?? currentCoins;
+                    await profileSetupRepository.updateCoins(
+                        profile.userId, newCoins);
                     if (context.mounted) {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(tr ? 'Jeton güncellendi.' : 'Coins updated.')),
+                        SnackBar(
+                            content: Text(
+                                tr ? 'Jeton güncellendi.' : 'Coins updated.')),
                       );
                     }
                   },
@@ -135,7 +148,10 @@ class _AdminScreenState extends State<AdminScreen> {
     if (profile == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr ? 'Kullanıcı profili bulunamadı.' : 'User profile not found.')),
+          SnackBar(
+              content: Text(tr
+                  ? 'Kullanıcı profili bulunamadı.'
+                  : 'User profile not found.')),
         );
       }
       return;
@@ -150,18 +166,23 @@ class _AdminScreenState extends State<AdminScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            final banText = profile.isBanned 
+            final banText = profile.isBanned
                 ? (tr ? 'Kalıcı Yasaklı' : 'Permanently Banned')
-                : (profile.banUntil != null && profile.banUntil!.isAfter(DateTime.now())
-                    ? (tr ? 'Geçici Askıda (${profile.banUntil!.toLocal()})' : 'Suspended until (${profile.banUntil!.toLocal()})')
+                : (profile.banUntil != null &&
+                        profile.banUntil!.isAfter(DateTime.now())
+                    ? (tr
+                        ? 'Geçici Askıda (${profile.banUntil!.toLocal()})'
+                        : 'Suspended until (${profile.banUntil!.toLocal()})')
                     : (tr ? 'Aktif' : 'Active'));
 
             return Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                border: const Border(
-                  top: BorderSide(color: Color(0xFFEC008C), width: 2),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                border: Border(
+                  top: BorderSide(
+                      color: Theme.of(context).colorScheme.primary, width: 2),
                 ),
               ),
               padding: EdgeInsets.only(
@@ -187,11 +208,13 @@ class _AdminScreenState extends State<AdminScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      tr ? '@${profile.username} Moderasyonu' : 'Moderation for @${profile.username}',
-                      style: GoogleFonts.cinzel(
+                      tr
+                          ? '@${profile.username} Moderasyonu'
+                          : 'Moderation for @${profile.username}',
+                      style: GoogleFonts.outfit(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFFEC008C),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -199,7 +222,8 @@ class _AdminScreenState extends State<AdminScreen> {
                     Text(
                       '${tr ? "Durum:" : "Status:"} $banText\n${tr ? "Rol:" : "Role:"} ${profile.role.toUpperCase()} (Pro: ${profile.isPro})',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                     const Divider(height: 24),
                     Row(
@@ -211,21 +235,27 @@ class _AdminScreenState extends State<AdminScreen> {
                               side: const BorderSide(color: Colors.redAccent),
                             ),
                             icon: const Icon(Icons.block_flipped),
-                            label: Text(tr ? 'Süresiz Engelle' : 'Permanent Ban'),
+                            label:
+                                Text(tr ? 'Süresiz Engelle' : 'Permanent Ban'),
                             onPressed: () async {
                               final confirmed = await showGothicConfirmDialog(
                                 context,
                                 title: tr ? 'Süresiz Engelle' : 'Permanent Ban',
-                                content: tr 
+                                content: tr
                                     ? '@${profile.username} kullanıcısını süresiz olarak engellemek istiyor musunuz?'
                                     : 'Do you want to permanently ban @${profile.username}?',
                               );
                               if (!confirmed) return;
-                              await profileSetupRepository.updateBanStatus(profile.userId, isBanned: true);
+                              await profileSetupRepository.updateBanStatus(
+                                  profile.userId,
+                                  isBanned: true);
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(tr ? 'Kullanıcı süresiz engellendi.' : 'User permanently banned.')),
+                                  SnackBar(
+                                      content: Text(tr
+                                          ? 'Kullanıcı süresiz engellendi.'
+                                          : 'User permanently banned.')),
                                 );
                               }
                             },
@@ -236,10 +266,12 @@ class _AdminScreenState extends State<AdminScreen> {
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.orangeAccent,
-                              side: const BorderSide(color: Colors.orangeAccent),
+                              side:
+                                  const BorderSide(color: Colors.orangeAccent),
                             ),
                             icon: const Icon(Icons.timer_outlined),
-                            label: Text(tr ? 'Süreli Engelle' : 'Temp Suspension'),
+                            label:
+                                Text(tr ? 'Süreli Engelle' : 'Temp Suspension'),
                             onPressed: () async {
                               final now = DateTime.now();
                               final pickedDate = await showDatePicker(
@@ -252,7 +284,8 @@ class _AdminScreenState extends State<AdminScreen> {
                               if (!context.mounted) return;
                               final pickedTime = await showTimePicker(
                                 context: context,
-                                initialTime: const TimeOfDay(hour: 0, minute: 0),
+                                initialTime:
+                                    const TimeOfDay(hour: 0, minute: 0),
                               );
                               if (pickedTime == null) return;
 
@@ -266,23 +299,28 @@ class _AdminScreenState extends State<AdminScreen> {
 
                               final confirmed = await showGothicConfirmDialog(
                                 context,
-                                title: tr ? 'Süreli Askıya Al' : 'Suspend Temporarily',
-                                content: tr 
+                                title: tr
+                                    ? 'Süreli Askıya Al'
+                                    : 'Suspend Temporarily',
+                                content: tr
                                     ? '@${profile.username} kullanıcısını şu tarihe kadar askıya almak istiyor musunuz: $banUntilDateTime?'
                                     : 'Do you want to suspend @${profile.username} until $banUntilDateTime?',
                               );
                               if (!confirmed) return;
 
                               await profileSetupRepository.updateBanStatus(
-                                profile.userId, 
-                                isBanned: false, 
+                                profile.userId,
+                                isBanned: false,
                                 banUntil: banUntilDateTime,
                               );
 
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(tr ? 'Kullanıcı süreli askıya alındı.' : 'User suspended temporarily.')),
+                                  SnackBar(
+                                      content: Text(tr
+                                          ? 'Kullanıcı süreli askıya alındı.'
+                                          : 'User suspended temporarily.')),
                                 );
                               }
                             },
@@ -302,11 +340,17 @@ class _AdminScreenState extends State<AdminScreen> {
                             icon: const Icon(Icons.check_circle_outline),
                             label: Text(tr ? 'Engeli Kaldır' : 'Unban User'),
                             onPressed: () async {
-                              await profileSetupRepository.updateBanStatus(profile.userId, isBanned: false, banUntil: null);
+                              await profileSetupRepository.updateBanStatus(
+                                  profile.userId,
+                                  isBanned: false,
+                                  banUntil: null);
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(tr ? 'Kullanıcı engeli kaldırıldı.' : 'User unbanned.')),
+                                  SnackBar(
+                                      content: Text(tr
+                                          ? 'Kullanıcı engeli kaldırıldı.'
+                                          : 'User unbanned.')),
                                 );
                               }
                             },
@@ -320,21 +364,26 @@ class _AdminScreenState extends State<AdminScreen> {
                               side: const BorderSide(color: Colors.grey),
                             ),
                             icon: const Icon(Icons.refresh_rounded),
-                            label: Text(tr ? 'Profili Sıfırla' : 'Reset Profile'),
+                            label:
+                                Text(tr ? 'Profili Sıfırla' : 'Reset Profile'),
                             onPressed: () async {
                               final confirmed = await showGothicConfirmDialog(
                                 context,
                                 title: tr ? 'Profili Sıfırla' : 'Reset Profile',
-                                content: tr 
+                                content: tr
                                     ? '@${profile.username} kullanıcısının avatarını, kapak fotoğrafını ve vitrin öğelerini sıfırlamak istiyor musunuz?'
                                     : 'Do you want to reset avatar, cover, and featured entries for @${profile.username}?',
                               );
                               if (!confirmed) return;
-                              await profileSetupRepository.resetProfileContent(profile.userId);
+                              await profileSetupRepository
+                                  .resetProfileContent(profile.userId);
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(tr ? 'Profil sıfırlandı.' : 'Profile reset completed.')),
+                                  SnackBar(
+                                      content: Text(tr
+                                          ? 'Profil sıfırlandı.'
+                                          : 'Profile reset completed.')),
                                 );
                               }
                             },
@@ -348,20 +397,30 @@ class _AdminScreenState extends State<AdminScreen> {
                         Expanded(
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF00FFCC),
-                              side: const BorderSide(color: Color(0xFF00FFCC)),
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.secondary,
+                              side: BorderSide(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary),
                             ),
                             icon: const Icon(Icons.swap_horiz_rounded),
-                            label: Text(profile.role == 'admin' 
+                            label: Text(profile.role == 'admin'
                                 ? (tr ? 'Adminliği Al' : 'Remove Admin')
                                 : (tr ? 'Admin Yap' : 'Make Admin')),
                             onPressed: () async {
-                              final newRole = profile.role == 'admin' ? 'user' : 'admin';
-                              await profileSetupRepository.updateRoleAndPro(profile.userId, role: newRole, isPro: profile.isPro);
+                              final newRole =
+                                  profile.role == 'admin' ? 'user' : 'admin';
+                              await profileSetupRepository.updateRoleAndPro(
+                                  profile.userId,
+                                  role: newRole,
+                                  isPro: profile.isPro);
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(tr ? 'Rol güncellendi.' : 'Role updated.')),
+                                  SnackBar(
+                                      content: Text(tr
+                                          ? 'Rol güncellendi.'
+                                          : 'Role updated.')),
                                 );
                               }
                             },
@@ -372,19 +431,26 @@ class _AdminScreenState extends State<AdminScreen> {
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.purpleAccent,
-                              side: const BorderSide(color: Colors.purpleAccent),
+                              side:
+                                  const BorderSide(color: Colors.purpleAccent),
                             ),
                             icon: const Icon(Icons.workspace_premium_outlined),
-                            label: Text(profile.isPro 
+                            label: Text(profile.isPro
                                 ? (tr ? 'Pro İptal Et' : 'Cancel Pro')
                                 : (tr ? 'Pro Yap' : 'Make Pro')),
                             onPressed: () async {
                               final newPro = !profile.isPro;
-                              await profileSetupRepository.updateRoleAndPro(profile.userId, role: profile.role, isPro: newPro);
+                              await profileSetupRepository.updateRoleAndPro(
+                                  profile.userId,
+                                  role: profile.role,
+                                  isPro: newPro);
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(tr ? 'Pro durumu güncellendi.' : 'Pro status updated.')),
+                                  SnackBar(
+                                      content: Text(tr
+                                          ? 'Pro durumu güncellendi.'
+                                          : 'Pro status updated.')),
                                 );
                               }
                             },
@@ -399,28 +465,38 @@ class _AdminScreenState extends State<AdminScreen> {
                         side: const BorderSide(color: Colors.red),
                       ),
                       icon: const Icon(Icons.delete_forever_rounded),
-                      label: Text(tr ? 'Üyeliği Tamamen Sil' : 'Delete Account Completely'),
+                      label: Text(tr
+                          ? 'Üyeliği Tamamen Sil'
+                          : 'Delete Account Completely'),
                       onPressed: () async {
                         final confirmed = await showGothicConfirmDialog(
                           context,
-                          title: tr ? 'Hesabı Tamamen Sil' : 'Delete Account Completely',
-                          content: tr 
+                          title: tr
+                              ? 'Hesabı Tamamen Sil'
+                              : 'Delete Account Completely',
+                          content: tr
                               ? '@${profile.username} kullanıcısının tüm profil verilerini, kullanıcı adını, koleksiyonunu ve bildirimlerini KALICI OLARAK silmek istiyor musunuz? Bu işlem geri alınamaz!'
                               : 'Are you sure you want to PERMANENTLY delete @${profile.username}\'s profile, collection, notifications, and release the username? This cannot be undone!',
                         );
                         if (!confirmed) return;
-                        await profileSetupRepository.adminDeleteUserAccount(profile.userId, profile.username);
+                        await profileSetupRepository.adminDeleteUserAccount(
+                            profile.userId, profile.username);
                         if (context.mounted) {
                           Navigator.of(context).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr ? 'Kullanıcı hesabı tamamen silindi.' : 'User account successfully deleted.')),
+                            SnackBar(
+                                content: Text(tr
+                                    ? 'Kullanıcı hesabı tamamen silindi.'
+                                    : 'User account successfully deleted.')),
                           );
                         }
                       },
                     ),
                     const Divider(height: 24),
                     Text(
-                      tr ? 'Kişiye Özel Bildirim/Uyarı Gönder' : 'Send Custom Notification/Warning',
+                      tr
+                          ? 'Kişiye Özel Bildirim/Uyarı Gönder'
+                          : 'Send Custom Notification/Warning',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
@@ -429,7 +505,10 @@ class _AdminScreenState extends State<AdminScreen> {
                       onSent: () {
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(tr ? 'Uyarı bildirimi gönderildi.' : 'Warning notification sent.')),
+                          SnackBar(
+                              content: Text(tr
+                                  ? 'Uyarı bildirimi gönderildi.'
+                                  : 'Warning notification sent.')),
                         );
                       },
                     ),
@@ -516,7 +595,8 @@ class _AdminScreenState extends State<AdminScreen> {
                     CatalogEntryForm(
                       editingEntry: _editingEntry,
                       onSubmit: (draft) async {
-                        final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+                        final tr = AppLanguageScope.languageOf(context) ==
+                            AppLanguage.tr;
                         final confirmed = await showGothicConfirmDialog(
                           context,
                           title: tr ? 'Değişiklikleri Kaydet' : 'Save Changes',
@@ -538,7 +618,8 @@ class _AdminScreenState extends State<AdminScreen> {
               final moderationQueue = const ModerationQueueScreen();
               final catalogButton = Card(
                 child: ListTile(
-                  leading: const Icon(Icons.collections_bookmark_rounded, color: DollDexTheme.teal),
+                  leading: const Icon(Icons.collections_bookmark_rounded,
+                      color: DollDexTheme.teal),
                   title: Text(
                     AppLanguageScope.languageOf(context) == AppLanguage.tr
                         ? 'Kataloğu Yönet / Görüntüle'
@@ -551,7 +632,8 @@ class _AdminScreenState extends State<AdminScreen> {
                         : 'Search, edit, or delete all registered catalog items',
                     style: const TextStyle(fontSize: 11),
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                  trailing:
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 16),
                   onTap: () {
                     _showAdminCatalogModal(context, (entry) {
                       setState(() {
@@ -582,11 +664,12 @@ class _AdminScreenState extends State<AdminScreen> {
                     ? 'Engelleme, askıya alma, üyelik silme, Pro rolü yetkilendirme ve özel uyarılar'
                     : 'Ban, suspend, delete accounts, Pro role toggling, and warning alerts',
                 icon: Icons.admin_panel_settings_outlined,
-                iconColor: const Color(0xFFEC008C),
+                iconColor: Theme.of(context).colorScheme.primary,
                 onUserSelected: _openModerationBottomSheet,
               );
 
-              final announcementCard = const AnnouncementForm(key: ValueKey('admin-announcement-form'));
+              final announcementCard = const AnnouncementForm(
+                  key: ValueKey('admin-announcement-form'));
 
               if (wide) {
                 return Row(
@@ -689,7 +772,8 @@ class AdminCatalogManager extends StatelessWidget {
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: Theme.of(context).brightness == Brightness.dark
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
                                   ? DollDexTheme.darkLine
                                   : DollDexTheme.line,
                             ),
@@ -721,10 +805,16 @@ class AdminCatalogManager extends StatelessWidget {
                                   onPressed: isTemplateEntry(entry)
                                       ? null
                                       : () async {
-                                          final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-                                          final confirmed = await showGothicConfirmDialog(
+                                          final tr =
+                                              AppLanguageScope.languageOf(
+                                                      context) ==
+                                                  AppLanguage.tr;
+                                          final confirmed =
+                                              await showGothicConfirmDialog(
                                             context,
-                                            title: tr ? 'Öğeyi Sil' : 'Delete Item',
+                                            title: tr
+                                                ? 'Öğeyi Sil'
+                                                : 'Delete Item',
                                             content: tr
                                                 ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
                                                 : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
@@ -762,7 +852,8 @@ class AdminCatalogManager extends StatelessWidget {
   }
 }
 
-void _showAdminCatalogModal(BuildContext context, ValueChanged<CatalogEntry> onEdit) {
+void _showAdminCatalogModal(
+    BuildContext context, ValueChanged<CatalogEntry> onEdit) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -858,13 +949,19 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
         _isSelectionMode = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr ? 'Seçilen katalog öğeleri silindi.' : 'Selected items deleted.')),
+        SnackBar(
+            content: Text(tr
+                ? 'Seçilen katalog öğeleri silindi.'
+                : 'Selected items deleted.')),
       );
     }
   }
 
   bool _isTemplateEntryById(String id) {
-    return id == 'template-character' || id == 'template-doll' || id == 'template-pet' || id == 'template-accessory';
+    return id == 'template-character' ||
+        id == 'template-doll' ||
+        id == 'template-pet' ||
+        id == 'template-accessory';
   }
 
   @override
@@ -893,7 +990,8 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                         hintText: tr ? 'Katalogda ara...' : 'Search catalog...',
                         hintStyle: const TextStyle(fontFamily: 'Outfit'),
                         prefixIcon: const Icon(Icons.search_rounded),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -910,39 +1008,54 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
             ),
             if (_isSelectionMode)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF160E22),
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFEC008C), width: 1.5),
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 1.5),
                   ),
                   child: Row(
                     children: [
                       Text(
-                        tr ? '${_selectedIds.length} Seçildi' : '${_selectedIds.length} Selected',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12),
+                        tr
+                            ? '${_selectedIds.length} Seçildi'
+                            : '${_selectedIds.length} Selected',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 12),
                       ),
                       const Spacer(),
                       TextButton(
                         onPressed: () => _selectAll(filteredEntries),
-                        style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                        style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact),
                         child: Text(
-                          _selectedIds.length == filteredEntries.length 
+                          _selectedIds.length == filteredEntries.length
                               ? (tr ? 'Seçimi Kaldır' : 'Deselect All')
                               : (tr ? 'Hepsini Seç' : 'Select All'),
-                          style: const TextStyle(color: Color(0xFF00FFCC), fontSize: 11, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                       IconButton(
                         onPressed: _deleteSelectedEntries,
-                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                        icon: const Icon(Icons.delete_outline_rounded,
+                            color: Colors.redAccent, size: 18),
                         tooltip: tr ? 'Toplu Sil' : 'Bulk Delete',
                       ),
                       IconButton(
                         onPressed: _cancelSelection,
-                        icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
+                        icon: const Icon(Icons.close_rounded,
+                            color: Colors.white70, size: 18),
                         tooltip: tr ? 'Vazgeç' : 'Cancel',
                       ),
                     ],
@@ -951,11 +1064,13 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
               ),
             Expanded(
               child: filteredEntries.isEmpty
-                  ? Center(child: Text(tr ? 'Öğe bulunamadı' : 'No items found'))
+                  ? Center(
+                      child: Text(tr ? 'Öğe bulunamadı' : 'No items found'))
                   : GridView.builder(
                       controller: widget.scrollController,
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
@@ -970,9 +1085,10 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(
-                              color: isSelected 
-                                  ? const Color(0xFFEC008C)
-                                  : (Theme.of(context).brightness == Brightness.dark
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : (Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? DollDexTheme.darkLine
                                       : DollDexTheme.line),
                               width: isSelected ? 3.0 : 1.0,
@@ -985,7 +1101,8 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                               } else {
                                 final router = GoRouter.of(context);
                                 Navigator.of(context).pop(); // Close modal
-                                router.go('/i/${entry.id}'); // Route to item page
+                                router
+                                    .go('/i/${entry.id}'); // Route to item page
                               }
                             },
                             onLongPress: () {
@@ -994,18 +1111,25 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                             child: Stack(
                               children: [
                                 Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     Expanded(
                                       child: ClipRRect(
-                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                                top: Radius.circular(12)),
                                         child: Image.network(
                                           entry.primaryImageUrl,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
                                             return Container(
-                                              color: Colors.grey.withValues(alpha: 0.1),
-                                              child: const Icon(Icons.broken_image_outlined, size: 36),
+                                              color: Colors.grey
+                                                  .withValues(alpha: 0.1),
+                                              child: const Icon(
+                                                  Icons.broken_image_outlined,
+                                                  size: 36),
                                             );
                                           },
                                         ),
@@ -1014,33 +1138,43 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                     Padding(
                                       padding: const EdgeInsets.all(8),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             entryName(context, entry),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12),
                                           ),
                                           Text(
-                                            catalogTypeLabel(context, entry.type),
-                                            style: TextStyle(fontSize: 10, color: Theme.of(context).hintColor),
+                                            catalogTypeLabel(
+                                                context, entry.type),
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                color: Theme.of(context)
+                                                    .hintColor),
                                           ),
                                         ],
                                       ),
                                     ),
                                     if (!_isSelectionMode)
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
                                         children: [
                                           IconButton(
                                             iconSize: 18,
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            icon: const Icon(Icons.edit_outlined),
+                                            icon:
+                                                const Icon(Icons.edit_outlined),
                                             onPressed: () {
                                               widget.onEdit(entry);
-                                              Navigator.of(context).pop(); // Close the modal
+                                              Navigator.of(context)
+                                                  .pop(); // Close the modal
                                             },
                                           ),
                                           const SizedBox(width: 8),
@@ -1048,20 +1182,28 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                             iconSize: 18,
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            icon: const Icon(Icons.delete_outline_rounded),
+                                            icon: const Icon(
+                                                Icons.delete_outline_rounded),
                                             onPressed: isTemplateEntry(entry)
                                                 ? null
                                                 : () async {
-                                                    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-                                                    final confirmed = await showGothicConfirmDialog(
+                                                    final tr = AppLanguageScope
+                                                            .languageOf(
+                                                                context) ==
+                                                        AppLanguage.tr;
+                                                    final confirmed =
+                                                        await showGothicConfirmDialog(
                                                       context,
-                                                      title: tr ? 'Öğeyi Sil' : 'Delete Item',
+                                                      title: tr
+                                                          ? 'Öğeyi Sil'
+                                                          : 'Delete Item',
                                                       content: tr
                                                           ? '${entryName(context, entry)} öğesini katalogdan silmek istediğinize emin misiniz?'
                                                           : 'Are you sure you want to delete ${entryName(context, entry)} from catalog?',
                                                     );
                                                     if (confirmed) {
-                                                      deleteCatalogEntry(entry.id);
+                                                      deleteCatalogEntry(
+                                                          entry.id);
                                                     }
                                                   },
                                           ),
@@ -1073,11 +1215,16 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                 ),
                                 if (isSelected)
                                   Container(
-                                    color: const Color(0xFFEC008C).withValues(alpha: 0.25),
-                                    child: const Center(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withValues(alpha: 0.25),
+                                    child: Center(
                                       child: Icon(
                                         Icons.check_circle_rounded,
-                                        color: Color(0xFFEC008C),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                         size: 40,
                                       ),
                                     ),
@@ -1109,21 +1256,28 @@ class _EditingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: DollDexTheme.teal.withValues(alpha: 0.1),
-        border: Border.all(color: DollDexTheme.teal.withValues(alpha: 0.3)),
+        color: Theme.of(context)
+            .colorScheme
+            .primaryContainer
+            .withValues(alpha: 0.1),
+        border: Border.all(
+            color:
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            const Icon(Icons.edit_outlined, color: DollDexTheme.teal),
+            Icon(Icons.edit_outlined,
+                color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 '${t(context, 'editingEntry')}: ${entry.name}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(),
               ),
             ),
             IconButton.outlined(
@@ -1182,7 +1336,9 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: _activeTab == 0 ? const Color(0xFFEC008C) : Colors.transparent,
+                            color: _activeTab == 0
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.transparent,
                             width: 2.0,
                           ),
                         ),
@@ -1193,8 +1349,8 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: _activeTab == 0
-                              ? const Color(0xFFEC008C)
-                              : (Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.black54),
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -1208,7 +1364,9 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: _activeTab == 1 ? const Color(0xFFEC008C) : Colors.transparent,
+                            color: _activeTab == 1
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.transparent,
                             width: 2.0,
                           ),
                         ),
@@ -1219,8 +1377,8 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: _activeTab == 1
-                              ? const Color(0xFFEC008C)
-                              : (Theme.of(context).brightness == Brightness.dark ? Colors.white60 : Colors.black54),
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -1233,7 +1391,8 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
               valueListenable: reportsNotifier,
               builder: (context, reports, _) {
                 final filtered = reports.where((report) {
-                  final isPending = report.status == ReportStatus.open || report.status == ReportStatus.reviewing;
+                  final isPending = report.status == ReportStatus.open ||
+                      report.status == ReportStatus.reviewing;
                   return _activeTab == 0 ? isPending : !isPending;
                 }).toList();
 
@@ -1241,7 +1400,9 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                   return EmptyState(
                     icon: Icons.report_gmailerrorred_outlined,
                     title: tr ? 'Rapor yok' : 'No reports',
-                    body: tr ? 'Bu sekmede görüntülenecek rapor bulunamadı.' : 'No reports found to display in this tab.',
+                    body: tr
+                        ? 'Bu sekmede görüntülenecek rapor bulunamadı.'
+                        : 'No reports found to display in this tab.',
                   );
                 }
 
@@ -1277,14 +1438,18 @@ class ResolvedReportDetails {
   });
 }
 
-Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserReport report) async {
+Future<ResolvedReportDetails> _resolveReportDetails(
+    BuildContext context, UserReport report) async {
   String reporterName = '...';
   String reportedName = '...';
   String contentText = '...';
 
   // 1. Raporlayan Kullanıcı adını çöz
   try {
-    final repDoc = await FirebaseFirestore.instance.collection('users').doc(report.reporterId).get();
+    final repDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(report.reporterId)
+        .get();
     if (repDoc.exists) {
       reporterName = repDoc.data()?['username'] as String? ?? 'Collector';
     } else {
@@ -1299,12 +1464,15 @@ Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserRe
     switch (report.targetType) {
       case ReportTargetType.user:
       case ReportTargetType.profile:
-        final doc = await FirebaseFirestore.instance.collection('users').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final username = doc.data()?['username'] as String? ?? 'Collector';
           reportedName = username;
-          contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr 
-              ? 'Profil Sayfası (@$username)' 
+          contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
+              ? 'Profil Sayfası (@$username)'
               : 'Profile Page (@$username)';
         } else {
           reportedName = 'ID: ${report.targetId}';
@@ -1312,18 +1480,25 @@ Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserRe
         }
         break;
       case ReportTargetType.comment:
-        final doc = await FirebaseFirestore.instance.collection('comments').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('comments')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final text = doc.data()?['text'] as String? ?? '';
           final authorId = doc.data()?['userId'] as String? ?? '';
           contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
               ? 'Yorum: "$text"'
               : 'Comment: "$text"';
-          
+
           if (authorId.isNotEmpty) {
-            final authDoc = await FirebaseFirestore.instance.collection('users').doc(authorId).get();
+            final authDoc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(authorId)
+                .get();
             if (authDoc.exists) {
-              reportedName = authDoc.data()?['username'] as String? ?? 'Collector';
+              reportedName =
+                  authDoc.data()?['username'] as String? ?? 'Collector';
             } else {
               reportedName = 'ID: $authorId';
             }
@@ -1333,7 +1508,10 @@ Future<ResolvedReportDetails> _resolveReportDetails(BuildContext context, UserRe
         }
         break;
       case ReportTargetType.catalogEntry:
-        final doc = await FirebaseFirestore.instance.collection('items').doc(report.targetId).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('items')
+            .doc(report.targetId)
+            .get();
         if (doc.exists) {
           final name = doc.data()?['name'] as String? ?? '';
           contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
@@ -1370,20 +1548,15 @@ class ModerationReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
 
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(
-          color: isDark
-              ? DollDexTheme.darkLine
-              : DollDexTheme.line,
+          color: theme.dividerColor,
         ),
         borderRadius: BorderRadius.circular(12),
-        color: isDark
-            ? DollDexTheme.darkPanel
-            : Colors.white,
+        color: theme.cardColor,
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -1393,7 +1566,8 @@ class ModerationReportCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildNeonFlagIcon(context, size: 20),
+                Icon(Icons.flag_outlined,
+                    color: theme.colorScheme.primary, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -1401,7 +1575,8 @@ class ModerationReportCard extends StatelessWidget {
                     children: [
                       Text(
                         reportReasonLabel(context, report.reason),
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 8),
                       FutureBuilder<ResolvedReportDetails>(
@@ -1413,7 +1588,8 @@ class ModerationReportCard extends StatelessWidget {
                               child: SizedBox(
                                 height: 16,
                                 width: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                             );
                           }
@@ -1422,44 +1598,54 @@ class ModerationReportCard extends StatelessWidget {
                             text: TextSpan(
                               style: TextStyle(
                                 fontSize: 13,
-                                fontFamily: 'Cinzel',
-                                color: isDark ? Colors.white70 : Colors.black87,
+                                fontFamily: GoogleFonts.outfit().fontFamily,
+                                color: theme.colorScheme.onSurface,
                                 height: 1.5,
                               ),
                               children: [
                                 TextSpan(
                                   text: tr ? 'Raporlayan: ' : 'Reporter: ',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF00FFCC)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.secondary),
                                 ),
                                 TextSpan(text: '@${d.reporterName}\n'),
                                 TextSpan(
                                   text: tr ? 'Raporlanan: ' : 'Reported: ',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFEC008C)),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary),
                                 ),
                                 TextSpan(
-                                  text: d.reportedName.startsWith('@') || d.reportedName.startsWith('ID:') || d.reportedName == 'System / Catalog'
+                                  text: d.reportedName.startsWith('@') ||
+                                          d.reportedName.startsWith('ID:') ||
+                                          d.reportedName == 'System / Catalog'
                                       ? '${d.reportedName}\n'
                                       : '@${d.reportedName}\n',
                                 ),
                                 TextSpan(
                                   text: tr ? 'İçerik: ' : 'Content: ',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 ),
                                 TextSpan(text: '${d.contentText}\n'),
                                 TextSpan(
                                   text: tr ? 'Zaman: ' : 'Time: ',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 ),
                                 TextSpan(text: d.formattedTime),
                                 if (report.details.trim().isNotEmpty) ...[
                                   const TextSpan(text: '\n'),
                                   TextSpan(
                                     text: tr ? 'Detay: ' : 'Details: ',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   TextSpan(
                                     text: report.details.trim(),
-                                    style: const TextStyle(fontStyle: FontStyle.italic),
+                                    style: const TextStyle(
+                                        fontStyle: FontStyle.italic),
                                   ),
                                 ],
                               ],
@@ -1477,14 +1663,17 @@ class ModerationReportCard extends StatelessWidget {
                     Chip(
                       label: Text(reportStatusLabel(context, report.status)),
                       visualDensity: VisualDensity.compact,
-                      side: BorderSide(color: DollDexTheme.teal.withOpacity(0.3)),
+                      side: BorderSide(
+                          color: theme.colorScheme.primary.withOpacity(0.3)),
                     ),
                     const SizedBox(height: 8),
                     PopupMenuButton<String>(
-                      icon: buildNeonIcon(context, Icons.more_vert_rounded, size: 22),
+                      icon: Icon(Icons.more_vert_rounded,
+                          color: theme.colorScheme.onSurface, size: 22),
                       tooltip: tr ? 'İşlemler' : 'Actions',
                       onSelected: (value) async {
-                        final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+                        final tr = AppLanguageScope.languageOf(context) ==
+                            AppLanguage.tr;
                         switch (value) {
                           case 'open':
                             openReportTarget(context, report);
@@ -1498,7 +1687,8 @@ class ModerationReportCard extends StatelessWidget {
                                   : 'Do you want to mark this report as under review?',
                             );
                             if (confirmed) {
-                              updateReportStatus(report.id, ReportStatus.reviewing);
+                              updateReportStatus(
+                                  report.id, ReportStatus.reviewing);
                             }
                             break;
                           case 'dismissed':
@@ -1510,7 +1700,8 @@ class ModerationReportCard extends StatelessWidget {
                                   : 'Do you want to dismiss and close this report?',
                             );
                             if (confirmed) {
-                              updateReportStatus(report.id, ReportStatus.dismissed);
+                              updateReportStatus(
+                                  report.id, ReportStatus.dismissed);
                             }
                             break;
                           case 'resolved':
@@ -1522,7 +1713,8 @@ class ModerationReportCard extends StatelessWidget {
                                   : 'Do you want to mark this report as resolved?',
                             );
                             if (confirmed) {
-                              updateReportStatus(report.id, ReportStatus.resolved);
+                              updateReportStatus(
+                                  report.id, ReportStatus.resolved);
                             }
                             break;
                           case 'delete':
@@ -1547,7 +1739,8 @@ class ModerationReportCard extends StatelessWidget {
                           value: 'open',
                           child: Row(
                             children: [
-                              buildNeonIcon(context, Icons.open_in_new_rounded, size: 18),
+                              Icon(Icons.open_in_new_rounded,
+                                  size: 18, color: theme.colorScheme.onSurface),
                               const SizedBox(width: 8),
                               Text(t(context, 'openTarget')),
                             ],
@@ -1557,7 +1750,8 @@ class ModerationReportCard extends StatelessWidget {
                           value: 'reviewing',
                           child: Row(
                             children: [
-                              buildNeonIcon(context, Icons.visibility_outlined, size: 18),
+                              Icon(Icons.visibility_outlined,
+                                  size: 18, color: theme.colorScheme.onSurface),
                               const SizedBox(width: 8),
                               Text(t(context, 'markReviewing')),
                             ],
@@ -1567,7 +1761,8 @@ class ModerationReportCard extends StatelessWidget {
                           value: 'dismissed',
                           child: Row(
                             children: [
-                              buildNeonIcon(context, Icons.block_outlined, size: 18),
+                              Icon(Icons.block_outlined,
+                                  size: 18, color: theme.colorScheme.onSurface),
                               const SizedBox(width: 8),
                               Text(t(context, 'dismissReport')),
                             ],
@@ -1577,7 +1772,8 @@ class ModerationReportCard extends StatelessWidget {
                           value: 'resolved',
                           child: Row(
                             children: [
-                              buildNeonIcon(context, Icons.check_rounded, size: 18),
+                              Icon(Icons.check_rounded,
+                                  size: 18, color: theme.colorScheme.onSurface),
                               const SizedBox(width: 8),
                               Text(t(context, 'resolveReport')),
                             ],
@@ -1587,7 +1783,8 @@ class ModerationReportCard extends StatelessWidget {
                           value: 'delete',
                           child: Row(
                             children: [
-                              buildNeonIcon(context, Icons.delete_outline_rounded, size: 18),
+                              Icon(Icons.delete_outline_rounded,
+                                  size: 18, color: theme.colorScheme.onSurface),
                               const SizedBox(width: 8),
                               Text(t(context, 'delete')),
                             ],
@@ -1599,11 +1796,13 @@ class ModerationReportCard extends StatelessWidget {
                             value: 'destroy',
                             child: Row(
                               children: [
-                                buildNeonIcon(context, Icons.delete_forever_rounded, size: 18),
+                                Icon(Icons.delete_forever_rounded,
+                                    size: 18, color: theme.colorScheme.error),
                                 const SizedBox(width: 8),
                                 Text(
                                   tr ? 'İçeriği İmha Et' : 'Destroy Content',
-                                  style: const TextStyle(color: Colors.redAccent),
+                                  style:
+                                      TextStyle(color: theme.colorScheme.error),
                                 ),
                               ],
                             ),
@@ -1620,6 +1819,7 @@ class ModerationReportCard extends StatelessWidget {
     );
   }
 }
+
 class _AdminStatusBanner extends StatelessWidget {
   const _AdminStatusBanner({required this.isFirebaseReady});
 
@@ -1627,7 +1827,9 @@ class _AdminStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isFirebaseReady ? DollDexTheme.teal : DollDexTheme.amber;
+    final color = isFirebaseReady
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.tertiary;
     final text = isFirebaseReady
         ? 'Firebase bağlı. Kayıtlar Firestore veritabanına yazılır.'
         : 'Firebase henüz bağlı değil. Kayıtlar bu oturumda geçici kalır.';
@@ -1656,6 +1858,7 @@ class _AdminStatusBanner extends StatelessWidget {
     );
   }
 }
+
 class AdminUserSearchCard extends StatefulWidget {
   const AdminUserSearchCard({
     required this.title,
@@ -1716,7 +1919,6 @@ class _AdminUserSearchCardState extends State<AdminUserSearchCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1733,9 +1935,10 @@ class _AdminUserSearchCardState extends State<AdminUserSearchCard> {
                     children: [
                       Text(
                         widget.title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
                       ),
                       Text(
                         widget.subtitle,
@@ -1750,29 +1953,33 @@ class _AdminUserSearchCardState extends State<AdminUserSearchCard> {
             TextField(
               controller: _searchController,
               onChanged: (_) => _runSearch(),
-              style: const TextStyle(fontFamily: 'Outfit'),
+              style: GoogleFonts.outfit(),
               decoration: InputDecoration(
                 hintText: AppLanguageScope.languageOf(context) == AppLanguage.tr
                     ? 'Kullanıcı adı ara...'
                     : 'Search username...',
                 prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: isDark ? const Color(0xFF2C1F45) : const Color(0xFFE9D8FA),
+                    color: Theme.of(context).dividerColor,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFEC008C)),
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
               ),
             ),
             if (_loading)
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: Center(child: CircularProgressIndicator(color: Color(0xFFEC008C))),
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Center(
+                    child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary)),
               ),
             if (_results.isNotEmpty)
               Container(
@@ -1879,7 +2086,8 @@ class _CustomWarningFormState extends State<_CustomWarningForm> {
           decoration: InputDecoration(
             labelText: tr ? 'Başlık' : 'Title',
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           ),
         ),
         const SizedBox(height: 8),
@@ -1889,14 +2097,15 @@ class _CustomWarningFormState extends State<_CustomWarningForm> {
           decoration: InputDecoration(
             labelText: tr ? 'İçerik/Mesaj' : 'Message Body',
             border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           ),
           maxLines: 3,
         ),
         const SizedBox(height: 8),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFEC008C),
+            backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
           ),
           onPressed: _sending ? null : _send,
@@ -1904,7 +2113,8 @@ class _CustomWarningFormState extends State<_CustomWarningForm> {
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 )
               : Text(tr ? 'Gönder' : 'Send'),
         ),
@@ -1922,24 +2132,24 @@ class AdminMonetizationCard extends StatefulWidget {
 
 class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final _monthlyPriceController = TextEditingController();
   final _yearlyPriceController = TextEditingController();
   final _coinsPack1PriceController = TextEditingController();
   final _coinsPack2PriceController = TextEditingController();
   final _coinsPack3PriceController = TextEditingController();
-  
+
   final _coinsPack1CoinsController = TextEditingController();
   final _coinsPack2CoinsController = TextEditingController();
   final _coinsPack3CoinsController = TextEditingController();
-  
+
   final _campaignTextTrController = TextEditingController();
   final _campaignTextEnController = TextEditingController();
   final _proMonthlyOldPriceController = TextEditingController();
   final _proYearlyOldPriceController = TextEditingController();
   final _campaignTitleTrController = TextEditingController();
   final _campaignTitleEnController = TextEditingController();
-  
+
   DateTime? _campaignEndTime;
   bool _isCampaignActive = false;
   double _coinMultiplier = 1.0;
@@ -1953,27 +2163,44 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
 
   Future<void> _loadSettings() async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('settings').doc('monetization').get();
+      final doc = await FirebaseFirestore.instance
+          .collection('settings')
+          .doc('monetization')
+          .get();
       if (doc.exists && mounted) {
         final data = doc.data()!;
         setState(() {
-          _monthlyPriceController.text = data['proMonthlyPriceText'] as String? ?? '₺19.99';
-          _yearlyPriceController.text = data['proYearlyPriceText'] as String? ?? '₺199.99';
-          _coinsPack1PriceController.text = data['coinsPack1Price'] as String? ?? '₺19.99';
-          _coinsPack2PriceController.text = data['coinsPack2Price'] as String? ?? '₺49.99';
-          _coinsPack3PriceController.text = data['coinsPack3Price'] as String? ?? '₺99.99';
-          
-          _coinsPack1CoinsController.text = (data['coinsPack1Amount'] ?? 150).toString();
-          _coinsPack2CoinsController.text = (data['coinsPack2Amount'] ?? 500).toString();
-          _coinsPack3CoinsController.text = (data['coinsPack3Amount'] ?? 1200).toString();
-          
-          _campaignTextTrController.text = data['campaignTextTr'] as String? ?? 'Sınırlı Süre Fırsatı!';
-          _campaignTextEnController.text = data['campaignTextEn'] as String? ?? 'Limited Time Offer!';
-          _proMonthlyOldPriceController.text = data['proMonthlyOldPriceText'] as String? ?? '';
-          _proYearlyOldPriceController.text = data['proYearlyOldPriceText'] as String? ?? '';
-          _campaignTitleTrController.text = data['campaignTitleTr'] as String? ?? 'Karanlık Fırsat';
-          _campaignTitleEnController.text = data['campaignTitleEn'] as String? ?? 'Mystic Offer';
-          
+          _monthlyPriceController.text =
+              data['proMonthlyPriceText'] as String? ?? '₺19.99';
+          _yearlyPriceController.text =
+              data['proYearlyPriceText'] as String? ?? '₺199.99';
+          _coinsPack1PriceController.text =
+              data['coinsPack1Price'] as String? ?? '₺19.99';
+          _coinsPack2PriceController.text =
+              data['coinsPack2Price'] as String? ?? '₺49.99';
+          _coinsPack3PriceController.text =
+              data['coinsPack3Price'] as String? ?? '₺99.99';
+
+          _coinsPack1CoinsController.text =
+              (data['coinsPack1Amount'] ?? 150).toString();
+          _coinsPack2CoinsController.text =
+              (data['coinsPack2Amount'] ?? 500).toString();
+          _coinsPack3CoinsController.text =
+              (data['coinsPack3Amount'] ?? 1200).toString();
+
+          _campaignTextTrController.text =
+              data['campaignTextTr'] as String? ?? 'Sınırlı Süre Fırsatı!';
+          _campaignTextEnController.text =
+              data['campaignTextEn'] as String? ?? 'Limited Time Offer!';
+          _proMonthlyOldPriceController.text =
+              data['proMonthlyOldPriceText'] as String? ?? '';
+          _proYearlyOldPriceController.text =
+              data['proYearlyOldPriceText'] as String? ?? '';
+          _campaignTitleTrController.text =
+              data['campaignTitleTr'] as String? ?? 'Karanlık Fırsat';
+          _campaignTitleEnController.text =
+              data['campaignTitleEn'] as String? ?? 'Mystic Offer';
+
           final ts = data['campaignEndTimestamp'] as Timestamp?;
           _campaignEndTime = ts?.toDate();
           _isCampaignActive = data['isCampaignActive'] as bool? ?? false;
@@ -2011,32 +2238,41 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
 
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
     try {
-      await FirebaseFirestore.instance.collection('settings').doc('monetization').set({
+      await FirebaseFirestore.instance
+          .collection('settings')
+          .doc('monetization')
+          .set({
         'proMonthlyPriceText': _monthlyPriceController.text,
         'proYearlyPriceText': _yearlyPriceController.text,
         'coinsPack1Price': _coinsPack1PriceController.text,
         'coinsPack2Price': _coinsPack2PriceController.text,
         'coinsPack3Price': _coinsPack3PriceController.text,
-        'coinsPack1Amount': int.tryParse(_coinsPack1CoinsController.text) ?? 150,
-        'coinsPack2Amount': int.tryParse(_coinsPack2CoinsController.text) ?? 500,
-        'coinsPack3Amount': int.tryParse(_coinsPack3CoinsController.text) ?? 1200,
+        'coinsPack1Amount':
+            int.tryParse(_coinsPack1CoinsController.text) ?? 150,
+        'coinsPack2Amount':
+            int.tryParse(_coinsPack2CoinsController.text) ?? 500,
+        'coinsPack3Amount':
+            int.tryParse(_coinsPack3CoinsController.text) ?? 1200,
         'campaignTextTr': _campaignTextTrController.text,
         'campaignTextEn': _campaignTextEnController.text,
         'proMonthlyOldPriceText': _proMonthlyOldPriceController.text,
         'proYearlyOldPriceText': _proYearlyOldPriceController.text,
         'campaignTitleTr': _campaignTitleTrController.text,
         'campaignTitleEn': _campaignTitleEnController.text,
-        'campaignEndTimestamp': _campaignEndTime != null ? Timestamp.fromDate(_campaignEndTime!) : null,
+        'campaignEndTimestamp': _campaignEndTime != null
+            ? Timestamp.fromDate(_campaignEndTime!)
+            : null,
         'isCampaignActive': _isCampaignActive,
         'coinMultiplier': _coinMultiplier,
       });
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Monetizasyon ayarları başarıyla kaydedildi.')),
+          const SnackBar(
+              content: Text('Monetizasyon ayarları başarıyla kaydedildi.')),
         );
       }
     } catch (e) {
@@ -2096,7 +2332,9 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          tr ? 'Pro üyelik, jeton paketleri ve in-app kampanya yönetimi' : 'Manage Pro, coin packages and in-app campaigns',
+          tr
+              ? 'Pro üyelik, jeton paketleri ve in-app kampanya yönetimi'
+              : 'Manage Pro, coin packages and in-app campaigns',
           style: const TextStyle(fontSize: 11),
         ),
         leading: const Icon(Icons.campaign_outlined, color: Colors.amber),
@@ -2110,7 +2348,10 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                 children: [
                   Text(
                     tr ? 'Pro Abonelik Fiyatları' : 'Pro Subscription Prices',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DollDexTheme.teal),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: DollDexTheme.teal),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -2145,7 +2386,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         child: TextFormField(
                           controller: _proMonthlyOldPriceController,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Aylık Eski Fiyat' : 'Monthly Old Price',
+                            labelText:
+                                tr ? 'Aylık Eski Fiyat' : 'Monthly Old Price',
                             border: const OutlineInputBorder(),
                           ),
                         ),
@@ -2155,7 +2397,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         child: TextFormField(
                           controller: _proYearlyOldPriceController,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Yıllık Eski Fiyat' : 'Yearly Old Price',
+                            labelText:
+                                tr ? 'Yıllık Eski Fiyat' : 'Yearly Old Price',
                             border: const OutlineInputBorder(),
                           ),
                         ),
@@ -2163,10 +2406,14 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
                   Text(
-                    tr ? 'Jeton Paketi Fiyatları & Miktarları' : 'Coin Package Prices & Amounts',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DollDexTheme.teal),
+                    tr
+                        ? 'Jeton Paketi Fiyatları & Miktarları'
+                        : 'Coin Package Prices & Amounts',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: DollDexTheme.teal),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -2176,7 +2423,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                           controller: _coinsPack1CoinsController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Paket 1 (Jeton)' : 'Pack 1 (Coins)',
+                            labelText:
+                                tr ? 'Paket 1 (Jeton)' : 'Pack 1 (Coins)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2187,7 +2435,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         child: TextFormField(
                           controller: _coinsPack1PriceController,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Paket 1 (Fiyat)' : 'Pack 1 (Price)',
+                            labelText:
+                                tr ? 'Paket 1 (Fiyat)' : 'Pack 1 (Price)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2203,7 +2452,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                           controller: _coinsPack2CoinsController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Paket 2 (Jeton)' : 'Pack 2 (Coins)',
+                            labelText:
+                                tr ? 'Paket 2 (Jeton)' : 'Pack 2 (Coins)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2214,7 +2464,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         child: TextFormField(
                           controller: _coinsPack2PriceController,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Paket 2 (Fiyat)' : 'Pack 2 (Price)',
+                            labelText:
+                                tr ? 'Paket 2 (Fiyat)' : 'Pack 2 (Price)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2230,7 +2481,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                           controller: _coinsPack3CoinsController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Paket 3 (Jeton)' : 'Pack 3 (Coins)',
+                            labelText:
+                                tr ? 'Paket 3 (Jeton)' : 'Pack 3 (Coins)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2241,7 +2493,8 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         child: TextFormField(
                           controller: _coinsPack3PriceController,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Paket 3 (Fiyat)' : 'Pack 3 (Price)',
+                            labelText:
+                                tr ? 'Paket 3 (Fiyat)' : 'Pack 3 (Price)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2250,15 +2503,20 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
                   Text(
                     tr ? 'Kampanya Ayarları' : 'Campaign Settings',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DollDexTheme.teal),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: DollDexTheme.teal),
                   ),
                   const SizedBox(height: 8),
                   SwitchListTile(
-                    title: Text(tr ? 'Kampanya Aktif mi?' : 'Is Campaign Active?'),
-                    subtitle: Text(tr ? 'Mağazada kampanya bandını gösterir' : 'Shows campaign banner in shop'),
+                    title:
+                        Text(tr ? 'Kampanya Aktif mi?' : 'Is Campaign Active?'),
+                    subtitle: Text(tr
+                        ? 'Mağazada kampanya bandını gösterir'
+                        : 'Shows campaign banner in shop'),
                     value: _isCampaignActive,
                     onChanged: (val) => setState(() => _isCampaignActive = val),
                     contentPadding: EdgeInsets.zero,
@@ -2283,7 +2541,9 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         child: TextFormField(
                           controller: _campaignTitleTrController,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Kampanya Başlığı (Türkçe)' : 'Campaign Title (Turkish)',
+                            labelText: tr
+                                ? 'Kampanya Başlığı (Türkçe)'
+                                : 'Campaign Title (Turkish)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2294,7 +2554,9 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         child: TextFormField(
                           controller: _campaignTitleEnController,
                           decoration: InputDecoration(
-                            labelText: tr ? 'Kampanya Başlığı (İngilizce)' : 'Campaign Title (English)',
+                            labelText: tr
+                                ? 'Kampanya Başlığı (İngilizce)'
+                                : 'Campaign Title (English)',
                             border: const OutlineInputBorder(),
                           ),
                           validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2306,7 +2568,9 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                   TextFormField(
                     controller: _campaignTextTrController,
                     decoration: InputDecoration(
-                      labelText: tr ? 'Kampanya Açıklaması (Türkçe)' : 'Campaign Body (Turkish)',
+                      labelText: tr
+                          ? 'Kampanya Açıklaması (Türkçe)'
+                          : 'Campaign Body (Turkish)',
                       border: const OutlineInputBorder(),
                     ),
                     validator: (v) => v == null || v.isEmpty ? '*' : null,
@@ -2315,14 +2579,17 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                   TextFormField(
                     controller: _campaignTextEnController,
                     decoration: InputDecoration(
-                      labelText: tr ? 'Kampanya Açıklaması (İngilizce)' : 'Campaign Body (English)',
+                      labelText: tr
+                          ? 'Kampanya Açıklaması (İngilizce)'
+                          : 'Campaign Body (English)',
                       border: const OutlineInputBorder(),
                     ),
                     validator: (v) => v == null || v.isEmpty ? '*' : null,
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey.shade400),
                       borderRadius: BorderRadius.circular(4),
@@ -2334,15 +2601,21 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                tr ? 'Kampanya Bitiş Süresi' : 'Campaign End Date & Time',
-                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                tr
+                                    ? 'Kampanya Bitiş Süresi'
+                                    : 'Campaign End Date & Time',
+                                style: const TextStyle(
+                                    fontSize: 10, color: Colors.grey),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 _campaignEndTime == null
-                                    ? (tr ? 'Bitiş Tarihi Seçilmedi (Sınırsız)' : 'No End Date Selected (Unlimited)')
+                                    ? (tr
+                                        ? 'Bitiş Tarihi Seçilmedi (Sınırsız)'
+                                        : 'No End Date Selected (Unlimited)')
                                     : _formatDateTime(_campaignEndTime!),
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -2353,14 +2626,18 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                           onPressed: () async {
                             final date = await showDatePicker(
                               context: context,
-                              initialDate: _campaignEndTime ?? DateTime.now().add(const Duration(days: 3)),
-                              firstDate: DateTime.now().subtract(const Duration(days: 1)),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              initialDate: _campaignEndTime ??
+                                  DateTime.now().add(const Duration(days: 3)),
+                              firstDate: DateTime.now()
+                                  .subtract(const Duration(days: 1)),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
                             );
                             if (date != null && mounted) {
                               final time = await showTimePicker(
                                 context: context,
-                                initialTime: TimeOfDay.fromDateTime(_campaignEndTime ?? DateTime.now()),
+                                initialTime: TimeOfDay.fromDateTime(
+                                    _campaignEndTime ?? DateTime.now()),
                               );
                               if (time != null && mounted) {
                                 setState(() {
@@ -2378,8 +2655,10 @@ class _AdminMonetizationCardState extends State<AdminMonetizationCard> {
                         ),
                         if (_campaignEndTime != null)
                           IconButton(
-                            icon: const Icon(Icons.clear_rounded, color: Colors.redAccent),
-                            onPressed: () => setState(() => _campaignEndTime = null),
+                            icon: const Icon(Icons.clear_rounded,
+                                color: Colors.redAccent),
+                            onPressed: () =>
+                                setState(() => _campaignEndTime = null),
                           ),
                       ],
                     ),

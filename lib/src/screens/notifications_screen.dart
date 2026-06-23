@@ -30,8 +30,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 40.0),
         child: Center(
           child: Text(
-            isTr ? 'Bu kategoride bildirim bulunmuyor.' : 'No notifications in this category.',
-            style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white54),
+            isTr
+                ? 'Bu kategoride bildirim bulunmuyor.'
+                : 'No notifications in this category.',
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
           ),
         ),
       );
@@ -49,32 +54,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           padding: const EdgeInsets.only(bottom: 6),
           child: Dismissible(
             key: Key('notification-${notification.id}-${notification.isRead}'),
-            direction: canDelete ? DismissDirection.horizontal : DismissDirection.startToEnd,
+            direction: canDelete
+                ? DismissDirection.horizontal
+                : DismissDirection.startToEnd,
             background: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF00FFCC).withOpacity(0.2),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.only(left: 16),
-              child: const Icon(Icons.mark_email_read_rounded, color: Color(0xFF00FFCC), size: 18),
+              child: Icon(Icons.mark_email_read_rounded,
+                  color: Theme.of(context).colorScheme.primary, size: 18),
             ),
             secondaryBackground: canDelete
                 ? Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC008C).withOpacity(0.2),
+                      color:
+                          Theme.of(context).colorScheme.error.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 16),
-                    child: const Icon(Icons.delete_forever_rounded, color: Color(0xFFEC008C), size: 18),
+                    child: Icon(Icons.delete_forever_rounded,
+                        color: Theme.of(context).colorScheme.error, size: 18),
                   )
                 : null,
             confirmDismiss: (direction) async {
               if (direction == DismissDirection.startToEnd) {
                 await notificationRepository.markRead(notification.id);
                 return false;
-              } else if (direction == DismissDirection.endToStart && canDelete) {
+              } else if (direction == DismissDirection.endToStart &&
+                  canDelete) {
                 await notificationRepository.delete(notification.id);
                 return true;
               }
@@ -87,18 +98,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 side: BorderSide(
                   color: notification.isRead
                       ? Colors.transparent
-                      : (isDark
-                          ? const Color(0xFFEC008C).withOpacity(0.5)
-                          : const Color(0xFFEC008C).withOpacity(0.25)),
+                      : Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(isDark ? 0.5 : 0.25),
                   width: 1,
                 ),
               ),
-              color: isDark
-                  ? (notification.isRead ? const Color(0xFF0F0918) : const Color(0xFF170D26))
-                  : (notification.isRead ? const Color(0xFFF9F6FC) : const Color(0xFFF0E6F5)),
+              color: notification.isRead
+                  ? Theme.of(context).colorScheme.surface
+                  : Theme.of(context).colorScheme.primaryContainer,
               child: ListTile(
                 dense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                 onTap: () async {
                   final route = notification.deepLink;
                   if (!notification.isRead) {
@@ -113,12 +126,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: notification.isRead
-                      ? Colors.grey.withOpacity(0.1)
-                      : const Color(0xFFEC008C).withOpacity(0.1),
+                        ? Theme.of(context)
+                            .colorScheme
+                            .secondary
+                            .withOpacity(0.1)
+                        : Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
                   ),
                   child: Icon(
                     notificationTypeIcon(notification.type),
-                    color: notification.isRead ? Colors.grey : const Color(0xFFEC008C),
+                    color: notification.isRead
+                        ? Theme.of(context).colorScheme.secondary
+                        : Theme.of(context).colorScheme.primary,
                     size: 16,
                   ),
                 ),
@@ -126,10 +147,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   notification.title,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
-                    color: isDark
-                        ? (notification.isRead ? const Color(0xFFB5A7C5) : Colors.white)
-                        : (notification.isRead ? const Color(0xFF6B5885) : Colors.black87),
+                    fontWeight: notification.isRead
+                        ? FontWeight.normal
+                        : FontWeight.bold,
+                    color: notification.isRead
+                        ? Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.7)
+                        : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 subtitle: Column(
@@ -140,9 +166,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       notification.body,
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark
-                            ? (notification.isRead ? const Color(0xFF8E7E9D) : const Color(0xFFC4B2D9))
-                            : (notification.isRead ? const Color(0xFF8E7E9D) : const Color(0xFF6B5885)),
+                        color: notification.isRead
+                            ? Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.5)
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.8),
                       ),
                     ),
                     if (notification.createdAt != null) ...[
@@ -151,7 +183,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         formatMessageTime(notification.createdAt!),
                         style: TextStyle(
                           fontSize: 9,
-                          color: isDark ? Colors.white38 : Colors.black38,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.4),
                         ),
                       ),
                     ],
@@ -162,9 +197,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     : Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFF00FFCC),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
               ),
@@ -184,21 +219,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     return PageShell(
       title: tr ? 'Bildirimler' : 'Notifications',
-      subtitle: tr ? 'Sosyal etkileşimler ve sistem duyuruları' : 'Social interactions and announcements',
+      subtitle: tr
+          ? 'Sosyal etkileşimler ve sistem duyuruları'
+          : 'Social interactions and announcements',
       child: StreamBuilder<List<AppNotification>>(
         stream: notificationRepository.watchForUser(userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary),
               ),
             );
           }
 
           final notifications = snapshot.data ?? [];
-          final announcements = notifications.where((n) => n.deepLink.startsWith('/announcement')).toList();
-          final regularNotifications = notifications.where((n) => !n.deepLink.startsWith('/announcement')).toList();
+          final announcements = notifications
+              .where((n) => n.deepLink.startsWith('/announcement'))
+              .toList();
+          final regularNotifications = notifications
+              .where((n) => !n.deepLink.startsWith('/announcement'))
+              .toList();
 
           if (notifications.isEmpty) {
             return EmptyState(
@@ -217,14 +259,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 children: [
                   Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF160E24) : const Color(0xFFFAF6FC),
+                        color: Theme.of(context).colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF00FFCC).withOpacity(0.2)
-                              : const Color(0xFFEC008C).withOpacity(0.15),
+                          color: Theme.of(context).dividerColor,
                           width: 1,
                         ),
                       ),
@@ -232,7 +273,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         children: [
                           Icon(
                             Icons.info_outline_rounded,
-                            color: isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C),
+                            color: Theme.of(context).colorScheme.primary,
                             size: 16,
                           ),
                           const SizedBox(width: 8),
@@ -243,7 +284,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   : 'Swipe left: Delete | Swipe right: Read',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? const Color(0xFFE5DDF2) : const Color(0xFF6B5885),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.7),
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
@@ -255,11 +299,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   if (userId != 'local-user') ...[
                     const SizedBox(width: 8),
                     TextButton.icon(
-                      icon: const Icon(Icons.done_all_rounded, size: 16, color: Color(0xFF00FFCC)),
+                      icon: Icon(Icons.done_all_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary),
                       label: Text(
                         tr ? 'Tümünü Oku' : 'Read All',
-                        style: const TextStyle(
-                          color: Color(0xFF00FFCC),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -277,7 +323,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 children: [
                   Expanded(
                     child: _buildTabButton(
-                      label: tr ? 'Bildirimler (${regularNotifications.length})' : 'Notifications (${regularNotifications.length})',
+                      label: tr
+                          ? 'Bildirimler (${regularNotifications.length})'
+                          : 'Notifications (${regularNotifications.length})',
                       isActive: _activeTab == 0,
                       onTap: () => setState(() => _activeTab = 0),
                     ),
@@ -285,7 +333,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _buildTabButton(
-                      label: tr ? 'Duyurular (${announcements.length})' : 'Announcements (${announcements.length})',
+                      label: tr
+                          ? 'Duyurular (${announcements.length})'
+                          : 'Announcements (${announcements.length})',
                       isActive: _activeTab == 1,
                       onTap: () => setState(() => _activeTab = 1),
                     ),
@@ -321,7 +371,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -332,12 +381,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: isActive
-              ? const Color(0xFFEC008C).withOpacity(0.15)
-              : (isDark ? const Color(0xFF160E22) : Colors.white),
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+              : Theme.of(context).colorScheme.surface,
           border: Border.all(
             color: isActive
-                ? const Color(0xFFEC008C)
-                : (isDark ? const Color(0xFF2C1F45) : const Color(0xFFEC008C).withOpacity(0.2)),
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).dividerColor,
             width: 1.2,
           ),
         ),
@@ -347,8 +396,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             fontSize: 12,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: isActive
-                ? (isDark ? Colors.white : const Color(0xFFEC008C))
-                : (isDark ? Colors.white70 : const Color(0xFF6B5885)),
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
       ),

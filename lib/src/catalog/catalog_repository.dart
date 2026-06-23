@@ -48,43 +48,43 @@ class InMemoryCatalogRepository implements CatalogRepository {
 }
 
 const fallbackCatalogRepositorySeed = [
-    CatalogEntry(
-      id: 'template-character',
-      name: 'Character Profile',
-      type: CatalogItemType.character,
-      subtitle: 'Wiki entry template',
-      imageUrls: [],
-      tags: ['character', 'wiki'],
-      description: 'Character pages will connect dolls, pets and accessories.',
-    ),
-    CatalogEntry(
-      id: 'template-doll',
-      name: 'Doll Release',
-      type: CatalogItemType.doll,
-      subtitle: 'Owned, wanted, trade',
-      imageUrls: [],
-      tags: ['doll', 'release'],
-      description: 'Doll releases will be tracked as collection pieces.',
-    ),
-    CatalogEntry(
-      id: 'template-pet',
-      name: 'Pet Companion',
-      type: CatalogItemType.pet,
-      subtitle: 'Linked to character',
-      imageUrls: [],
-      tags: ['pet'],
-      description: 'Pets can connect to characters and doll releases.',
-    ),
-    CatalogEntry(
-      id: 'template-accessory',
-      name: 'Accessory Piece',
-      type: CatalogItemType.accessory,
-      subtitle: 'Set completion item',
-      imageUrls: [],
-      tags: ['accessory', 'completion'],
-      description: 'Accessories help users complete detailed sets.',
-    ),
-  ];
+  CatalogEntry(
+    id: 'template-character',
+    name: 'Character Profile',
+    type: CatalogItemType.character,
+    subtitle: 'Wiki entry template',
+    imageUrls: [],
+    tags: ['character', 'wiki'],
+    description: 'Character pages will connect dolls, pets and accessories.',
+  ),
+  CatalogEntry(
+    id: 'template-doll',
+    name: 'Doll Release',
+    type: CatalogItemType.doll,
+    subtitle: 'Owned, wanted, trade',
+    imageUrls: [],
+    tags: ['doll', 'release'],
+    description: 'Doll releases will be tracked as collection pieces.',
+  ),
+  CatalogEntry(
+    id: 'template-pet',
+    name: 'Pet Companion',
+    type: CatalogItemType.pet,
+    subtitle: 'Linked to character',
+    imageUrls: [],
+    tags: ['pet'],
+    description: 'Pets can connect to characters and doll releases.',
+  ),
+  CatalogEntry(
+    id: 'template-accessory',
+    name: 'Accessory Piece',
+    type: CatalogItemType.accessory,
+    subtitle: 'Set completion item',
+    imageUrls: [],
+    tags: ['accessory', 'completion'],
+    description: 'Accessories help users complete detailed sets.',
+  ),
+];
 
 final fallbackCatalogRepository = InMemoryCatalogRepository(
   seedEntries: fallbackCatalogRepositorySeed,

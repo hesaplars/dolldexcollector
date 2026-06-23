@@ -75,7 +75,8 @@ class SocialRepository {
 
     try {
       final senderDoc = await db.collection('users').doc(fromUserId).get();
-      final senderUsername = senderDoc.data()?['username'] as String? ?? 'Collector';
+      final senderUsername =
+          senderDoc.data()?['username'] as String? ?? 'Collector';
       await db.collection('notifications').add({
         'userId': toUserId,
         'type': 'friendRequest',
@@ -106,7 +107,8 @@ class SocialRepository {
 
       try {
         final recipientDoc = await db.collection('users').doc(toUserId).get();
-        final recipientUsername = recipientDoc.data()?['username'] as String? ?? 'Collector';
+        final recipientUsername =
+            recipientDoc.data()?['username'] as String? ?? 'Collector';
         await db.collection('notifications').add({
           'userId': fromUserId,
           'type': 'friendRequest',
@@ -166,10 +168,12 @@ class SocialRepository {
         .where('toUserId', isEqualTo: userId)
         .where('status', isEqualTo: 'pending')
         .snapshots()
-        .map((snap) => snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList());
+        .map((snap) =>
+            snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList());
   }
 
-  Stream<List<FriendRequestWithUser>> watchIncomingRequestsWithUsers(String userId) {
+  Stream<List<FriendRequestWithUser>> watchIncomingRequestsWithUsers(
+      String userId) {
     final db = _db;
     if (db == null || userId.isEmpty) return Stream.value([]);
 
@@ -184,7 +188,8 @@ class SocialRepository {
           list.add(FriendRequestWithUser(
             requestId: req['id'] as String,
             sender: sender,
-            createdAt: (req['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            createdAt:
+                (req['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
           ));
         }
       }
@@ -202,13 +207,13 @@ class SocialRepository {
         .where('memberIds', arrayContains: userId)
         .snapshots()
         .map((snap) {
-          return snap.docs.map((doc) {
-            final data = doc.data();
-            final from = data['fromUserId'] as String? ?? '';
-            final to = data['toUserId'] as String? ?? '';
-            return from == userId ? to : from;
-          }).toList();
-        });
+      return snap.docs.map((doc) {
+        final data = doc.data();
+        final from = data['fromUserId'] as String? ?? '';
+        final to = data['toUserId'] as String? ?? '';
+        return from == userId ? to : from;
+      }).toList();
+    });
   }
 
   Future<void> blockUser({
@@ -245,7 +250,8 @@ class SocialRepository {
         .collection('blocks')
         .where('blockerId', isEqualTo: userId)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) => doc.data()['blockedId'] as String).toList());
+        .map((snap) =>
+            snap.docs.map((doc) => doc.data()['blockedId'] as String).toList());
   }
 
   Future<String> openDirectThread({
@@ -270,10 +276,14 @@ class SocialRepository {
     required String threadId,
     required String senderId,
     required String text,
+    String sharedCatalogId = '',
+    String sharedCollectionId = '',
+    String sharedCollectionStatus = '',
+    String sharedSource = '',
   }) async {
     final db = _db;
     final trimmed = text.trim();
-    if (db == null || threadId.isEmpty || trimmed.isEmpty) {
+    if (db == null || threadId.isEmpty || (trimmed.isEmpty && sharedSource.isEmpty)) {
       return;
     }
 
@@ -292,9 +302,21 @@ class SocialRepository {
       'senderFrameColor': senderFrameColor,
       'text': trimmed,
       'createdAt': FieldValue.serverTimestamp(),
+      'sharedCatalogId': sharedCatalogId,
+      'sharedCollectionId': sharedCollectionId,
+      'sharedCollectionStatus': sharedCollectionStatus,
+      'sharedSource': sharedSource,
     });
+
+    String preview = trimmed;
+    if (preview.isEmpty && sharedSource.isNotEmpty) {
+      preview = sharedSource == 'catalog'
+          ? '🍼 Bir bebek paylaştı / Shared a doll'
+          : '✨ Bir koleksiyon öğesi paylaştı / Shared a collection item';
+    }
+
     await db.collection('chatThreads').doc(threadId).set({
-      'lastMessagePreview': trimmed,
+      'lastMessagePreview': preview,
       'lastMessageSenderId': senderId,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
@@ -306,7 +328,7 @@ class SocialRepository {
         'userId': recipientId,
         'type': 'message',
         'title': 'Yeni Mesaj / New Message',
-        'body': '@$senderUsername: $trimmed',
+        'body': '@$senderUsername: $preview',
         'isRead': false,
         'deepLink': '/social?chatUserId=$senderId',
         'createdAt': FieldValue.serverTimestamp(),
@@ -526,7 +548,10 @@ class SocialRepository {
     required String targetUserId,
   }) async {
     final db = _db;
-    if (db == null || currentUserId.isEmpty || targetUserId.isEmpty || currentUserId == targetUserId) {
+    if (db == null ||
+        currentUserId.isEmpty ||
+        targetUserId.isEmpty ||
+        currentUserId == targetUserId) {
       return;
     }
 
@@ -573,19 +598,20 @@ class SocialRepository {
         .where('followerId', isEqualTo: userId)
         .snapshots()
         .asyncMap((snap) async {
-          final uids = snap.docs.map((doc) => doc.data()['followingId'] as String).toList();
-          if (uids.isEmpty) {
-            return const <AppUser>[];
-          }
-          final List<AppUser> users = [];
-          for (final uid in uids) {
-            final userDoc = await db.collection('users').doc(uid).get();
-            if (userDoc.exists) {
-              users.add(AppUser.fromMap(userDoc.id, userDoc.data() ?? {}));
-            }
-          }
-          return users;
-        });
+      final uids =
+          snap.docs.map((doc) => doc.data()['followingId'] as String).toList();
+      if (uids.isEmpty) {
+        return const <AppUser>[];
+      }
+      final List<AppUser> users = [];
+      for (final uid in uids) {
+        final userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+          users.add(AppUser.fromMap(userDoc.id, userDoc.data() ?? {}));
+        }
+      }
+      return users;
+    });
   }
 
   Stream<List<AppUser>> watchFollowersList(String userId) {
@@ -599,19 +625,20 @@ class SocialRepository {
         .where('followingId', isEqualTo: userId)
         .snapshots()
         .asyncMap((snap) async {
-          final uids = snap.docs.map((doc) => doc.data()['followerId'] as String).toList();
-          if (uids.isEmpty) {
-            return const <AppUser>[];
-          }
-          final List<AppUser> users = [];
-          for (final uid in uids) {
-            final userDoc = await db.collection('users').doc(uid).get();
-            if (userDoc.exists) {
-              users.add(AppUser.fromMap(userDoc.id, userDoc.data() ?? {}));
-            }
-          }
-          return users;
-        });
+      final uids =
+          snap.docs.map((doc) => doc.data()['followerId'] as String).toList();
+      if (uids.isEmpty) {
+        return const <AppUser>[];
+      }
+      final List<AppUser> users = [];
+      for (final uid in uids) {
+        final userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+          users.add(AppUser.fromMap(userDoc.id, userDoc.data() ?? {}));
+        }
+      }
+      return users;
+    });
   }
 
   Stream<List<AppUser>> watchFriendsList(String userId) {
@@ -698,7 +725,9 @@ class SocialRepository {
         .orderBy('createdAt', descending: true)
         .limit(45)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) => AppComment.fromMap(doc.id, doc.data())).toList());
+        .map((snap) => snap.docs
+            .map((doc) => AppComment.fromMap(doc.id, doc.data()))
+            .toList());
   }
 
   DateTime? _dateFromValue(Object? value) {

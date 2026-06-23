@@ -48,7 +48,7 @@ class ReplayStream<T> extends Stream<T> {
     bool? cancelOnError,
   }) {
     final controller = StreamController<T>(sync: true);
-    
+
     _controllers.add(controller);
     _startSubscription();
 

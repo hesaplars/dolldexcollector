@@ -22,6 +22,7 @@ import 'src/collection/collection_repository.dart';
 import 'src/comments/comment_models.dart';
 import 'src/comments/comment_repository.dart';
 import 'src/core/app_language.dart';
+import 'src/core/app_helpers.dart';
 import 'src/core/image_url_validator.dart';
 import 'src/core/web_image_helper.dart';
 import 'src/core/local_storage_helper.dart';
@@ -335,9 +336,12 @@ class DollDexApp extends StatelessWidget {
                                       Center(
                                         child: ElevatedButton(
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                const Color(0xFFEC008C),
-                                            foregroundColor: Colors.white,
+                                            backgroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            foregroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary,
                                           ),
                                           onPressed: () {
                                             appErrorNotifier.value = null;
@@ -517,166 +521,10 @@ final _router = GoRouter(
   ],
 );
 
-Widget _buildAvatarHelper(String avatarId, String frameColor,
+Widget _buildAvatarHelper(
+    BuildContext context, String avatarId, String frameColor,
     {double size = 40}) {
-  String assetPath = '';
-  switch (avatarId) {
-    case 'avatar-0':
-      assetPath = 'assets/avatars/avatar_vampire.png';
-      break;
-    case 'avatar-1':
-      assetPath = 'assets/avatars/avatar_werewolf.png';
-      break;
-    case 'avatar-2':
-      assetPath = 'assets/avatars/avatar_sea.png';
-      break;
-    case 'avatar-3':
-      assetPath = 'assets/avatars/avatar_zombie.png';
-      break;
-    case 'avatar-4':
-      assetPath = 'assets/avatars/avatar_mummy.png';
-      break;
-    case 'avatar-5':
-      assetPath = 'assets/avatars/avatar_phantom.png';
-      break;
-    case 'avatar-6':
-      assetPath = 'assets/avatars/avatar_witch.png';
-      break;
-    case 'avatar-7':
-      assetPath = 'assets/avatars/avatar_gargoyle.png';
-      break;
-    case 'avatar-8':
-      assetPath = 'assets/avatars/avatar_ghost.png';
-      break;
-    case 'avatar-9':
-      assetPath = 'assets/avatars/avatar_spider.png';
-      break;
-    case 'avatar-10':
-      assetPath = 'assets/avatars/avatar_cyber.png';
-      break;
-    case 'avatar-11':
-      assetPath = 'assets/avatars/avatar_skeleton.png';
-      break;
-    default:
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: const Color(0xFFEC008C),
-            width: 2.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFEC008C).withOpacity(0.3),
-              blurRadius: 6,
-              spreadRadius: 1,
-            ),
-          ],
-          color: const Color(0xFF160E22),
-        ),
-        child: Center(
-          child: SafeShaderMask(
-            shaderCallback: (bounds) {
-              return const LinearGradient(
-                colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(bounds);
-            },
-            child: Icon(
-              Icons.face_3_outlined,
-              size: size * 0.6,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      );
-  }
-
-  final isGothicFrame = frameColor.startsWith('frame-');
-  final parsedColor =
-      !isGothicFrame ? int.tryParse(frameColor, radix: 16) : null;
-  final Color? borderColor = parsedColor != null ? Color(parsedColor) : null;
-
-  return Stack(
-    alignment: Alignment.center,
-    children: [
-      Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: borderColor ?? const Color(0xFFEC008C).withOpacity(0.15),
-            width: borderColor != null ? 3.0 : 1.5,
-          ),
-          boxShadow: borderColor != null
-              ? [
-                  BoxShadow(
-                    color: borderColor.withOpacity(0.35),
-                    blurRadius: 6,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
-        ),
-        child: Padding(
-          padding:
-              EdgeInsets.all(borderColor != null || isGothicFrame ? 2.0 : 0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(size),
-            child: Image.asset(
-              assetPath,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: size,
-                  height: size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFEC008C),
-                      width: 2.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFEC008C).withOpacity(0.3),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                    color: const Color(0xFF160E22),
-                  ),
-                  child: Center(
-                    child: SafeShaderMask(
-                      shaderCallback: (bounds) {
-                        return const LinearGradient(
-                          colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds);
-                      },
-                      child: Icon(
-                        Icons.face_3_outlined,
-                        size: size * 0.6,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ),
-      if (isGothicFrame)
-        Positioned.fill(
-          child: GothicFrameWidget(frameType: frameColor, size: size),
-        ),
-    ],
-  );
+  return buildAvatarHelper(context, avatarId, frameColor, size: size);
 }
 
 Future<void> _loadCollectionForCurrentUser() async {
@@ -1215,7 +1063,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                       ),
                                     ),
                                     padding: const EdgeInsets.all(2),
-                                    child: buildAvatarHelper(
+                                    child: _buildAvatarHelper(
+                                      context,
                                       previewAvatar,
                                       frame,
                                       size: 36,
@@ -1309,7 +1158,8 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                     borderRadius: BorderRadius.circular(6),
                                     child: Stack(
                                       children: [
-                                        _buildCoverPhotoPreview(coverId),
+                                        _buildCoverPhotoPreview(
+                                            context, coverId),
                                         if (isSelected)
                                           const Center(
                                             child: CircleAvatar(
@@ -2598,114 +2448,13 @@ Future<bool> _showGothicConfirmDialog(
   String? confirmText,
   String? cancelText,
 }) async {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-  final finalConfirmText = confirmText ?? (tr ? 'Onayla' : 'Confirm');
-  final finalCancelText = cancelText ?? (tr ? 'Vazgeç' : 'Cancel');
-
-  final result = await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        child: GothicIvyContainer(
-          borderRadius: 20,
-          color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cinzel',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFFEC008C),
-                  shadows: isDark
-                      ? [
-                          const Shadow(
-                            color: Color(0xFFEC008C),
-                            blurRadius: 10,
-                          ),
-                        ]
-                      : [],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                content,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                            color: Color(0xFFEC008C), width: 1.5),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(
-                        finalCancelText,
-                        style: TextStyle(
-                          color:
-                              isDark ? Colors.white : const Color(0xFFEC008C),
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Cinzel',
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(
-                          finalConfirmText,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Cinzel',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
+  return showGothicConfirmDialog(
+    context,
+    title: title,
+    content: content,
+    confirmText: confirmText,
+    cancelText: cancelText,
   );
-  return result ?? false;
 }
 
 String _reportReasonLabel(BuildContext context, ReportReason reason) {
@@ -2882,7 +2631,8 @@ Widget _buildFilterChip({
   required String label,
   required VoidCallback onTap,
 }) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final finalColor =
+      isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent;
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(12),
@@ -2892,40 +2642,34 @@ Widget _buildFilterChip({
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: isSelected
-            ? const Color(0xFFEC008C).withOpacity(0.15)
-            : (isDark ? const Color(0xFF171026) : Colors.white),
+            ? finalColor.withOpacity(0.15)
+            : Theme.of(context).colorScheme.surface,
         border: Border.all(
-          color: isSelected
-              ? const Color(0xFFEC008C)
-              : (isDark
-                  ? const Color(0xFF2C1F45)
-                  : const Color(0xFFEC008C).withOpacity(0.25)),
+          color: isSelected ? finalColor : Theme.of(context).dividerColor,
           width: 1.5,
         ),
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: const Color(0xFFEC008C).withOpacity(0.2),
+                  color: finalColor.withOpacity(0.2),
                   blurRadius: 6,
                   spreadRadius: 1,
                 )
               ]
-            : (isDark
-                ? null
-                : [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    )
-                  ]),
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ],
       ),
       child: Text(
         label,
         style: TextStyle(
           color: isSelected
-              ? (isDark ? Colors.white : const Color(0xFFEC008C))
-              : (isDark ? Colors.white70 : const Color(0xFF6B5885)),
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
@@ -2937,10 +2681,10 @@ Widget _buildFilterChip({
 Widget _buildNeonIcon(BuildContext context, IconData icon, {double size = 24}) {
   return SafeShaderMask(
     shaderCallback: (bounds) {
-      return const LinearGradient(
+      return LinearGradient(
         colors: [
-          Color(0xFFEC008C),
-          Color(0xFF00FFCC),
+          Theme.of(context).colorScheme.primary,
+          Theme.of(context).colorScheme.secondary,
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -2962,14 +2706,13 @@ Widget _buildGothicNeonIconButton({
   EdgeInsets padding = const EdgeInsets.all(8),
   Color? activeColor,
 }) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  final finalColor = activeColor ?? const Color(0xFFEC008C);
+  final finalColor = activeColor ?? Theme.of(context).colorScheme.primary;
 
   final child = Container(
     padding: padding,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
-      color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF2FF),
+      color: Theme.of(context).colorScheme.surface,
       border: Border.all(
         color: finalColor.withOpacity(0.8),
         width: 1.5,
@@ -3313,7 +3056,7 @@ Widget _buildCoverPhoto(BuildContext context, String? coverId,
   );
 }
 
-Widget _buildCoverPhotoPreview(String coverId) {
+Widget _buildCoverPhotoPreview(BuildContext context, String coverId) {
   if (coverId == 'default') {
     return Container(
       width: double.infinity,
@@ -3326,12 +3069,12 @@ Widget _buildCoverPhotoPreview(String coverId) {
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFF130820),
-                      Color(0xFF2E0C4C),
-                      Color(0xFFEC008C)
+                      Theme.of(context).colorScheme.surface,
+                      Theme.of(context).colorScheme.primaryContainer,
+                      Theme.of(context).colorScheme.primary,
                     ],
                   ),
                 ),
@@ -3346,7 +3089,7 @@ Widget _buildCoverPhotoPreview(String coverId) {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.5,
                 color: Colors.white,
-                fontFamily: 'Cinzel',
+                fontFamily: 'Outfit',
               ),
             ),
           ),
@@ -3364,7 +3107,7 @@ Widget _buildCoverPhotoPreview(String coverId) {
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
         return Container(
-          color: const Color(0xFF1C0D2B),
+          color: Theme.of(context).colorScheme.secondaryContainer,
         );
       },
     ),
@@ -3475,7 +3218,7 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                             itemBuilder: (context, idx) {
                               final user = list[idx];
                               return ListTile(
-                                leading: _buildAvatarHelper(
+                                leading: _buildAvatarHelper(context,
                                     user.avatarId, user.avatarFrameColor,
                                     size: 36),
                                 title: Text(
@@ -3540,7 +3283,7 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                             itemBuilder: (context, idx) {
                               final user = list[idx];
                               return ListTile(
-                                leading: _buildAvatarHelper(
+                                leading: _buildAvatarHelper(context,
                                     user.avatarId, user.avatarFrameColor,
                                     size: 36),
                                 title: Text(
@@ -3603,7 +3346,7 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                             itemBuilder: (context, idx) {
                               final user = list[idx];
                               return ListTile(
-                                leading: _buildAvatarHelper(
+                                leading: _buildAvatarHelper(context,
                                     user.avatarId, user.avatarFrameColor,
                                     size: 36),
                                 title: Text(
@@ -3672,7 +3415,7 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                               itemBuilder: (context, idx) {
                                 final user = list[idx];
                                 return ListTile(
-                                  leading: _buildAvatarHelper(
+                                  leading: _buildAvatarHelper(context,
                                       user.avatarId, user.avatarFrameColor,
                                       size: 36),
                                   title: Text(
@@ -4051,6 +3794,7 @@ void _showCommentsSheet(BuildContext context, String targetId,
                                     }
                                   },
                                   child: _buildAvatarHelper(
+                                    context,
                                     comment.senderAvatarId,
                                     comment.senderFrameColor,
                                     size: 30,
@@ -4311,9 +4055,10 @@ void _openDirectMessagesModal(BuildContext context,
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: isDark ? const Color(0xFF0F0918) : const Color(0xFFFAF2FF),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: RoundedRectangleBorder(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      side: BorderSide(color: Theme.of(context).dividerColor, width: 1.1),
     ),
     builder: (context) {
       return SizedBox(

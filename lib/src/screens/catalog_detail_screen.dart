@@ -118,7 +118,8 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.08),
                 side: BorderSide(
                   color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
                   width: 1.2,
@@ -150,7 +151,9 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
                       : GestureDetector(
                           onTap: () => showPhotoGalleryDialog(
                             context,
-                            item.imageUrls.isNotEmpty ? item.imageUrls : [item.primaryImageUrl],
+                            item.imageUrls.isNotEmpty
+                                ? item.imageUrls
+                                : [item.primaryImageUrl],
                             0,
                           ),
                           child: DollImage(
@@ -220,7 +223,8 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
                     builder: (context, commentsByTarget, _) {
                       return _CommentsPanel(
                         controller: _commentController,
-                        comments: commentsByTarget[item.id] ?? const <AppComment>[],
+                        comments:
+                            commentsByTarget[item.id] ?? const <AppComment>[],
                         onSubmit: _addComment,
                       );
                     },
@@ -248,7 +252,10 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
     if (user != null) {
       senderUsername = user.displayName ?? 'Collector';
       try {
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
         final data = doc.data();
         final customUsername = data?['username'] as String? ?? '';
         if (customUsername.isNotEmpty) {
@@ -408,13 +415,15 @@ class _CommentsPanel extends StatelessWidget {
                     leading: GestureDetector(
                       onTap: () {
                         if (comment.senderUsername.isNotEmpty) {
-                          final uName = comment.senderUsername.replaceAll('@', '');
+                          final uName =
+                              comment.senderUsername.replaceAll('@', '');
                           context.go('/u/$uName');
                         } else {
                           context.go('/users/${comment.userId}');
                         }
                       },
                       child: buildAvatarHelper(
+                        context,
                         comment.senderAvatarId,
                         comment.senderFrameColor,
                         size: 38,
@@ -435,7 +444,8 @@ class _CommentsPanel extends StatelessWidget {
                             GestureDetector(
                               onTap: () {
                                 if (comment.senderUsername.isNotEmpty) {
-                                  final uName = comment.senderUsername.replaceAll('@', '');
+                                  final uName = comment.senderUsername
+                                      .replaceAll('@', '');
                                   context.go('/u/$uName');
                                 } else {
                                   context.go('/users/${comment.userId}');
@@ -520,7 +530,8 @@ class SetPartsWidget extends StatelessWidget {
     return ValueListenableBuilder<List<CatalogEntry>>(
       valueListenable: catalogEntriesNotifier,
       builder: (context, allCatalog, _) {
-        final children = allCatalog.where((c) => c.parentId == item.id).toList();
+        final children =
+            allCatalog.where((c) => c.parentId == item.id).toList();
         if (children.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -530,9 +541,9 @@ class SetPartsWidget extends StatelessWidget {
           builder: (context, userColl, _) {
             final ownedChildren = children.where((child) {
               final entry = userColl.cast<CollectionEntry?>().firstWhere(
-                (e) => e?.itemId == child.id,
-                orElse: () => null,
-              );
+                    (e) => e?.itemId == child.id,
+                    orElse: () => null,
+                  );
               return entry != null && entry.status == CollectionStatus.owned;
             }).toList();
 
@@ -576,7 +587,9 @@ class SetPartsWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                tr ? 'Set Parçaları & Aksesuarlar' : 'Set Parts & Accessories',
+                                tr
+                                    ? 'Set Parçaları & Aksesuarlar'
+                                    : 'Set Parts & Accessories',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -598,16 +611,19 @@ class SetPartsWidget extends StatelessWidget {
                         ),
                         if (isSetComplete)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: colorScheme.primary.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: colorScheme.primary, width: 1),
+                              border: Border.all(
+                                  color: colorScheme.primary, width: 1),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.stars_rounded, color: colorScheme.primary, size: 16),
+                                Icon(Icons.stars_rounded,
+                                    color: colorScheme.primary, size: 16),
                                 const SizedBox(width: 4),
                                 Text(
                                   tr ? 'Set Tamamlandı!' : 'Set Complete!',
@@ -630,8 +646,11 @@ class SetPartsWidget extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                             child: LinearProgressIndicator(
                               value: progress,
-                              backgroundColor: isDark ? Colors.white10 : Colors.black12,
-                              color: isSetComplete ? colorScheme.primary : colorScheme.secondary,
+                              backgroundColor:
+                                  isDark ? Colors.white10 : Colors.black12,
+                              color: isSetComplete
+                                  ? colorScheme.primary
+                                  : colorScheme.secondary,
                               minHeight: 8,
                             ),
                           ),
@@ -656,37 +675,48 @@ class SetPartsWidget extends StatelessWidget {
                       itemCount: children.length,
                       itemBuilder: (context, index) {
                         final child = children[index];
-                        final collEntry = userColl.cast<CollectionEntry?>().firstWhere(
-                          (e) => e?.itemId == child.id,
-                          orElse: () => null,
-                        );
+                        final collEntry =
+                            userColl.cast<CollectionEntry?>().firstWhere(
+                                  (e) => e?.itemId == child.id,
+                                  orElse: () => null,
+                                );
 
                         Widget trailing;
                         if (collEntry == null) {
                           trailing = Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.lock_outline_rounded, size: 16, color: Colors.grey),
+                              const Icon(Icons.lock_outline_rounded,
+                                  size: 16, color: Colors.grey),
                               const SizedBox(width: 6),
                               IconButton(
-                                icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
-                                onPressed: () => showCollectionSheet(context, child),
-                                tooltip: tr ? 'Koleksiyona Ekle' : 'Add to Collection',
+                                icon: const Icon(
+                                    Icons.add_circle_outline_rounded,
+                                    size: 20),
+                                onPressed: () =>
+                                    showCollectionSheet(context, child),
+                                tooltip: tr
+                                    ? 'Koleksiyona Ekle'
+                                    : 'Add to Collection',
                               ),
                             ],
                           );
                         } else if (collEntry.status == CollectionStatus.owned) {
                           trailing = Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.green.withValues(alpha: 0.3), width: 1),
+                              border: Border.all(
+                                  color: Colors.green.withValues(alpha: 0.3),
+                                  width: 1),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 14),
+                                const Icon(Icons.check_circle_outline_rounded,
+                                    color: Colors.green, size: 14),
                                 const SizedBox(width: 4),
                                 Text(
                                   tr ? 'Koleksiyonunda' : 'In Collection',
@@ -699,18 +729,23 @@ class SetPartsWidget extends StatelessWidget {
                               ],
                             ),
                           );
-                        } else if (collEntry.status == CollectionStatus.wanted) {
+                        } else if (collEntry.status ==
+                            CollectionStatus.wanted) {
                           trailing = Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.pink.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.pink.withValues(alpha: 0.3), width: 1),
+                              border: Border.all(
+                                  color: Colors.pink.withValues(alpha: 0.3),
+                                  width: 1),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.favorite_rounded, color: Colors.pink, size: 14),
+                                const Icon(Icons.favorite_rounded,
+                                    color: Colors.pink, size: 14),
                                 const SizedBox(width: 4),
                                 Text(
                                   tr ? 'İstek Listesinde' : 'Wishlist',
@@ -725,11 +760,14 @@ class SetPartsWidget extends StatelessWidget {
                           );
                         } else {
                           trailing = Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.orange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.orange.withValues(alpha: 0.3), width: 1),
+                              border: Border.all(
+                                  color: Colors.orange.withValues(alpha: 0.3),
+                                  width: 1),
                             ),
                             child: Text(
                               collEntry.status.name.toUpperCase(),
@@ -771,7 +809,7 @@ class SetPartsWidget extends StatelessWidget {
                           ),
                           trailing: trailing,
                           onTap: () {
-                             context.go('/i/${child.id}');
+                            context.go('/i/${child.id}');
                           },
                         );
                       },

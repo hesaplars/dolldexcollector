@@ -14,291 +14,81 @@ import '../core/app_helpers.dart';
 import 'social_feed_tab.dart';
 
 class DollDexTheme {
-  static const ink = Color(0xFF211C18);
-  static const cocoa = Color(0xFF6B4328);
-  static const paper = Color(0xFFFFF7E8);
-  static const mist = Color(0xFFFFF1DA);
-  static const panel = Color(0xFFFFFBF2);
-  static const teal = Color(0xFFFF6415);
-  static const berry = Color(0xFF8A5A34);
-  static const amber = Color(0xFFF5B940);
-  static const line = Color(0xFFE9D9BE);
-  static const softPeach = Color(0xFFFFDEC0);
-  static const softLemon = Color(0xFFFFF3B8);
-  static const darkInk = Color(0xFFFFF7E8);
-  static const darkPaper = Color(0xFF2A2018);
-  static const darkPanel = Color(0xFF3A2A1F);
-  static const darkLine = Color(0xFF705239);
+  static const ink = Color(0xFF1F1E1C);
+  static const cocoa = Color(0xFF7A6652);
+  static const paper = Color(0xFFF7EFE2);
+  static const mist = Color(0xFFF4E7D3);
+  static const panel = Color(0xFFFFF8EB);
+  static const teal = Color(0xFFFF5A14);
+  static const berry = Color(0xFF7A6652);
+  static const amber = Color(0xFFC89411);
+  static const line = Color(0xFFE5D6BF);
+  static const softPeach = Color(0xFFFFE2C4);
+  static const softLemon = Color(0xFFFFE2C4);
+  static const darkInk = Color(0xFFFFF7EA);
+  static const darkPaper = Color(0xFF15120F);
+  static const darkPanel = Color(0xFF211A14);
+  static const darkLine = Color(0xFF4A3828);
 
-  static ThemeData get light {
-    final base = ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: teal,
+  static ThemeData get light => _buildPremiumTheme(
         brightness: Brightness.light,
-        primary: teal,
-        secondary: berry,
-        surface: paper,
-      ),
-      useMaterial3: true,
-    );
+        bg: const Color(0xFFF7EFE2),
+        panel: const Color(0xFFFFF8EB),
+        panelAlt: const Color(0xFFF4E7D3),
+        text: const Color(0xFF1F1E1C),
+        muted: const Color(0xFF7A6652),
+        accent: const Color(0xFFFF5A14),
+        accentSoft: const Color(0xFFFFE2C4),
+        line: const Color(0xFFE5D6BF),
+      );
 
-    return base.copyWith(
-      scaffoldBackgroundColor: paper,
-      textTheme: GoogleFonts.outfitTextTheme(base.textTheme).apply(
-        bodyColor: ink,
-        displayColor: ink,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: paper,
-        foregroundColor: ink,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      iconTheme: const IconThemeData(color: cocoa),
-      cardTheme: CardThemeData(
-        color: panel,
-        surfaceTintColor: Colors.transparent,
-        elevation: 5,
-        shadowColor: Colors.black.withOpacity(0.13),
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: line, width: 1.1),
-        ),
-      ),
-      dialogTheme: DialogThemeData(
-        backgroundColor: panel,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: const BorderSide(color: line, width: 1.2),
-        ),
-      ),
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: panel,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          side: const BorderSide(color: line, width: 1.2),
-        ),
-        dragHandleColor: line,
-        dragHandleSize: const Size(48, 5),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: panel,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: line),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: line),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: teal, width: 1.6),
-        ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: teal,
-          foregroundColor: Colors.white,
-          elevation: 5,
-          shadowColor: teal.withOpacity(0.35),
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: teal,
-          foregroundColor: Colors.white,
-          elevation: 5,
-          shadowColor: teal.withOpacity(0.35),
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: cocoa,
-          side: const BorderSide(color: line, width: 1.5),
-          textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w800),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        height: 74,
-        backgroundColor: const Color(0xFFFFF4DC),
-        surfaceTintColor: Colors.transparent,
-        indicatorColor: teal.withOpacity(0.12),
-        shadowColor: Colors.black.withOpacity(0.18),
-        elevation: 12,
-        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
-          final selected = states.contains(WidgetState.selected);
-          return IconThemeData(
-            color: selected ? teal : cocoa.withOpacity(0.75),
-            size: selected ? 28 : 25,
-          );
-        }),
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
-          final isSelected = states.contains(WidgetState.selected);
-          return TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-            color: isSelected ? teal : cocoa.withOpacity(0.72),
-            overflow: TextOverflow.ellipsis,
-            fontFamily: 'Outfit',
-            height: 1.0,
-          );
-        }),
-      ),
-    );
-  }
-
-  static ThemeData get dark {
-    final base = ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: teal,
+  static ThemeData get dark => _buildPremiumTheme(
         brightness: Brightness.dark,
-        primary: teal,
-        secondary: berry,
-        surface: darkPaper,
-      ),
-      useMaterial3: true,
-    );
+        bg: const Color(0xFF15120F),
+        panel: const Color(0xFF211A14),
+        panelAlt: const Color(0xFF2C2218),
+        text: const Color(0xFFFFF7EA),
+        muted: const Color(0xFFCBB9A4),
+        accent: const Color(0xFFFF7A1A),
+        accentSoft: const Color(0xFF3A2618),
+        line: const Color(0xFF4A3828),
+      );
 
-    return base.copyWith(
-      scaffoldBackgroundColor: darkPaper,
-      textTheme: GoogleFonts.outfitTextTheme(base.textTheme).apply(
-        bodyColor: darkInk,
-        displayColor: darkInk,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: darkPaper,
-        foregroundColor: darkInk,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      cardTheme: CardThemeData(
-        color: darkPanel,
-        elevation: 5,
-        shadowColor: Colors.black.withOpacity(0.28),
-        surfaceTintColor: Colors.transparent,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: darkLine, width: 1.5),
-        ),
-      ),
-      dialogTheme: DialogThemeData(
-        backgroundColor: darkPanel,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: const BorderSide(color: darkLine, width: 1.5),
-        ),
-      ),
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: darkPanel,
-        surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          side: BorderSide(color: darkLine, width: 1.5),
-        ),
-        dragHandleColor: darkLine,
-        dragHandleSize: const Size(40, 4),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: teal,
-          foregroundColor: Colors.white,
-          elevation: 5,
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: teal,
-          foregroundColor: Colors.white,
-          elevation: 5,
-          textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: darkInk,
-          side: const BorderSide(color: darkLine, width: 1.5),
-          textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w800),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        height: 74,
-        backgroundColor: const Color(0xFF3A2A1F),
-        indicatorColor: teal.withOpacity(0.18),
-        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
-          final isSelected = states.contains(WidgetState.selected);
-          return TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-            overflow: TextOverflow.ellipsis,
-            fontFamily: 'Outfit',
-            height: 1.0,
-          );
-        }),
-      ),
-    );
-  }
+  static ThemeData get toxicNeon => _buildPremiumTheme(
+        brightness: Brightness.light,
+        bg: const Color(0xFFEEF7EF),
+        panel: const Color(0xFFFBFFF8),
+        panelAlt: const Color(0xFFE0F0E6),
+        text: const Color(0xFF17221A),
+        muted: const Color(0xFF607463),
+        accent: const Color(0xFF2D9D72),
+        accentSoft: const Color(0xFFCDEEDC),
+        line: const Color(0xFFC7DDCC),
+      );
 
-  static ThemeData get toxicNeon {
-    return _buildCustomDarkTheme(
-      primary: const Color(0xFF39FF14),
-      secondary: const Color(0xFF00E5FF),
-      background: const Color(0xFF060D08),
-      panel: const Color(0xFF0E1A11),
-      line: const Color(0xFF1C3A24),
-    );
-  }
+  static ThemeData get crimsonBlood => _buildPremiumTheme(
+        brightness: Brightness.light,
+        bg: const Color(0xFFFFF0EC),
+        panel: const Color(0xFFFFF8F2),
+        panelAlt: const Color(0xFFF8DCD4),
+        text: const Color(0xFF241713),
+        muted: const Color(0xFF7F5A50),
+        accent: const Color(0xFFC53B2C),
+        accentSoft: const Color(0xFFFFD8CE),
+        line: const Color(0xFFE8C5BB),
+      );
 
-  static ThemeData get crimsonBlood {
-    return _buildCustomDarkTheme(
-      primary: const Color(0xFFFF073A),
-      secondary: const Color(0xFFFFCC00),
-      background: const Color(0xFF0B0606),
-      panel: const Color(0xFF160C0C),
-      line: const Color(0xFF321515),
-    );
-  }
-
-  static ThemeData get royalGold {
-    return _buildCustomDarkTheme(
-      primary: const Color(0xFFFFD700),
-      secondary: const Color(0xFF8A2BE2),
-      background: const Color(0xFF0B0410),
-      panel: const Color(0xFF160E1E),
-      line: const Color(0xFF332042),
-    );
-  }
+  static ThemeData get royalGold => _buildPremiumTheme(
+        brightness: Brightness.light,
+        bg: const Color(0xFFFFF7DF),
+        panel: const Color(0xFFFFFDF3),
+        panelAlt: const Color(0xFFF3E0AA),
+        text: const Color(0xFF211B0E),
+        muted: const Color(0xFF776033),
+        accent: const Color(0xFFC89411),
+        accentSoft: const Color(0xFFFFE6A6),
+        line: const Color(0xFFE1C778),
+      );
 
   static ThemeData getThemeData(String key) {
     switch (key) {
@@ -316,87 +106,150 @@ class DollDexTheme {
     }
   }
 
-  static ThemeData _buildCustomDarkTheme({
-    required Color primary,
-    required Color secondary,
-    required Color background,
+  static ThemeData _buildPremiumTheme({
+    required Brightness brightness,
+    required Color bg,
     required Color panel,
+    required Color panelAlt,
+    required Color text,
+    required Color muted,
+    required Color accent,
+    required Color accentSoft,
     required Color line,
   }) {
     final base = ThemeData(
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primary,
-        brightness: Brightness.dark,
-        primary: primary,
-        secondary: secondary,
-        surface: background,
+        seedColor: accent,
+        brightness: brightness,
+        primary: accent,
+        primaryContainer: accentSoft,
+        secondary: muted,
+        secondaryContainer: panelAlt,
+        surface: panel,
+        onSurface: text,
       ),
       useMaterial3: true,
     );
 
     return base.copyWith(
-      scaffoldBackgroundColor: background,
-      textTheme: GoogleFonts.cinzelTextTheme(base.textTheme).apply(
-        bodyColor: darkInk,
-        displayColor: darkInk,
+      scaffoldBackgroundColor: bg,
+      textTheme: GoogleFonts.outfitTextTheme(base.textTheme).apply(
+        bodyColor: text,
+        displayColor: text,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: background,
-        foregroundColor: darkInk,
+        backgroundColor: bg,
+        foregroundColor: text,
         elevation: 0,
         centerTitle: true,
       ),
+      iconTheme: IconThemeData(color: muted),
+      dividerColor: line,
       cardTheme: CardThemeData(
         color: panel,
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        elevation: 4,
+        shadowColor: Colors.black
+            .withOpacity(brightness == Brightness.dark ? 0.28 : 0.1),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: line, width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: line, width: 1.1),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: panel,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: line, width: 1.5),
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(color: line, width: 1.2),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: panel,
         surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          side: BorderSide(color: darkLine, width: 1.5),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          side: BorderSide(color: line, width: 1.2),
         ),
         dragHandleColor: line,
-        dragHandleSize: const Size(40, 4),
+        dragHandleSize: const Size(48, 5),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: panel,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: line),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: line),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: accent, width: 1.6),
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: accent,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: accent,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          elevation: 4,
+          shadowColor: accent.withOpacity(0.35),
+          textStyle:
+              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: accent,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shadowColor: accent.withOpacity(0.35),
+          textStyle:
+              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: darkInk,
+          foregroundColor: muted,
           side: BorderSide(color: line, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w800),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
+        height: 74,
+        backgroundColor: panelAlt,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: accent.withOpacity(0.12),
+        shadowColor: Colors.black.withOpacity(0.18),
+        elevation: 12,
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? accent : muted.withOpacity(0.75),
+            size: selected ? 28 : 25,
+          );
+        }),
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
-            fontSize: 10.5,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+            color: isSelected ? accent : muted.withOpacity(0.72),
             overflow: TextOverflow.ellipsis,
             fontFamily: 'Outfit',
             height: 1.0,
@@ -638,14 +491,9 @@ class GothicIvyContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    final bgCol =
-        color ?? (isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC));
-    final borderCol = borderColor ??
-        (isDark
-            ? const Color(0xFF00FFCC).withOpacity(0.4)
-            : const Color(0xFFEC008C).withOpacity(0.5));
+    final bgCol = color ?? theme.colorScheme.surface;
+    final borderCol = borderColor ?? theme.colorScheme.primary.withOpacity(0.5);
 
     return Container(
       decoration: BoxDecoration(
@@ -1329,64 +1177,77 @@ class EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 0,
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.02)
-          : Colors.black.withValues(alpha: 0.01),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-          width: 1.5,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color:
-                    isDark ? const Color(0xFF160E22) : const Color(0xFFFAF2FF),
-                border: Border.all(
-                  color: const Color(0xFFEC008C),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFEC008C).withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 2,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: SizedBox(
+          width: double.infinity,
+          child: Card(
+            elevation: 0,
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.02)
+                : Colors.black.withValues(alpha: 0.01),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
+                width: 1.5,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withValues(alpha: 0.4),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.25),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: buildNeonIcon(context, icon, size: 40),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    body,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                      height: 1.3,
+                    ),
                   ),
                 ],
               ),
-              child: buildNeonIcon(context, icon, size: 40),
             ),
-            const SizedBox(height: 18),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                height: 1.3,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1439,13 +1300,16 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark
-        ? const Color(0xFF0E0818).withOpacity(0.85)
-        : const Color(0xFFFAF2FF).withOpacity(0.9);
-    final borderColor = isDark
-        ? const Color(0xFFEC008C)
-        : const Color(0xFFEC008C).withOpacity(0.7);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+    final outlineColor = theme.colorScheme.outline;
+    final surfaceColor = theme.colorScheme.surface;
+
+    final bgColor =
+        isDark ? surfaceColor.withOpacity(0.85) : surfaceColor.withOpacity(0.9);
+    final borderColor = primaryColor;
 
     return AnimatedBuilder(
       animation: _glowAnimation,
@@ -1471,15 +1335,14 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEC008C).withOpacity(
+                  color: primaryColor.withOpacity(
                       _glowAnimation.value * (_isHovered ? 1.4 : 1.0)),
                   blurRadius: (10 + (_glowAnimation.value * 15)) *
                       (_isHovered ? 1.2 : 1.0),
                   spreadRadius: 1,
                 ),
                 BoxShadow(
-                  color: const Color(0xFF00FFCC)
-                      .withOpacity(_glowAnimation.value * 0.4),
+                  color: secondaryColor.withOpacity(_glowAnimation.value * 0.4),
                   blurRadius: 5 + (_glowAnimation.value * 10),
                   spreadRadius: -1,
                 ),
@@ -1492,14 +1355,14 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                   children: [
                     SafeShaderMask(
                       shaderCallback: (bounds) {
-                        return const LinearGradient(
-                          colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+                        return LinearGradient(
+                          colors: [primaryColor, secondaryColor],
                         ).createShader(bounds);
                       },
                       child: Text(
                         widget.title,
                         style: const TextStyle(
-                          fontFamily: 'Cinzel',
+                          fontFamily: 'Outfit',
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
@@ -1511,20 +1374,20 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                     Container(
                       height: 1,
                       width: 35,
-                      color: const Color(0xFF00FFCC).withOpacity(0.5),
+                      color: secondaryColor.withOpacity(0.5),
                     ),
                   ],
                 ),
                 Icon(
                   widget.icon,
                   size: 32,
-                  color: const Color(0xFF00FFCC).withOpacity(0.85),
+                  color: primaryColor.withOpacity(0.85),
                 ),
                 Text(
                   widget.subtitle,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontFamily: 'Cinzel',
+                    fontFamily: 'Outfit',
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -1546,25 +1409,31 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          backgroundColor: const Color(0xFF0E0818),
+                          backgroundColor:
+                              theme.dialogTheme.backgroundColor ?? surfaceColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: const BorderSide(color: Color(0xFFEC008C)),
+                            side: BorderSide(color: primaryColor),
                           ),
                           title: Text(
                             widget.subtitle,
                             style: const TextStyle(
-                                fontFamily: 'Cinzel', color: Colors.white),
+                                fontFamily: 'Outfit',
+                                fontWeight: FontWeight.bold),
                           ),
                           content: Text(
                             'DollDex Collector özel indirim kodunuz: ${widget.promoCode}\nKeyifli koleksiyonlar dileriz!',
-                            style: const TextStyle(color: Colors.white70),
+                            style: TextStyle(
+                                color: theme.textTheme.bodyMedium?.color
+                                    ?.withOpacity(0.8)),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('Kapat',
-                                  style: TextStyle(color: Color(0xFF00FFCC))),
+                              child: Text('Kapat',
+                                  style: TextStyle(
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
@@ -1575,13 +1444,11 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: const Color(0xFF00FFCC), width: 1),
+                        border: Border.all(color: primaryColor, width: 1),
                         gradient: LinearGradient(
                           colors: [
-                            const Color(0xFFEC008C)
-                                .withOpacity(_isHovered ? 0.35 : 0.15),
-                            const Color(0xFF00FFCC)
+                            primaryColor.withOpacity(_isHovered ? 0.35 : 0.15),
+                            secondaryColor
                                 .withOpacity(_isHovered ? 0.35 : 0.15),
                           ],
                         ),
@@ -1589,7 +1456,7 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                       child: const Text(
                         'KEŞFET',
                         style: TextStyle(
-                          fontFamily: 'Cinzel',
+                          fontFamily: 'Outfit',
                           fontSize: 9.5,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -1620,16 +1487,18 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final outlineColor = theme.colorScheme.outline;
+    final panelAltColor = theme.colorScheme.secondaryContainer;
 
     return Container(
       height: 60,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF171026) : const Color(0xFFF5EBFD),
+        color: panelAltColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF2C1F45) : const Color(0xFFE9D8FA),
+          color: outlineColor,
           width: 1.5,
         ),
       ),
@@ -1638,18 +1507,16 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
           CustomPaint(
             size: const Size(double.infinity, 60),
             painter: IvyBorderPainter(
-              color: isDark
-                  ? const Color(0xFFEC008C).withOpacity(0.15)
-                  : const Color(0xFFEC008C).withOpacity(0.2),
+              color: primaryColor.withOpacity(0.15),
             ),
           ),
           Center(
             child: Text(
               'ADVERTISEMENT',
               style: theme.textTheme.bodySmall?.copyWith(
-                fontFamily: 'Cinzel',
+                fontFamily: 'Outfit',
                 letterSpacing: 4,
-                color: isDark ? Colors.white24 : Colors.black26,
+                color: theme.textTheme.bodySmall?.color?.withOpacity(0.4),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1661,7 +1528,18 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
 }
 
 class GothicPageBackgroundPainter extends CustomPainter {
-  GothicPageBackgroundPainter({required this.isDark});
+  GothicPageBackgroundPainter({
+    required this.bg,
+    required this.panelAlt,
+    required this.line,
+    required this.accent,
+    required this.isDark,
+  });
+
+  final Color bg;
+  final Color panelAlt;
+  final Color line;
+  final Color accent;
   final bool isDark;
 
   @override
@@ -1669,9 +1547,7 @@ class GothicPageBackgroundPainter extends CustomPainter {
     final rect = Offset.zero & size;
     final bgPaint = Paint()
       ..shader = LinearGradient(
-        colors: isDark
-            ? [DollDexTheme.darkPaper, const Color(0xFF322318)]
-            : [DollDexTheme.paper, const Color(0xFFFFF0D6)],
+        colors: [bg, panelAlt],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(rect);
@@ -1695,7 +1571,7 @@ class GothicPageBackgroundPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = (isDark ? Colors.white : DollDexTheme.cocoa)
+      ..color = (isDark ? Colors.white : const Color(0xFF6B4328))
           .withOpacity(isDark ? 0.04 : 0.055)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
@@ -1712,7 +1588,7 @@ class GothicPageBackgroundPainter extends CustomPainter {
     canvas.drawPath(path, linePaint);
 
     final accentPaint = Paint()
-      ..color = DollDexTheme.teal.withOpacity(isDark ? 0.11 : 0.08)
+      ..color = accent.withOpacity(isDark ? 0.11 : 0.08)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(
         Offset(size.width * 0.92, size.height * 0.08), 72, accentPaint);
@@ -1722,7 +1598,11 @@ class GothicPageBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant GothicPageBackgroundPainter oldDelegate) =>
-      oldDelegate.isDark != isDark;
+      oldDelegate.isDark != isDark ||
+      oldDelegate.bg != bg ||
+      oldDelegate.panelAlt != panelAlt ||
+      oldDelegate.line != line ||
+      oldDelegate.accent != accent;
 }
 
 class GothicPageBackgroundWidget extends StatelessWidget {
@@ -1730,9 +1610,15 @@ class GothicPageBackgroundWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
     return CustomPaint(
-      painter: GothicPageBackgroundPainter(isDark: isDark),
+      painter: GothicPageBackgroundPainter(
+        bg: theme.scaffoldBackgroundColor,
+        panelAlt: theme.colorScheme.secondaryContainer,
+        line: theme.colorScheme.outline,
+        accent: theme.colorScheme.primary,
+        isDark: theme.brightness == Brightness.dark,
+      ),
     );
   }
 }
@@ -1926,9 +1812,16 @@ Widget buildNeonFlagIcon(BuildContext context, {double size = 24}) {
   return buildNeonIcon(context, Icons.flag_outlined, size: size);
 }
 
-Widget buildAvatarHelper(String avatarId, String frameColor,
+Widget buildAvatarHelper(
+    BuildContext context, String avatarId, String frameColor,
     {double size = 40}) {
   String assetPath = '';
+  final theme = Theme.of(context);
+  final primaryColor = theme.colorScheme.primary;
+  final secondaryColor = theme.colorScheme.secondary;
+  final outlineColor = theme.colorScheme.outline;
+  final surfaceColor = theme.colorScheme.surface;
+
   final bool isNetwork =
       avatarId.startsWith('http://') || avatarId.startsWith('https://');
 
@@ -1979,23 +1872,23 @@ Widget buildAvatarHelper(String avatarId, String frameColor,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: const Color(0xFFEC008C),
+              color: primaryColor,
               width: 2.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFEC008C).withOpacity(0.3),
+                color: primaryColor.withOpacity(0.3),
                 blurRadius: 6,
                 spreadRadius: 1,
               ),
             ],
-            color: const Color(0xFF160E22),
+            color: surfaceColor,
           ),
           child: Center(
             child: SafeShaderMask(
               shaderCallback: (bounds) {
-                return const LinearGradient(
-                  colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+                return LinearGradient(
+                  colors: [primaryColor, secondaryColor],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ).createShader(bounds);
@@ -2024,23 +1917,23 @@ Widget buildAvatarHelper(String avatarId, String frameColor,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: const Color(0xFFEC008C),
+          color: primaryColor,
           width: 2.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEC008C).withOpacity(0.3),
+            color: primaryColor.withOpacity(0.3),
             blurRadius: 6,
             spreadRadius: 1,
           ),
         ],
-        color: const Color(0xFF160E22),
+        color: surfaceColor,
       ),
       child: Center(
         child: SafeShaderMask(
           shaderCallback: (bounds) {
-            return const LinearGradient(
-              colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+            return LinearGradient(
+              colors: [primaryColor, secondaryColor],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ).createShader(bounds);
@@ -2065,8 +1958,7 @@ Widget buildAvatarHelper(String avatarId, String frameColor,
           shape: BoxShape.circle,
           border: hasFrame
               ? Border.all(
-                  color:
-                      borderColor ?? const Color(0xFFEC008C).withOpacity(0.15),
+                  color: borderColor ?? outlineColor.withOpacity(0.5),
                   width: borderColor != null ? 3.0 : 1.5,
                 )
               : null,
@@ -2273,8 +2165,11 @@ Widget buildCoverPhoto(BuildContext context, String? coverId,
               children: [
                 SafeShaderMask(
                   shaderCallback: (bounds) {
-                    return const LinearGradient(
-                      colors: [Color(0xFF00FFCC), Colors.white],
+                    return LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Colors.white
+                      ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ).createShader(bounds);
@@ -2286,11 +2181,11 @@ Widget buildCoverPhoto(BuildContext context, String? coverId,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 2.5,
                       color: Colors.white,
-                      fontFamily: 'Cinzel',
+                      fontFamily: 'Outfit',
                       shadows: [
                         Shadow(
-                          color: const Color(0xFFEC008C).withOpacity(0.8),
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withValues(alpha: 0.7),
+                          offset: const Offset(0, 1.5),
                           blurRadius: 4,
                         ),
                       ],
@@ -2306,13 +2201,13 @@ Widget buildCoverPhoto(BuildContext context, String? coverId,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.0,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.95),
                     fontFamily: 'Outfit',
                     shadows: [
                       Shadow(
-                        color: Colors.black.withOpacity(0.5),
-                        offset: const Offset(0, 1),
-                        blurRadius: 2,
+                        color: Colors.black.withValues(alpha: 0.85),
+                        offset: const Offset(0, 1.5),
+                        blurRadius: 3,
                       ),
                     ],
                   ),
@@ -2374,7 +2269,7 @@ Widget buildCoverPhotoPreview(String coverId) {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.5,
                 color: Colors.white,
-                fontFamily: 'Cinzel',
+                fontFamily: 'Outfit',
               ),
             ),
           ),
@@ -2510,6 +2405,7 @@ class AvatarOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return InkWell(
       borderRadius: BorderRadius.circular(40),
       onTap: onTap,
@@ -2518,12 +2414,12 @@ class AvatarOption extends StatelessWidget {
             ? BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color(0xFF00FFCC),
+                  color: primaryColor,
                   width: 3,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00FFCC).withValues(alpha: 0.4),
+                    color: primaryColor.withOpacity(0.4),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -2532,6 +2428,7 @@ class AvatarOption extends StatelessWidget {
             : null,
         padding: selected ? const EdgeInsets.all(2) : EdgeInsets.zero,
         child: buildAvatarHelper(
+          context,
           avatarId,
           selected ? frameColor : '',
           size: selected ? 52 : 56,
@@ -2555,12 +2452,15 @@ class GothicStatButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+    final outlineColor = theme.colorScheme.outline;
+    final surfaceColor = theme.colorScheme.surface;
+    final primaryContainerColor = theme.colorScheme.primaryContainer;
 
-    final bgCol = isDark
-        ? const Color(0xFFD6C3F7).withOpacity(0.12)
-        : const Color(0xFFD6C3F7).withOpacity(0.25);
-    final borderCol = const Color(0xFF8338EC).withOpacity(0.4);
+    final bgCol = primaryContainerColor.withOpacity(0.15);
+    final borderCol = outlineColor.withOpacity(0.4);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
@@ -2573,7 +2473,7 @@ class GothicStatButton extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8338EC).withOpacity(0.08),
+            color: primaryColor.withOpacity(0.08),
             blurRadius: 6,
             spreadRadius: 0.5,
           ),
@@ -2586,14 +2486,14 @@ class GothicStatButton extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF2FF),
+              color: surfaceColor,
               border: Border.all(
-                color: const Color(0xFFEC008C).withOpacity(0.8),
+                color: primaryColor.withOpacity(0.8),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEC008C).withOpacity(0.15),
+                  color: primaryColor.withOpacity(0.15),
                   blurRadius: 4,
                   spreadRadius: 0.5,
                 ),
@@ -2609,7 +2509,7 @@ class GothicStatButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF8338EC),
+              color: theme.textTheme.bodyMedium?.color,
             ),
           ),
           const SizedBox(height: 2),
@@ -2619,7 +2519,7 @@ class GothicStatButton extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 8.0,
-              color: isDark ? Colors.white70 : const Color(0xFF6B5885),
+              color: secondaryColor,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -3047,8 +2947,13 @@ class ProfileBadgeWidget extends StatelessWidget {
 
 void showAnnouncementModalDetail(BuildContext context,
     {required String title, required String body}) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final theme = Theme.of(context);
+  final primaryColor = theme.colorScheme.primary;
+  final secondaryColor = theme.colorScheme.secondary;
+  final outlineColor = theme.colorScheme.outline;
+  final surfaceColor = theme.colorScheme.surface;
   final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+
   showDialog<void>(
     context: context,
     builder: (context) {
@@ -3058,15 +2963,15 @@ void showAnnouncementModalDetail(BuildContext context,
           width: 400,
           constraints: const BoxConstraints(maxHeight: 500),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0E0818) : Colors.white,
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFFEC008C),
+              color: outlineColor,
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFEC008C).withOpacity(0.2),
+                color: primaryColor.withOpacity(0.2),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -3083,31 +2988,29 @@ void showAnnouncementModalDetail(BuildContext context,
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isDark
-                          ? const Color(0xFF2C1F45)
-                          : const Color(0xFFEC008C).withOpacity(0.1),
+                      color: outlineColor.withOpacity(0.3),
                     ),
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.campaign_rounded,
-                        color: Color(0xFFEC008C), size: 24),
+                    Icon(Icons.campaign_rounded, color: primaryColor, size: 24),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         tr ? 'Duyuru Detayı' : 'Announcement Detail',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Outfit',
-                          color: Color(0xFFEC008C),
+                          color: primaryColor,
                         ),
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded, size: 20),
-                      color: isDark ? Colors.white54 : Colors.black54,
+                      color: theme.iconTheme.color?.withOpacity(0.7) ??
+                          Colors.black54,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -3125,7 +3028,7 @@ void showAnnouncementModalDetail(BuildContext context,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                          color: theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -3133,9 +3036,7 @@ void showAnnouncementModalDetail(BuildContext context,
                         body,
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark
-                              ? const Color(0xFFE5DDF2)
-                              : const Color(0xFF6B5885),
+                          color: secondaryColor,
                           height: 1.5,
                         ),
                       ),
@@ -3147,14 +3048,15 @@ void showAnnouncementModalDetail(BuildContext context,
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEC008C),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+                  style: theme.elevatedButtonTheme.style ??
+                      ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(
                     tr ? 'Kapat' : 'Close',
@@ -3230,10 +3132,15 @@ class _NotificationsModalState extends State<NotificationsModal> {
         return StreamBuilder<List<AppNotification>>(
           stream: notificationRepository.watchForUser(userId),
           builder: (context, snapshot) {
+            final theme = Theme.of(context);
+            final primaryColor = theme.colorScheme.primary;
+            final secondaryColor = theme.colorScheme.secondary;
+            final panelAltColor = theme.colorScheme.secondaryContainer;
+
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
+              return Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC008C)),
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                 ),
               );
             }
@@ -3263,21 +3170,21 @@ class _NotificationsModalState extends State<NotificationsModal> {
                     children: [
                       Text(
                         tr ? 'Bildirimler' : 'Notifications',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFEC008C),
-                            ),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: primaryColor,
+                        ),
                       ),
                       if (userId != 'local-user' &&
                           notifications.isNotEmpty &&
                           _activeTab != 1)
                         TextButton.icon(
-                          icon: const Icon(Icons.done_all_rounded,
-                              size: 16, color: Color(0xFF00FFCC)),
+                          icon: Icon(Icons.done_all_rounded,
+                              size: 16, color: primaryColor),
                           label: Text(
                             tr ? 'Tümünü Oku' : 'Read All',
-                            style: const TextStyle(
-                              color: Color(0xFF00FFCC),
+                            style: TextStyle(
+                              color: primaryColor,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -3294,14 +3201,10 @@ class _NotificationsModalState extends State<NotificationsModal> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF160E24)
-                            : const Color(0xFFFAF6FC),
+                        color: panelAltColor,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isDark
-                              ? const Color(0xFF00FFCC).withValues(alpha: 0.2)
-                              : const Color(0xFFEC008C).withValues(alpha: 0.15),
+                          color: primaryColor.withOpacity(0.15),
                           width: 1,
                         ),
                       ),
@@ -3309,9 +3212,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                         children: [
                           Icon(
                             Icons.info_outline_rounded,
-                            color: isDark
-                                ? const Color(0xFF00FFCC)
-                                : const Color(0xFFEC008C),
+                            color: primaryColor,
                             size: 16,
                           ),
                           const SizedBox(width: 8),
@@ -3322,9 +3223,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                                   : 'Swipe left: Delete | Swipe right: Read',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark
-                                    ? const Color(0xFFE5DDF2)
-                                    : const Color(0xFF6B5885),
+                                color: secondaryColor,
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
@@ -3421,7 +3320,12 @@ class _NotificationsModalState extends State<NotificationsModal> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+    final outlineColor = theme.colorScheme.outline;
+    final surfaceColor = theme.colorScheme.surface;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -3431,15 +3335,9 @@ class _NotificationsModalState extends State<NotificationsModal> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: isActive
-              ? const Color(0xFFEC008C).withValues(alpha: 0.15)
-              : (isDark ? const Color(0xFF160E22) : Colors.white),
+          color: isActive ? primaryColor.withOpacity(0.15) : surfaceColor,
           border: Border.all(
-            color: isActive
-                ? const Color(0xFFEC008C)
-                : (isDark
-                    ? const Color(0xFF2C1F45)
-                    : const Color(0xFFEC008C).withValues(alpha: 0.2)),
+            color: isActive ? primaryColor : outlineColor.withOpacity(0.5),
             width: 1.2,
           ),
         ),
@@ -3448,9 +3346,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            color: isActive
-                ? (isDark ? Colors.white : const Color(0xFFEC008C))
-                : (isDark ? Colors.white70 : const Color(0xFF6B5885)),
+            color: isActive ? primaryColor : secondaryColor,
           ),
         ),
       ),
@@ -3465,6 +3361,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
     required bool isTr,
   }) {
     if (list.isEmpty) {
+      final theme = Theme.of(context);
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 40.0),
         child: Center(
@@ -3472,14 +3369,21 @@ class _NotificationsModalState extends State<NotificationsModal> {
             isTr
                 ? 'Bu kategoride bildirim bulunmuyor.'
                 : 'No notifications in this category.',
-            style: const TextStyle(
-                fontStyle: FontStyle.italic, color: Colors.white54),
+            style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: theme.colorScheme.secondary.withOpacity(0.7)),
           ),
         ),
       );
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+    final outlineColor = theme.colorScheme.outline;
+    final surfaceColor = theme.colorScheme.surface;
+    final panelAltColor = theme.colorScheme.secondaryContainer;
+    final errorColor = theme.colorScheme.error;
 
     return ListView.builder(
       key: PageStorageKey(
@@ -3499,24 +3403,24 @@ class _NotificationsModalState extends State<NotificationsModal> {
                 : DismissDirection.startToEnd,
             background: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF00FFCC).withValues(alpha: 0.2),
+                color: primaryColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.only(left: 16),
-              child: const Icon(Icons.mark_email_read_rounded,
-                  color: Color(0xFF00FFCC), size: 18),
+              child: Icon(Icons.mark_email_read_rounded,
+                  color: primaryColor, size: 18),
             ),
             secondaryBackground: canDelete
                 ? Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC008C).withValues(alpha: 0.2),
+                      color: errorColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 16),
-                    child: const Icon(Icons.delete_forever_rounded,
-                        color: Color(0xFFEC008C), size: 18),
+                    child: Icon(Icons.delete_forever_rounded,
+                        color: errorColor, size: 18),
                   )
                 : null,
             confirmDismiss: (direction) async {
@@ -3537,19 +3441,11 @@ class _NotificationsModalState extends State<NotificationsModal> {
                 side: BorderSide(
                   color: notification.isRead
                       ? Colors.transparent
-                      : (isDark
-                          ? const Color(0xFFEC008C).withValues(alpha: 0.5)
-                          : const Color(0xFFEC008C).withValues(alpha: 0.25)),
+                      : primaryColor.withOpacity(0.3),
                   width: 1,
                 ),
               ),
-              color: isDark
-                  ? (notification.isRead
-                      ? const Color(0xFF0F0918)
-                      : const Color(0xFF170D26))
-                  : (notification.isRead
-                      ? const Color(0xFFF9F6FC)
-                      : const Color(0xFFF0E6F5)),
+              color: notification.isRead ? surfaceColor : panelAltColor,
               child: ListTile(
                 dense: true,
                 contentPadding:
@@ -3584,14 +3480,12 @@ class _NotificationsModalState extends State<NotificationsModal> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: notification.isRead
-                        ? Colors.grey.withValues(alpha: 0.1)
-                        : const Color(0xFFEC008C).withValues(alpha: 0.1),
+                        ? outlineColor.withOpacity(0.1)
+                        : primaryColor.withOpacity(0.1),
                   ),
                   child: Icon(
                     notificationTypeIcon(notification.type),
-                    color: notification.isRead
-                        ? Colors.grey
-                        : const Color(0xFFEC008C),
+                    color: notification.isRead ? secondaryColor : primaryColor,
                     size: 16,
                   ),
                 ),
@@ -3602,13 +3496,9 @@ class _NotificationsModalState extends State<NotificationsModal> {
                     fontWeight: notification.isRead
                         ? FontWeight.normal
                         : FontWeight.bold,
-                    color: isDark
-                        ? (notification.isRead
-                            ? const Color(0xFFB5A7C5)
-                            : Colors.white)
-                        : (notification.isRead
-                            ? const Color(0xFF6B5885)
-                            : Colors.black87),
+                    color: notification.isRead
+                        ? secondaryColor
+                        : theme.textTheme.bodyLarge?.color,
                   ),
                 ),
                 subtitle: Column(
@@ -3619,13 +3509,8 @@ class _NotificationsModalState extends State<NotificationsModal> {
                       notification.body,
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark
-                            ? (notification.isRead
-                                ? const Color(0xFF8E7E9D)
-                                : const Color(0xFFC4B2D9))
-                            : (notification.isRead
-                                ? const Color(0xFF8E7E9D)
-                                : const Color(0xFF6B5885)),
+                        color: secondaryColor
+                            .withOpacity(notification.isRead ? 0.7 : 1.0),
                       ),
                     ),
                     if (notification.createdAt != null) ...[
@@ -3634,7 +3519,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                         formatMessageTime(notification.createdAt!),
                         style: TextStyle(
                           fontSize: 9,
-                          color: isDark ? Colors.white38 : Colors.black38,
+                          color: secondaryColor.withOpacity(0.5),
                         ),
                       ),
                     ],
@@ -3645,9 +3530,9 @@ class _NotificationsModalState extends State<NotificationsModal> {
                     : Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFF00FFCC),
+                          color: primaryColor,
                         ),
                       ),
               ),
@@ -3723,7 +3608,7 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
         children: [
           Text(
             value,
-            style: GoogleFonts.cinzel(
+            style: GoogleFonts.outfit(
               color: accentColor,
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -3754,7 +3639,7 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
     if (_remaining.inSeconds == 0) {
       return Text(
         tr ? 'Kampanya Sona Erdi!' : 'Campaign Ended!',
-        style: GoogleFonts.cinzel(
+        style: GoogleFonts.outfit(
           color: Colors.redAccent,
           fontSize: 16,
           fontWeight: FontWeight.bold,
@@ -3838,7 +3723,7 @@ class PriceOptionCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             price,
-            style: GoogleFonts.cinzel(
+            style: GoogleFonts.outfit(
               color: isDark ? accentColor : primaryColor,
               fontSize: 16,
               fontWeight: FontWeight.bold,

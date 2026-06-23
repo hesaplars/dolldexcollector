@@ -74,7 +74,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     try {
       // searchUsers handles empty queries by returning first 20 users
       final users = await socialRepository.searchUsers(_searchQuery);
-      
+
       // Filter out current user from search
       var filtered = users.where((u) => u.id != myUid).toList();
 
@@ -103,7 +103,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     }
   }
 
-  Future<void> _sendFriendRequest(BuildContext context, String targetUserId) async {
+  Future<void> _sendFriendRequest(
+      BuildContext context, String targetUserId) async {
     final myUid = authService.currentUser?.uid ?? '';
     if (myUid.isEmpty) return;
     await socialRepository.sendFriendRequest(
@@ -121,10 +122,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      backgroundColor: isDark ? const Color(0xFF0E0818) : Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+        side: BorderSide(color: Theme.of(context).dividerColor, width: 1.0),
       ),
       builder: (context) {
         final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -147,18 +148,21 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   Text(
                     tr ? 'Kullanıcı Filtresi' : 'User Filter',
                     style: TextStyle(
-                      fontFamily: 'Cinzel',
+                      fontFamily: 'Outfit',
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildFilterOption(context, null, tr ? 'Tüm Kullanıcılar' : 'All Users', isPro),
+                  _buildFilterOption(context, null,
+                      tr ? 'Tüm Kullanıcılar' : 'All Users', isPro),
                   const SizedBox(height: 8),
-                  _buildFilterOption(context, 'pro', tr ? 'Sadece Pro Üyeler' : 'Pro Members Only', isPro),
+                  _buildFilterOption(context, 'pro',
+                      tr ? 'Sadece Pro Üyeler' : 'Pro Members Only', isPro),
                   const SizedBox(height: 8),
-                  _buildFilterOption(context, 'admin', tr ? 'Yöneticiler' : 'Staff / Admins', isPro),
+                  _buildFilterOption(context, 'admin',
+                      tr ? 'Yöneticiler' : 'Staff / Admins', isPro),
                 ],
               ),
             );
@@ -168,7 +172,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     );
   }
 
-  Widget _buildFilterOption(BuildContext context, String? type, String label, bool isPro) {
+  Widget _buildFilterOption(
+      BuildContext context, String? type, String label, bool isPro) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _roleFilter == type;
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -204,13 +209,16 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFEC008C).withOpacity(isDark ? 0.15 : 0.08)
+              ? Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withOpacity(isDark ? 0.15 : 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFEC008C).withOpacity(0.5)
-                : const Color(0xFF2C1F45).withOpacity(0.1),
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+                : Theme.of(context).dividerColor,
           ),
         ),
         child: Row(
@@ -220,8 +228,11 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 label,
                 style: TextStyle(
                   color: isSelected
-                      ? (isDark ? Colors.white : const Color(0xFFEC008C))
-                      : (isDark ? Colors.white60 : Colors.black87),
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -239,11 +250,15 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     );
   }
 
-  Widget _buildNeonIcon(BuildContext context, IconData icon, {double size = 24}) {
+  Widget _buildNeonIcon(BuildContext context, IconData icon,
+      {double size = 24}) {
     return SafeShaderMask(
       shaderCallback: (bounds) {
-        return const LinearGradient(
-          colors: [Color(0xFFEC008C), Color(0xFF00FFCC)],
+        return LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.secondary,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ).createShader(bounds);
@@ -264,14 +279,31 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     return PageShell(
       listViewKey: const PageStorageKey('user_search_scroll'),
       title: tr ? 'Kullanıcı Ara' : 'Search Users',
-      subtitle: tr ? 'Topluluktaki diğer koleksiyoncuları bulun ve takip edin.' : 'Find and follow other collectors in the community.',
+      subtitle: tr
+          ? 'Topluluktaki diğer koleksiyoncuları bulun ve takip edin.'
+          : 'Find and follow other collectors in the community.',
       child: Column(
         children: [
-          GothicIvyContainer(
+          Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            borderRadius: 16,
+            decoration: BoxDecoration(
+              color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                  color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.22 : 0.09),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
             child: Row(
               children: [
+                const SizedBox(width: 4),
+                _buildNeonIcon(context, Icons.search_rounded, size: 16),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
@@ -281,16 +313,61 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       });
                       _performSearch();
                     },
-                    style: TextStyle(fontSize: 14, color: isDark ? Colors.white : Colors.black87, fontFamily: 'Outfit'),
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white : DollDexTheme.ink,
+                        fontFamily: 'Outfit'),
                     decoration: InputDecoration(
-                      hintText: tr ? 'Kullanıcı adı veya isim yaz...' : 'Type username or display name...',
-                      hintStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, fontFamily: 'Outfit'),
-                      prefixIcon: _buildNeonIcon(context, Icons.search_rounded, size: 20),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      hintText: tr
+                          ? 'Kullanıcı adı veya isim yaz...'
+                          : 'Type username or display name...',
+                      hintStyle: TextStyle(
+                          color: isDark ? Colors.white60 : DollDexTheme.cocoa,
+                          fontSize: 13,
+                          fontFamily: 'Outfit'),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       filled: false,
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: () => _showUserFilterSheet(context),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: 34,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+                        width: 1.0,
+                      ),
+                      color: isDark ? DollDexTheme.darkPaper : DollDexTheme.mist,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildNeonIcon(context, Icons.tune_rounded, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          _roleFilter == null
+                              ? (tr ? 'Hepsi' : 'All')
+                              : (_roleFilter == 'pro'
+                                  ? 'Pro'
+                                  : (tr ? 'Yönetici' : 'Staff')),
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white70 : DollDexTheme.ink,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -331,13 +408,16 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFEC008C).withOpacity(isDark ? 0.3 : 0.15),
+                      color: Theme.of(context).dividerColor,
                       width: 1.2,
                     ),
-                    color: isDark ? const Color(0xFF130820) : Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEC008C).withOpacity(0.04),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.04),
                         blurRadius: 6,
                         spreadRadius: 1,
                       ),
@@ -351,21 +431,27 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                         context.go('/users/${target.id}?from=/user_search');
                       }
                     },
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: buildAvatarHelper(target.avatarId, target.avatarFrameColor, size: 40),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: buildAvatarHelper(
+                        context, target.avatarId, target.avatarFrameColor,
+                        size: 40),
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (target.selectedBadge.isNotEmpty) ...[
-                          ProfileBadgeWidget(badgeId: target.selectedBadge, size: 8),
+                          ProfileBadgeWidget(
+                              badgeId: target.selectedBadge, size: 8),
                           const SizedBox(height: 2),
                         ],
                         Row(
                           children: [
                             Expanded(
                               child: Text(
-                                target.username.isEmpty ? target.displayName : '@${target.username}',
+                                target.username.isEmpty
+                                    ? target.displayName
+                                    : '@${target.username}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 14,
@@ -376,15 +462,21 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                             if (target.isPro) ...[
                               const SizedBox(width: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).colorScheme.primary,
+                                      Theme.of(context).colorScheme.secondary,
+                                    ],
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  target.isAdmin ? (tr ? 'EDİTÖR' : 'STAFF') : 'PRO',
+                                  target.isAdmin
+                                      ? (tr ? 'EDİTÖR' : 'STAFF')
+                                      : 'PRO',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 8,
@@ -400,7 +492,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 4.0),
                       child: Text(
-                        target.bio.isNotEmpty ? target.bio : (tr ? 'Koleksiyoncu' : 'Collector'),
+                        target.bio.isNotEmpty
+                            ? target.bio
+                            : (tr ? 'Koleksiyoncu' : 'Collector'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -414,18 +508,27 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          tooltip: tr ? 'Arkadaş İsteği Gönder' : 'Send Friend Request',
-                          icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: Color(0xFF00FFCC)),
-                          onPressed: () => _sendFriendRequest(context, target.id),
+                          tooltip: tr
+                              ? 'Arkadaş İsteği Gönder'
+                              : 'Send Friend Request',
+                          icon: Icon(Icons.person_add_alt_1_rounded,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.secondary),
+                          onPressed: () =>
+                              _sendFriendRequest(context, target.id),
                         ),
                         IconButton(
                           tooltip: tr ? 'Profili Görüntüle' : 'View Profile',
-                          icon: const Icon(Icons.account_circle_outlined, size: 20, color: Color(0xFFEC008C)),
+                          icon: Icon(Icons.account_circle_outlined,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.primary),
                           onPressed: () {
                             if (target.username.isNotEmpty) {
-                              context.go('/u/${target.username}?from=/user_search');
+                              context.go(
+                                  '/u/${target.username}?from=/user_search');
                             } else {
-                              context.go('/users/${target.id}?from=/user_search');
+                              context
+                                  .go('/users/${target.id}?from=/user_search');
                             }
                           },
                         ),

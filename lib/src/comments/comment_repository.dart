@@ -73,33 +73,42 @@ class FirestoreCommentRepository implements CommentRepository {
     final db = _db;
     if (db != null && comment.userId != 'local-user') {
       await db.collection('comments').doc(comment.id).set(comment.toMap());
-      
+
       // Reward +2 coins if comment is meaningful and daily limit is not reached
       final text = comment.text.trim();
-      final words = text.split(RegExp(r'\s+')).where((w) => w.length > 1).toList();
-      final hasNoRepetitivePunctuation = !RegExp(r'([!?.@#\$%^&*()_+={}\[\]|\\:;\"<>,~\-\/`])\1{3,}').hasMatch(text);
-      
-      if (text.length >= 10 && words.length >= 2 && hasNoRepetitivePunctuation) {
+      final words =
+          text.split(RegExp(r'\s+')).where((w) => w.length > 1).toList();
+      final hasNoRepetitivePunctuation =
+          !RegExp(r'([!?.@#\$%^&*()_+={}\[\]|\\:;\"<>,~\-\/`])\1{3,}')
+              .hasMatch(text);
+
+      if (text.length >= 10 &&
+          words.length >= 2 &&
+          hasNoRepetitivePunctuation) {
         try {
           final todayStr = DateTime.now().toIso8601String().substring(0, 10);
           final userRef = db.collection('users').doc(comment.userId);
-          
+
           await db.runTransaction((transaction) async {
             final userDoc = await transaction.get(userRef);
             if (userDoc.exists) {
               final data = userDoc.data() ?? {};
-              final lastClaimDate = data['lastCommentCoinsClaimDate'] as String? ?? '';
-              int dailyCoinsClaimed = data['dailyCommentCoinsClaimed'] as int? ?? 0;
-              
+              final lastClaimDate =
+                  data['lastCommentCoinsClaimDate'] as String? ?? '';
+              int dailyCoinsClaimed =
+                  data['dailyCommentCoinsClaimed'] as int? ?? 0;
+
               if (lastClaimDate != todayStr) {
                 dailyCoinsClaimed = 0;
               }
-              
-              if (dailyCoinsClaimed < 4) { // Max 4 coins (2 comments per day)
+
+              if (dailyCoinsClaimed < 4) {
+                // Max 4 coins (2 comments per day)
                 transaction.update(userRef, {
                   'coins': FieldValue.increment(2),
                   'lastCommentCoinsClaimDate': todayStr,
-                  'dailyCommentCoinsClaimed': lastClaimDate != todayStr ? 2 : FieldValue.increment(2),
+                  'dailyCommentCoinsClaimed':
+                      lastClaimDate != todayStr ? 2 : FieldValue.increment(2),
                 });
               }
             }

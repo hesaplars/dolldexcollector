@@ -196,8 +196,9 @@ class FirestoreNotificationRepository implements NotificationRepository {
   @override
   Future<void> publishAnnouncement(String title, String body) async {
     final db = _db;
-    final deepLink = '/announcement?title=${Uri.encodeComponent(title)}&body=${Uri.encodeComponent(body)}';
-    
+    final deepLink =
+        '/announcement?title=${Uri.encodeComponent(title)}&body=${Uri.encodeComponent(body)}';
+
     if (db != null) {
       final usersSnapshot = await db.collection('users').get();
       final batch = db.batch();

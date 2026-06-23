@@ -9,7 +9,8 @@ Widget buildWebImage({
     imageUrl,
     width: double.infinity,
     fit: fit ?? BoxFit.cover,
-    errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(context, label),
+    errorBuilder: (context, error, stackTrace) =>
+        _buildErrorPlaceholder(context, label),
     loadingBuilder: (context, child, loadingProgress) {
       if (loadingProgress == null) return child;
       return const Center(
@@ -26,7 +27,7 @@ Widget _buildErrorPlaceholder(BuildContext context, String label) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   return Container(
     width: double.infinity,
-    color: isDark ? const Color(0xFF1E152C) : const Color(0xFFFAF2FF),
+    color: Theme.of(context).colorScheme.surface,
     alignment: Alignment.center,
     padding: const EdgeInsets.all(16),
     child: Column(
@@ -34,7 +35,7 @@ Widget _buildErrorPlaceholder(BuildContext context, String label) {
       children: [
         Icon(
           Icons.image_not_supported_outlined,
-          color: isDark ? const Color(0xFFEC008C) : const Color(0xFF8338EC),
+          color: Theme.of(context).colorScheme.primary,
           size: 32,
         ),
         const SizedBox(height: 8),

@@ -50,146 +50,182 @@ class _ProfileScreenState extends State<ProfileScreen> {
               key: const PageStorageKey('profile_scroll'),
               padding: EdgeInsets.zero,
               children: [
-                        // Cover Photo Stack
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            buildCoverPhoto(context, setupStatus?.coverId, isPro: setupStatus?.isPro == true),
-                            Positioned(
-                              top: 80,
-                              left: 16,
-                              child: InkWell(
-                                onTap: () => showAvatarStudioModal(context, user.uid),
-                                borderRadius: BorderRadius.circular(38),
-                                child: buildAvatarHelper(avatarId, frameColor, size: 76),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: -15,
-                              right: 16,
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  setState(() {
-                                    _showStats = !_showStats;
-                                  });
-                                },
-                                icon: Icon(
-                                  _showStats ? Icons.insights_rounded : Icons.bar_chart_rounded,
-                                  color: const Color(0xFFFFCC00),
-                                  size: 15,
-                                ),
-                                label: Text(
-                                  tr ? 'Profil İstatistiği' : 'Profile Stats',
-                                  style: const TextStyle(
-                                    color: Color(0xFFFFCC00),
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Outfit',
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFFFFCC00), width: 1.2),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-                                ),
-                              ),
-                            ),
-                          ],
+                // Cover Photo Stack
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    buildCoverPhoto(context, setupStatus?.coverId,
+                        isPro: setupStatus?.isPro == true),
+                    Positioned(
+                      top: 80,
+                      left: 16,
+                      child: InkWell(
+                        onTap: () => showAvatarStudioModal(context, user.uid),
+                        borderRadius: BorderRadius.circular(38),
+                        child: buildAvatarHelper(context, avatarId, frameColor,
+                            size: 76),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -15,
+                      right: 16,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showStats = !_showStats;
+                          });
+                        },
+                        icon: Icon(
+                          _showStats
+                              ? Icons.insights_rounded
+                              : Icons.bar_chart_rounded,
+                          color: const Color(0xFFFFCC00),
+                          size: 15,
                         ),
-                        const SizedBox(height: 45),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: [
-                              AccountSummaryCard(
-                                displayName: user.displayName,
-                                email: user.email,
-                                onSignOut: _handleSignOut,
-                                avatarId: avatarId,
-                                frameColor: frameColor,
-                                selectedBadge: setupStatus?.selectedBadge ?? '',
-                              ),
-                              const SizedBox(height: 8),
-                              _buildCoinWallet(context, setupStatus?.coins ?? 20),
-                              const SizedBox(height: 8),
-                              // Connections stats row
-                              StreamBuilder<List<AppUser>>(
-                                stream: socialRepository.watchFriendsList(user.uid),
-                                builder: (context, friendsSnap) {
-                                  final friendsCount = friendsSnap.data?.length ?? 0;
-                                  return StreamBuilder<List<AppUser>>(
-                                    stream: socialRepository.watchFollowingList(user.uid),
-                                    builder: (context, followingSnap) {
-                                      final followingCount = followingSnap.data?.length ?? 0;
-                                      return StreamBuilder<List<AppUser>>(
-                                        stream: socialRepository.watchFollowersList(user.uid),
-                                        builder: (context, followersSnap) {
-                                          final followersCount = followersSnap.data?.length ?? 0;
-                                          return Padding(
-                                            padding: const EdgeInsets.only(top: 4, bottom: 8),
-                                            child: InkWell(
-                                              onTap: () => showConnectionsModal(context, user.uid),
-                                              borderRadius: BorderRadius.circular(12),
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  border: Border.all(color: const Color(0xFFEC008C).withOpacity(0.4), width: 1.2),
-                                                  color: Theme.of(context).brightness == Brightness.dark
-                                                      ? const Color(0xFF171026)
-                                                      : const Color(0xFFFAF2FF),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  children: [
-                                                    _buildStatItem(
-                                                      context,
-                                                      label: tr ? 'Arkadaş' : 'Friends',
-                                                      value: friendsCount.toString(),
-                                                    ),
-                                                    Container(width: 1.2, height: 24, color: const Color(0xFFEC008C).withOpacity(0.4)),
-                                                    _buildStatItem(
-                                                      context,
-                                                      label: tr ? 'Takip' : 'Following',
-                                                      value: followingCount.toString(),
-                                                    ),
-                                                    Container(width: 1.2, height: 24, color: const Color(0xFFEC008C).withOpacity(0.4)),
-                                                    _buildStatItem(
-                                                      context,
-                                                      label: tr ? 'Takipçi' : 'Followers',
-                                                      value: followersCount.toString(),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              ProfileSetupCard(userId: user.uid),
-                              const SizedBox(height: 16),
-                              if (_showStats) ...[
-                                const ProfileStatsCard(),
-                                const SizedBox(height: 16),
-                                CollectionAnalyticsCard(userId: user.uid),
-                                const SizedBox(height: 16),
-                              ],
-                              FeaturedShowcaseCard(userId: user.uid),
-                              const SizedBox(height: 16),
-                              const ProfileShowcaseCard(),
-                              const SizedBox(height: 24),
-                            ],
+                        label: Text(
+                          tr ? 'Profil İstatistiği' : 'Profile Stats',
+                          style: const TextStyle(
+                            color: Color(0xFFFFCC00),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Outfit',
                           ),
                         ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(
+                              color: Color(0xFFFFCC00), width: 1.2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withOpacity(0.9),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 45),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      AccountSummaryCard(
+                        displayName: user.displayName,
+                        email: user.email,
+                        onSignOut: _handleSignOut,
+                        avatarId: avatarId,
+                        frameColor: frameColor,
+                        selectedBadge: setupStatus?.selectedBadge ?? '',
+                      ),
+                      const SizedBox(height: 8),
+                      _buildCoinWallet(context, setupStatus?.coins ?? 20),
+                      const SizedBox(height: 8),
+                      // Connections stats row
+                      StreamBuilder<List<AppUser>>(
+                        stream: socialRepository.watchFriendsList(user.uid),
+                        builder: (context, friendsSnap) {
+                          final friendsCount = friendsSnap.data?.length ?? 0;
+                          return StreamBuilder<List<AppUser>>(
+                            stream:
+                                socialRepository.watchFollowingList(user.uid),
+                            builder: (context, followingSnap) {
+                              final followingCount =
+                                  followingSnap.data?.length ?? 0;
+                              return StreamBuilder<List<AppUser>>(
+                                stream: socialRepository
+                                    .watchFollowersList(user.uid),
+                                builder: (context, followersSnap) {
+                                  final followersCount =
+                                      followersSnap.data?.length ?? 0;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 4, bottom: 8),
+                                    child: InkWell(
+                                      onTap: () => showConnectionsModal(
+                                          context, user.uid),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withOpacity(0.4),
+                                              width: 1.2),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            _buildStatItem(
+                                              context,
+                                              label: tr ? 'Arkadaş' : 'Friends',
+                                              value: friendsCount.toString(),
+                                            ),
+                                            Container(
+                                                width: 1.2,
+                                                height: 24,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withOpacity(0.4)),
+                                            _buildStatItem(
+                                              context,
+                                              label: tr ? 'Takip' : 'Following',
+                                              value: followingCount.toString(),
+                                            ),
+                                            Container(
+                                                width: 1.2,
+                                                height: 24,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                    .withOpacity(0.4)),
+                                            _buildStatItem(
+                                              context,
+                                              label:
+                                                  tr ? 'Takipçi' : 'Followers',
+                                              value: followersCount.toString(),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      ProfileSetupCard(userId: user.uid),
+                      const SizedBox(height: 16),
+                      if (_showStats) ...[
+                        const ProfileStatsCard(),
+                        const SizedBox(height: 16),
+                        CollectionAnalyticsCard(userId: user.uid),
+                        const SizedBox(height: 16),
                       ],
+                      FeaturedShowcaseCard(userId: user.uid),
+                      const SizedBox(height: 16),
+                      const ProfileShowcaseCard(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -197,7 +233,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, {required String label, required String value}) {
+  Widget _buildStatItem(BuildContext context,
+      {required String label, required String value}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -207,7 +244,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFFEC008C),
+            color:
+                isDark ? Colors.white : Theme.of(context).colorScheme.primary,
             fontFamily: 'Outfit',
           ),
         ),
@@ -250,20 +288,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1230) : const Color(0xFFFAF2FF),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFFFCC00).withOpacity(0.4), width: 1.2),
+          border: Border.all(
+              color: const Color(0xFFFFCC00).withOpacity(0.4), width: 1.2),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               children: [
-                const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFCC00), size: 20),
+                const Icon(Icons.monetization_on_rounded,
+                    color: Color(0xFFFFCC00), size: 20),
                 const SizedBox(width: 4),
-                const Icon(Icons.add_circle_outline_rounded, color: Color(0xFFFFCC00), size: 14),
+                const Icon(Icons.add_circle_outline_rounded,
+                    color: Color(0xFFFFCC00), size: 14),
                 const SizedBox(width: 6),
                 Text(
                   tr ? 'Jeton Cüzdanım' : 'My Coin Wallet',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Outfit'),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      fontFamily: 'Outfit'),
                 ),
               ],
             ),
@@ -330,7 +374,7 @@ class AccountSummaryCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            buildAvatarHelper(avatarId, frameColor, size: 42),
+            buildAvatarHelper(context, avatarId, frameColor, size: 42),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -343,9 +387,10 @@ class AccountSummaryCard extends StatelessWidget {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                         ),
                       ),
                       if (selectedBadge.isNotEmpty) ...[
@@ -365,7 +410,9 @@ class AccountSummaryCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Tooltip(
-              message: AppLanguageScope.languageOf(context) == AppLanguage.tr ? 'Ayarlar' : 'Settings',
+              message: AppLanguageScope.languageOf(context) == AppLanguage.tr
+                  ? 'Ayarlar'
+                  : 'Settings',
               child: buildGothicNeonIconButton(
                 context: context,
                 icon: Icons.settings_outlined,
@@ -704,10 +751,14 @@ class ProfileShowcaseCard extends StatelessWidget {
           );
         }
 
-        final owned = entries.where((e) => e.status == CollectionStatus.owned).toList();
-        final wanted = entries.where((e) => e.status == CollectionStatus.wanted).toList();
-        final trade = entries.where((e) => e.status == CollectionStatus.trade).toList();
-        final selling = entries.where((e) => e.status == CollectionStatus.selling).toList();
+        final owned =
+            entries.where((e) => e.status == CollectionStatus.owned).toList();
+        final wanted =
+            entries.where((e) => e.status == CollectionStatus.wanted).toList();
+        final trade =
+            entries.where((e) => e.status == CollectionStatus.trade).toList();
+        final selling =
+            entries.where((e) => e.status == CollectionStatus.selling).toList();
 
         return Card(
           child: Padding(
@@ -729,7 +780,10 @@ class ProfileShowcaseCard extends StatelessWidget {
                     tabAlignment: TabAlignment.start,
                     indicatorColor: Theme.of(context).colorScheme.primary,
                     labelColor: Theme.of(context).colorScheme.primary,
-                    unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    unselectedLabelColor: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.6),
                     tabs: [
                       Tab(text: t(context, 'owned')),
                       Tab(text: t(context, 'wanted')),
@@ -778,8 +832,9 @@ class FeaturedShowcaseCard extends StatelessWidget {
 
         if (featuredIds.isEmpty) {
           if (!isMe) return const SizedBox.shrink();
-          final isPro = userSnap.data?.isPro == true || userSnap.data?.role == 'admin';
-          final maxShowcase = isPro ? (tr ? 'Sınırsız' : 'Unlimited') : '30';
+          final isPro =
+              userSnap.data?.isPro == true || userSnap.data?.role == 'admin';
+          final maxShowcase = isPro ? '15' : '3';
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -809,7 +864,8 @@ class FeaturedShowcaseCard extends StatelessWidget {
           );
         }
 
-        final isPro = userSnap.data?.isPro == true || userSnap.data?.role == 'admin';
+        final isPro =
+            userSnap.data?.isPro == true || userSnap.data?.role == 'admin';
         final maxShowText = isPro ? (tr ? 'Sınırsız' : 'Unlimited') : '30';
 
         return FutureBuilder<List<CollectionEntry>>(
@@ -840,20 +896,24 @@ class FeaturedShowcaseCard extends StatelessWidget {
                       children: [
                         Text(
                           tr ? 'Öne Çıkan Vitrin' : 'Featured Showcase',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFFFCC00), width: 1),
+                            border: Border.all(
+                                color: const Color(0xFFFFCC00), width: 1),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star_rounded, color: Color(0xFFFFCC00), size: 14),
+                              const Icon(Icons.star_rounded,
+                                  color: Color(0xFFFFCC00), size: 14),
                               const SizedBox(width: 4),
                               Text(
                                 '${featuredEntries.length} / $maxShowText',
@@ -879,28 +939,33 @@ class FeaturedShowcaseCard extends StatelessWidget {
                           final entry = featuredEntries[index];
                           final item = findCatalogEntry(entry.itemId);
                           return GestureDetector(
-                             onTap: () {
-                               if (isMe) {
-                                 context.go('/c/${entry.id}?from=profile');
-                               } else {
-                                 context.go('/c/${entry.id}?from=public_profile&userId=$userId');
-                               }
-                             },
+                            onTap: () {
+                              if (isMe) {
+                                context.go('/c/${entry.id}?from=profile');
+                              } else {
+                                context.go(
+                                    '/c/${entry.id}?from=public_profile&userId=$userId');
+                              }
+                            },
                             child: Container(
                               width: 110,
                               margin: const EdgeInsets.only(right: 12),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
+                                color: isDark
+                                    ? const Color(0xFF160E22)
+                                    : const Color(0xFFFAF6FC),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: const Color(0xFFFFCC00).withOpacity(0.4),
+                                  color:
+                                      const Color(0xFFFFCC00).withOpacity(0.4),
                                   width: 1.5,
                                 ),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     Expanded(
                                       child: Stack(
@@ -932,7 +997,8 @@ class FeaturedShowcaseCard extends StatelessWidget {
                                     Padding(
                                       padding: const EdgeInsets.all(6.0),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             entryName(context, item),
@@ -946,9 +1012,12 @@ class FeaturedShowcaseCard extends StatelessWidget {
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            conditionLabel(context, entry.condition),
+                                            conditionLabel(
+                                                context, entry.condition),
                                             style: TextStyle(
-                                              color: isDark ? Colors.white60 : Colors.black54,
+                                              color: isDark
+                                                  ? Colors.white60
+                                                  : Colors.black54,
                                               fontSize: 9,
                                               fontFamily: 'Outfit',
                                             ),
@@ -999,7 +1068,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFEC008C).withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
             width: 1.5,
           ),
         ),
@@ -1007,17 +1076,19 @@ class CollectionAnalyticsCard extends StatelessWidget {
           children: [
             Icon(
               Icons.lock_outline_rounded,
-              color: const Color(0xFFEC008C).withOpacity(0.8),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
               size: 32,
             ),
             const SizedBox(height: 12),
             Text(
-              tr ? 'Koleksiyon İstatistikleri (Pro)' : 'Collection Analytics (Pro)',
-              style: const TextStyle(
+              tr
+                  ? 'Koleksiyon İstatistikleri (Pro)'
+                  : 'Collection Analytics (Pro)',
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Outfit',
-                color: Color(0xFFEC008C),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 8),
@@ -1036,16 +1107,18 @@ class CollectionAnalyticsCard extends StatelessWidget {
             ElevatedButton(
               onPressed: () => showProSubscriptionModal(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEC008C),
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               child: Text(
                 tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
             ),
           ],
@@ -1131,7 +1204,9 @@ class CollectionAnalyticsCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final boxedCount = collectionEntries.where((e) => e.condition == CollectionCondition.boxed).length;
+    final boxedCount = collectionEntries
+        .where((e) => e.condition == CollectionCondition.boxed)
+        .length;
     final totalCount = collectionEntries.length;
     final boxedPct = totalCount > 0 ? boxedCount / totalCount : 0.0;
     final unboxedPct = 1.0 - boxedPct;
@@ -1169,7 +1244,8 @@ class CollectionAnalyticsCard extends StatelessWidget {
     final ownedItemIds = collectionEntries.map((e) => e.itemId).toSet();
     final charProgress = <String, double>{};
     charMap.forEach((charId, itemIds) {
-      final ownedCount = itemIds.where((id) => ownedItemIds.contains(id)).length;
+      final ownedCount =
+          itemIds.where((id) => ownedItemIds.contains(id)).length;
       if (ownedCount > 0) {
         charProgress[charId] = ownedCount / itemIds.length;
       }
@@ -1195,7 +1271,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
         ),
       );
       final basePrice = cat.id.isNotEmpty ? cat.averagePrice : 1200.0;
-      
+
       double multiplier = 1.0;
       switch (entry.condition) {
         case CollectionCondition.boxed:
@@ -1217,22 +1293,27 @@ class CollectionAnalyticsCard extends StatelessWidget {
       estValue += (basePrice * multiplier * entry.quantity);
     }
 
-    final formattedVal = '₺' + estValue.toInt().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
+    final formattedVal = '₺' +
+        estValue.toInt().toString().replaceAllMapped(
+              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+              (Match m) => '${m[1]}.',
+            );
 
     String charAnalysisText = '';
     if (topChars.isNotEmpty) {
       final topCharName = _formatCharName(topChars.first.key);
       final topPct = (topChars.first.value * 100).toStringAsFixed(0);
-      charAnalysisText = tr 
+      charAnalysisText = tr
           ? "Koleksiyonunuzda en baskın karakter $topCharName (%$topPct tamamlanma). "
           : "Your most dominant character is $topCharName ($topPct% completed). ";
     }
-    final conditionText = boxedPct > 0.4 
-        ? (tr ? "Kutulu korumaya (NIB) ağırlık veriyorsunuz." : "You heavily prefer Mint-In-Box (NIB) preservation.")
-        : (tr ? "Bebekleri kutusundan çıkarıp sergilemeyi seviyorsunuz." : "You prefer unboxing and displaying your dolls.");
+    final conditionText = boxedPct > 0.4
+        ? (tr
+            ? "Kutulu korumaya (NIB) ağırlık veriyorsunuz."
+            : "You heavily prefer Mint-In-Box (NIB) preservation.")
+        : (tr
+            ? "Bebekleri kutusundan çıkarıp sergilemeyi seviyorsunuz."
+            : "You prefer unboxing and displaying your dolls.");
     final insights = "$charAnalysisText$conditionText";
 
     return Card(
@@ -1244,20 +1325,24 @@ class CollectionAnalyticsCard extends StatelessWidget {
             Row(
               children: [
                 ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFFEC008C), Color(0xFFFFCC00)],
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.secondary,
+                    ],
                   ).createShader(bounds),
-                  child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 20),
+                  child: const Icon(Icons.workspace_premium_rounded,
+                      color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   tr ? 'Profil İstatistiği' : 'Profile Statistics',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    fontFamily: 'Cinzel',
+                    fontFamily: 'Outfit',
                     letterSpacing: 1.2,
-                    color: Color(0xFFFFCC00),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
@@ -1268,15 +1353,16 @@ class CollectionAnalyticsCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1230) : const Color(0xFFFAF2FF),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: const Color(0xFFFFCC00).withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFCC00).withOpacity(0.08),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.08),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -1285,7 +1371,9 @@ class CollectionAnalyticsCard extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    tr ? 'TAHMİNİ KOLEKSİYON DEĞERİ' : 'ESTIMATED COLLECTION VALUE',
+                    tr
+                        ? 'TAHMİNİ KOLEKSİYON DEĞERİ'
+                        : 'ESTIMATED COLLECTION VALUE',
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
@@ -1297,14 +1385,17 @@ class CollectionAnalyticsCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     formattedVal,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
-                      fontFamily: 'Cinzel',
-                      color: Color(0xFFFFCC00),
+                      fontFamily: 'Outfit',
+                      color: Theme.of(context).colorScheme.primary,
                       shadows: [
                         Shadow(
-                          color: Color(0xFFFFCC00),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.5),
                           blurRadius: 4,
                         ),
                       ],
@@ -1334,7 +1425,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
                     icon: Icons.inventory_2_outlined,
                     label: tr ? 'Toplam Öğe' : 'Total Items',
                     value: '$totalCount ${tr ? 'Adet' : 'Items'}',
-                    color: const Color(0xFF00FFCC),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1344,7 +1435,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
                     icon: Icons.auto_awesome_outlined,
                     label: tr ? 'Koleksiyoner Skoru' : 'Collector Score',
                     value: '${totalCount * 125 + boxedCount * 75} XP',
-                    color: const Color(0xFF8338EC),
+                    color: Theme.of(context).colorScheme.secondary,
                   ),
                 ),
               ],
@@ -1358,8 +1449,10 @@ class CollectionAnalyticsCard extends StatelessWidget {
                     context,
                     icon: Icons.diamond_outlined,
                     label: tr ? 'Nadir & Özel' : 'Rare & Special',
-                    value: '${(totalCount * 0.15).ceil()} ${tr ? 'Parça' : 'Pcs'}',
-                    color: const Color(0xFFFFCC00),
+                    value:
+                        '${(totalCount * 0.15).ceil()} ${tr ? 'Parça' : 'Pcs'}',
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.85),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1368,16 +1461,26 @@ class CollectionAnalyticsCard extends StatelessWidget {
                     context,
                     icon: Icons.health_and_safety_outlined,
                     label: tr ? 'Ort. Kondisyon' : 'Avg. Condition',
-                    value: boxedPct > 0.4 ? (tr ? 'Kutulu (MIB)' : 'MIB / Pristine') : (tr ? 'Çok İyi (EX)' : 'Very Good'),
-                    color: const Color(0xFFEC008C),
+                    value: boxedPct > 0.4
+                        ? (tr ? 'Kutulu (MIB)' : 'MIB / Pristine')
+                        : (tr ? 'Çok İyi (EX)' : 'Very Good'),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withOpacity(0.85),
                   ),
                 ),
               ],
             ),
             const Divider(height: 28),
             Text(
-              tr ? 'Koleksiyon Oranları & Sağlığı' : 'Collection Health & Ratios',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
+              tr
+                  ? 'Koleksiyon Oranları & Sağlığı'
+                  : 'Collection Health & Ratios',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  fontFamily: 'Outfit'),
             ),
             const SizedBox(height: 12),
             Row(
@@ -1386,49 +1489,59 @@ class CollectionAnalyticsCard extends StatelessWidget {
                 NeonPieChart(
                   percentage: boxedPct,
                   label: tr ? 'Kutulu MIB' : 'Boxed MIB',
-                  color: const Color(0xFFEC008C),
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 NeonPieChart(
                   percentage: unboxedPct,
                   label: tr ? 'Açılmış' : 'Unboxed',
-                  color: const Color(0xFF00FFCC),
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
                 NeonPieChart(
-                  percentage: totalCatalog.isNotEmpty ? (totalCount / totalCatalog.length).clamp(0.0, 1.0) : 0.0,
+                  percentage: totalCatalog.isNotEmpty
+                      ? (totalCount / totalCatalog.length).clamp(0.0, 1.0)
+                      : 0.0,
                   label: tr ? 'Katalog Oranı' : 'Catalog Comp.',
-                  color: const Color(0xFFFFCC00),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
                 ),
               ],
             ),
             const Divider(height: 28),
             Text(
               tr ? 'Kategori Dağılımı' : 'Category Distribution',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  fontFamily: 'Outfit'),
             ),
             const SizedBox(height: 8),
             NeonBarChart(
               label: tr ? 'Bebekler (Dolls)' : 'Dolls',
               count: dollCount,
               total: totalCount,
-              color: const Color(0xFFEC008C),
+              color: Theme.of(context).colorScheme.primary,
             ),
             NeonBarChart(
               label: tr ? 'Evcil Hayvanlar (Pets)' : 'Pets',
               count: petCount,
               total: totalCount,
-              color: const Color(0xFF00FFCC),
+              color: Theme.of(context).colorScheme.secondary,
             ),
             NeonBarChart(
               label: tr ? 'Aksesuarlar (Accs)' : 'Accessories',
               count: accCount,
               total: totalCount,
-              color: const Color(0xFFFFCC00),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
             ),
             if (topChars.isNotEmpty) ...[
               const Divider(height: 28),
               Text(
-                tr ? 'Karakter Tamamlanma Oranları' : 'Character Completion Rates',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Outfit'),
+                tr
+                    ? 'Karakter Tamamlanma Oranları'
+                    : 'Character Completion Rates',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    fontFamily: 'Outfit'),
               ),
               const SizedBox(height: 10),
               for (final char in topChars)
@@ -1442,11 +1555,15 @@ class CollectionAnalyticsCard extends StatelessWidget {
                         children: [
                           Text(
                             _formatCharName(char.key),
-                            style: const TextStyle(fontSize: 11, fontFamily: 'Outfit'),
+                            style: const TextStyle(
+                                fontSize: 11, fontFamily: 'Outfit'),
                           ),
                           Text(
                             '${(char.value * 100).toStringAsFixed(0)}%',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Outfit'),
                           ),
                         ],
                       ),
@@ -1457,7 +1574,8 @@ class CollectionAnalyticsCard extends StatelessWidget {
                           value: char.value,
                           minHeight: 6,
                           backgroundColor: Colors.white10,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8338EC)),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary),
                         ),
                       ),
                     ],
@@ -1470,17 +1588,18 @@ class CollectionAnalyticsCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF8338EC).withOpacity(0.04),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.04),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: const Color(0xFF8338EC).withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                   width: 1,
                 ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.psychology_outlined, color: Color(0xFF8338EC), size: 18),
+                  Icon(Icons.psychology_outlined,
+                      color: Theme.of(context).colorScheme.primary, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1589,7 +1708,7 @@ class NeonPieChart extends StatelessWidget {
                 value: 1.0,
                 strokeWidth: 5,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  isDark ? const Color(0xFF2C1F45) : Colors.black12,
+                  Theme.of(context).dividerColor,
                 ),
               ),
               CircularProgressIndicator(
@@ -1613,7 +1732,8 @@ class NeonPieChart extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
+          style: const TextStyle(
+              fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
         ),
       ],
     );
@@ -1651,7 +1771,8 @@ class NeonBarChart extends StatelessWidget {
               ),
               Text(
                 '$count / $total',
-                style: const TextStyle(fontSize: 11, fontFamily: 'Outfit', color: Colors.white54),
+                style: const TextStyle(
+                    fontSize: 11, fontFamily: 'Outfit', color: Colors.white54),
               ),
             ],
           ),

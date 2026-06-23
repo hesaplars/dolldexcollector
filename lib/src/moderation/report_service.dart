@@ -80,11 +80,11 @@ class ReportService {
         .where('reporterId', isEqualTo: reporterId)
         .snapshots()
         .map((snapshot) {
-          final reports = snapshot.docs
-              .map((doc) => UserReport.fromMap(doc.id, doc.data()))
-              .toList();
-          return reports..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        });
+      final reports = snapshot.docs
+          .map((doc) => UserReport.fromMap(doc.id, doc.data()))
+          .toList();
+      return reports..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    });
   }
 }
 

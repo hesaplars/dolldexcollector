@@ -208,40 +208,35 @@ class SettingsScreen extends StatelessWidget {
                             final themes = [
                               {
                                 'key': 'goth_light',
-                                'nameTr': 'Açık Goth',
-                                'nameEn': 'Light Goth',
-                                'color': DollDexTheme.teal,
-                                'bg': DollDexTheme.paper
+                                'nameTr': 'Sıcak Premium',
+                                'nameEn': 'Warm Premium',
+                                'color': const Color(0xFFFF5A14),
                               },
                               {
                                 'key': 'goth_dark',
-                                'nameTr': 'Koyu Goth',
-                                'nameEn': 'Dark Goth',
-                                'color': DollDexTheme.teal,
-                                'bg': DollDexTheme.darkPaper
+                                'nameTr': 'Gece Premium',
+                                'nameEn': 'Night Premium',
+                                'color': const Color(0xFFFF7A1A),
                               },
                               {
                                 'key': 'toxic_neon',
-                                'nameTr': 'Zehir Yeşili',
-                                'nameEn': 'Toxic Neon',
-                                'color': const Color(0xFF39FF14),
-                                'bg': const Color(0xFF060D08),
+                                'nameTr': 'Nane Premium',
+                                'nameEn': 'Mint Premium',
+                                'color': const Color(0xFF2D9D72),
                                 'isPro': true
                               },
                               {
                                 'key': 'crimson_blood',
-                                'nameTr': 'Kan Kırmızısı',
-                                'nameEn': 'Crimson Blood',
-                                'color': const Color(0xFFFF073A),
-                                'bg': const Color(0xFF0B0606),
+                                'nameTr': 'Yakut Premium',
+                                'nameEn': 'Ruby Premium',
+                                'color': const Color(0xFFC53B2C),
                                 'isPro': true
                               },
                               {
                                 'key': 'royal_gold',
-                                'nameTr': 'Asil Altın',
-                                'nameEn': 'Royal Gold',
-                                'color': const Color(0xFFFFD700),
-                                'bg': const Color(0xFF0B0410),
+                                'nameTr': 'Altın Premium',
+                                'nameEn': 'Gold Premium',
+                                'color': const Color(0xFFC89411),
                                 'isPro': true
                               },
                             ];
@@ -268,8 +263,8 @@ class SettingsScreen extends StatelessWidget {
                                               ? 'DollDex Pro Özelliği'
                                               : 'DollDex Pro Feature',
                                           content: tr
-                                              ? 'Bu özel renkli gotik temayı kullanabilmek için DollDex Pro üyesi olmalısınız.'
-                                              : 'You must be a DollDex Pro member to use this custom colored gothic theme.',
+                                              ? 'Bu özel renkli Premium temayı kullanabilmek için DollDex Pro üyesi olmalısınız.'
+                                              : 'You must be a DollDex Pro member to use this custom colored Premium theme.',
                                           confirmText: tr
                                               ? "Pro'ya Geç"
                                               : 'Upgrade to Pro',

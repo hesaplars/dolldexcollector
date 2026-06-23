@@ -13,6 +13,8 @@ import '../social/social_models.dart';
 import '../users/user_models.dart';
 import '../users/profile_setup_repository.dart';
 import '../auth/sign_in_panel.dart';
+import 'social_screen.dart';
+import '../catalog/catalog_models.dart';
 
 class DirectMessagesModalContent extends StatefulWidget {
   const DirectMessagesModalContent({
@@ -24,10 +26,12 @@ class DirectMessagesModalContent extends StatefulWidget {
   final bool showDragHandle;
 
   @override
-  State<DirectMessagesModalContent> createState() => _DirectMessagesModalContentState();
+  State<DirectMessagesModalContent> createState() =>
+      _DirectMessagesModalContentState();
 }
 
-class _DirectMessagesModalContentState extends State<DirectMessagesModalContent> {
+class _DirectMessagesModalContentState
+    extends State<DirectMessagesModalContent> {
   String? _activeThreadId;
   String? _activeChatUserId;
   bool _showFriendsSelection = false;
@@ -240,7 +244,10 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
                   : 'You must sign in to message and chat with other collectors.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -251,7 +258,9 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
     }
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFFEC008C)));
+      return Center(
+          child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary));
     }
 
     Widget header;
@@ -261,13 +270,16 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
       header = Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black87, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: isDark ? Colors.white : Colors.black87, size: 20),
             onPressed: _backToInbox,
           ),
           StreamBuilder<ProfileSetupStatus>(
             stream: profileSetupRepository.watch(_activeChatUserId!),
             builder: (context, snap) {
-              final username = snap.data?.username.isNotEmpty == true ? '@${snap.data!.username}' : 'Collector';
+              final username = snap.data?.username.isNotEmpty == true
+                  ? '@${snap.data!.username}'
+                  : 'Collector';
               final avatarId = snap.data?.avatarId ?? '';
               final frameColor = snap.data?.avatarFrameColor ?? '';
               return GestureDetector(
@@ -287,19 +299,24 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
                   cursor: SystemMouseCursors.click,
                   child: Row(
                     children: [
-                      buildAvatarHelper(avatarId, frameColor, size: 32),
+                      buildAvatarHelper(context, avatarId, frameColor,
+                          size: 32),
                       const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (snap.data?.selectedBadge.isNotEmpty == true) ...[
-                            ProfileBadgeWidget(badgeId: snap.data!.selectedBadge, size: 8),
+                            ProfileBadgeWidget(
+                                badgeId: snap.data!.selectedBadge, size: 8),
                             const SizedBox(height: 2),
                           ],
                           Text(
                             username,
-                            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+                            style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black87,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16),
                           ),
                         ],
                       ),
@@ -322,13 +339,17 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
       header = Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black87, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: isDark ? Colors.white : Colors.black87, size: 20),
             onPressed: _backToInbox,
           ),
           const SizedBox(width: 8),
           Text(
             tr ? 'Yeni Sohbet' : 'New Chat',
-            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
+                fontSize: 18),
           ),
         ],
       );
@@ -343,8 +364,12 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
             if (friends.isEmpty) {
               return Center(
                 child: Text(
-                  tr ? 'Sohbet başlatacak arkadaşınız yok' : 'No friends to start chat with',
-                  style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14),
+                  tr
+                      ? 'Sohbet başlatacak arkadaşınız yok'
+                      : 'No friends to start chat with',
+                  style: TextStyle(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      fontSize: 14),
                 ),
               );
             }
@@ -354,22 +379,32 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
               itemBuilder: (context, idx) {
                 final friend = friends[idx];
                 return ListTile(
-                  leading: buildAvatarHelper(friend.avatarId, friend.avatarFrameColor, size: 36),
+                  leading: buildAvatarHelper(
+                      context, friend.avatarId, friend.avatarFrameColor,
+                      size: 36),
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (friend.selectedBadge.isNotEmpty) ...[
-                        ProfileBadgeWidget(badgeId: friend.selectedBadge, size: 8),
+                        ProfileBadgeWidget(
+                            badgeId: friend.selectedBadge, size: 8),
                         const SizedBox(height: 2),
                       ],
                       Text(
-                        friend.username.isEmpty ? friend.displayName : '@${friend.username}',
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                        friend.username.isEmpty
+                            ? friend.displayName
+                            : '@${friend.username}',
+                        style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                  subtitle: Text(friend.displayName, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12)),
+                  subtitle: Text(friend.displayName,
+                      style: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.black54,
+                          fontSize: 12)),
                   onTap: () => _startChatWithUser(friend.id),
                 );
               },
@@ -385,10 +420,14 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
           children: [
             Text(
               tr ? 'Özel Mesajlar' : 'Direct Messages',
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18),
             ),
             IconButton(
-              icon: const Icon(Icons.add_comment_rounded, color: Color(0xFFEC008C)),
+              icon: Icon(Icons.add_comment_rounded,
+                  color: Theme.of(context).colorScheme.primary),
               onPressed: () {
                 if (!widget.showDragHandle) {
                   context.go('/messages?newChat=true');
@@ -413,17 +452,23 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
                   return const Center(child: CircularProgressIndicator());
                 }
                 final allThreads = snap.data ?? [];
-                final threads = allThreads.where((t) => !deletedIds.contains(t.id)).toList();
+                final threads = allThreads
+                    .where((t) => !deletedIds.contains(t.id))
+                    .toList();
                 if (threads.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.forum_outlined, size: 48, color: isDark ? Colors.white24 : Colors.black26),
+                        Icon(Icons.forum_outlined,
+                            size: 48,
+                            color: isDark ? Colors.white24 : Colors.black26),
                         const SizedBox(height: 12),
                         Text(
                           tr ? 'Henüz konuşma yok' : 'No conversations yet',
-                          style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14),
+                          style: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.black54,
+                              fontSize: 14),
                         ),
                       ],
                     ),
@@ -434,7 +479,8 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
                   itemCount: threads.length,
                   itemBuilder: (context, idx) {
                     final thread = threads[idx];
-                    final otherMemberId = thread.memberIds.firstWhere((id) => id != myUid, orElse: () => '');
+                    final otherMemberId = thread.memberIds
+                        .firstWhere((id) => id != myUid, orElse: () => '');
                     if (otherMemberId.isEmpty) return const SizedBox.shrink();
 
                     return ThreadListTile(
@@ -471,7 +517,8 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
           : true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        if (widget.showDragHandle && (_activeThreadId != null || _showFriendsSelection)) {
+        if (widget.showDragHandle &&
+            (_activeThreadId != null || _showFriendsSelection)) {
           _backToInbox();
         }
       },
@@ -491,7 +538,7 @@ class _DirectMessagesModalContentState extends State<DirectMessagesModalContent>
           ] else
             const SizedBox(height: 8),
           header,
-          Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
+          Divider(color: Theme.of(context).dividerColor, height: 1),
           body,
         ],
       ),
@@ -528,7 +575,8 @@ class ThreadListTile extends StatelessWidget {
           return const SizedBox(height: 60);
         }
         final status = snap.data!;
-        final username = status.username.isNotEmpty ? '@${status.username}' : 'Collector';
+        final username =
+            status.username.isNotEmpty ? '@${status.username}' : 'Collector';
         final displayName = status.displayName;
         final avatarId = status.avatarId;
         final frameColor = status.avatarFrameColor;
@@ -541,7 +589,7 @@ class ThreadListTile extends StatelessWidget {
 
         return ListTile(
           onTap: onTap,
-          leading: buildAvatarHelper(avatarId, frameColor, size: 40),
+          leading: buildAvatarHelper(context, avatarId, frameColor, size: 40),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -565,15 +613,16 @@ class ThreadListTile extends StatelessWidget {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEC008C),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 6),
               ],
               if (isMuted) ...[
-                Icon(Icons.volume_off_rounded, size: 14, color: isDark ? Colors.white30 : Colors.black38),
+                Icon(Icons.volume_off_rounded,
+                    size: 14, color: isDark ? Colors.white30 : Colors.black38),
                 const SizedBox(width: 4),
               ],
               Expanded(
@@ -604,7 +653,8 @@ class ThreadListTile extends StatelessWidget {
             ],
           ),
           trailing: PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, color: isDark ? Colors.white30 : Colors.black38),
+            icon: Icon(Icons.more_vert_rounded,
+                color: isDark ? Colors.white30 : Colors.black38),
             padding: EdgeInsets.zero,
             onSelected: (val) {
               if (val == 'mute') {
@@ -650,10 +700,12 @@ class DirectChatConversationView extends StatefulWidget {
   final String myUid;
 
   @override
-  State<DirectChatConversationView> createState() => _DirectChatConversationViewState();
+  State<DirectChatConversationView> createState() =>
+      _DirectChatConversationViewState();
 }
 
-class _DirectChatConversationViewState extends State<DirectChatConversationView> {
+class _DirectChatConversationViewState
+    extends State<DirectChatConversationView> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
@@ -695,15 +747,19 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
               final messages = snap.data ?? [];
               if (messages.isNotEmpty) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  LocalStorage.getString('last_read_times').then((readTimesRaw) {
+                  LocalStorage.getString('last_read_times')
+                      .then((readTimesRaw) {
                     Map<String, String> readTimes = {};
                     if (readTimesRaw != null) {
                       try {
-                        readTimes = Map<String, String>.from(jsonDecode(readTimesRaw) as Map);
+                        readTimes = Map<String, String>.from(
+                            jsonDecode(readTimesRaw) as Map);
                       } catch (_) {}
                     }
-                    readTimes[widget.threadId] = DateTime.now().toIso8601String();
-                    LocalStorage.setString('last_read_times', jsonEncode(readTimes));
+                    readTimes[widget.threadId] =
+                        DateTime.now().toIso8601String();
+                    LocalStorage.setString(
+                        'last_read_times', jsonEncode(readTimes));
                   });
                 });
               }
@@ -724,7 +780,8 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
                 key: const PageStorageKey('messages_chat_scroll'),
                 reverse: true,
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 itemCount: messages.length,
                 itemBuilder: (context, idx) {
                   final msg = messages[idx];
@@ -735,7 +792,7 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
             },
           ),
         ),
-        Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
+        Divider(color: Theme.of(context).dividerColor, height: 1),
         Container(
           padding: EdgeInsets.only(
             left: 12,
@@ -743,19 +800,65 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
             top: 8,
             bottom: MediaQuery.viewInsetsOf(context).bottom + 8,
           ),
-          color: isDark ? const Color(0xFF171026) : const Color(0xFFFAF2FF),
+          color: Theme.of(context).colorScheme.secondaryContainer,
           child: Row(
             children: [
+              IconButton(
+                icon: Icon(Icons.add_circle_outline_rounded,
+                    color: Theme.of(context).colorScheme.primary),
+                tooltip: tr ? 'Paylaş' : 'Share',
+                onPressed: () {
+                  showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    showDragHandle: true,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(24)),
+                      side: BorderSide(color: Theme.of(context).dividerColor),
+                    ),
+                    builder: (context) {
+                      return ShareItemSelectionModal(
+                        userId: widget.myUid,
+                        onShareCatalog: (catalogId) async {
+                          await socialRepository.sendDirectMessage(
+                            threadId: widget.threadId,
+                            senderId: widget.myUid,
+                            text: '',
+                            sharedCatalogId: catalogId,
+                            sharedSource: 'catalog',
+                          );
+                        },
+                        onShareCollection: (catalogId, collectionId, status) async {
+                          await socialRepository.sendDirectMessage(
+                            threadId: widget.threadId,
+                            senderId: widget.myUid,
+                            text: '',
+                            sharedCatalogId: catalogId,
+                            sharedCollectionId: collectionId,
+                            sharedCollectionStatus: status,
+                            sharedSource: 'collection',
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
               Expanded(
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
                   autofocus: true,
                   textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+                  style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 14),
                   decoration: InputDecoration(
                     hintText: tr ? 'Mesaj yaz...' : 'Write message...',
-                    hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38),
+                    hintStyle: TextStyle(
+                        color: isDark ? Colors.white30 : Colors.black38),
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -764,7 +867,8 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.send_rounded, color: Color(0xFFEC008C)),
+                icon: Icon(Icons.send_rounded,
+                    color: Theme.of(context).colorScheme.primary),
                 onPressed: _sendMessage,
               ),
             ],
@@ -774,7 +878,8 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
     );
   }
 
-  Widget _buildDirectMsgBubble(BuildContext context, ChatMessage msg, bool isMe) {
+  Widget _buildDirectMsgBubble(
+      BuildContext context, ChatMessage msg, bool isMe) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -793,19 +898,9 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
               bottomLeft: Radius.circular(isMe ? 16 : 4),
               bottomRight: Radius.circular(isMe ? 4 : 16),
             ),
-            gradient: isMe
-                ? const LinearGradient(
-                    colors: [Color(0xFFEC008C), Color(0xFF8338EC)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : LinearGradient(
-                    colors: isDark
-                        ? [const Color(0xFF2C1F45), const Color(0xFF1C1330)]
-                        : [const Color(0xFFF3E8FF), const Color(0xFFE9D5FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+            color: isMe
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.secondaryContainer,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,8 +910,11 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
                 stream: profileSetupRepository.watch(msg.senderId),
                 builder: (context, snapshot) {
                   final badge = snapshot.data?.selectedBadge ?? '';
-                  final username = snapshot.data?.username ?? msg.senderUsername;
-                  final displayUsername = username.isNotEmpty ? '@$username' : (isMe ? 'Ben' : 'Collector');
+                  final username =
+                      snapshot.data?.username ?? msg.senderUsername;
+                  final displayUsername = username.isNotEmpty
+                      ? '@$username'
+                      : (isMe ? 'Ben' : 'Collector');
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -832,8 +930,11 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
                           fontSize: 9.5,
                           fontWeight: FontWeight.w900,
                           color: isMe
-                              ? const Color(0xFF00FFCC)
-                              : (isDark ? const Color(0xFF00FFCC) : const Color(0xFF8338EC)),
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .onPrimary
+                                  .withOpacity(0.9)
+                              : Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -841,14 +942,21 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
                   );
                 },
               ),
-              Text(
-                msg.text,
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
-                  fontSize: 13.5,
+              if (msg.text.isNotEmpty) ...[
+                Text(
+                  msg.text,
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: isMe
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontSize: 13.5,
+                  ),
                 ),
-              ),
+              ],
+              if (msg.sharedSource.isNotEmpty) ...[
+                _buildSharedItemCard(context, msg, isMe),
+              ],
               if (msg.createdAt != null) ...[
                 const SizedBox(height: 2),
                 Align(
@@ -858,12 +966,175 @@ class _DirectChatConversationViewState extends State<DirectChatConversationView>
                     style: TextStyle(
                       fontFamily: 'Outfit',
                       fontSize: 8.5,
-                      color: isMe ? Colors.white70 : (isDark ? Colors.white24 : Colors.black26),
+                      color: isMe
+                          ? Theme.of(context)
+                              .colorScheme
+                              .onPrimary
+                              .withOpacity(0.7)
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.5),
                     ),
                   ),
                 ),
               ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSharedItemCard(
+      BuildContext context, ChatMessage msg, bool isMe) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final entry = catalogEntriesNotifier.value.firstWhere(
+      (e) => e.id == msg.sharedCatalogId,
+      orElse: () => CatalogEntry(
+        id: '',
+        name: '',
+        type: CatalogItemType.doll,
+        subtitle: '',
+        imageUrls: [],
+      ),
+    );
+
+    if (entry.id.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    String getStatusLabel(String status) {
+      switch (status) {
+        case 'owned':
+          return tr ? 'Sahibim' : 'Owned';
+        case 'wanted':
+          return tr ? 'Arıyorum' : 'Looking For';
+        case 'trade':
+          return tr ? 'Takaslık' : 'Trade';
+        case 'selling':
+          return tr ? 'Satılık' : 'Selling';
+        default:
+          return status;
+      }
+    }
+
+    final statusLabel = getStatusLabel(msg.sharedCollectionStatus);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 6, bottom: 2),
+      constraints: const BoxConstraints(maxWidth: 240),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.black.withOpacity(0.4)
+            : Colors.white.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          width: 1.0,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              context.push('/i/${entry.id}');
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark ? Colors.white10 : Colors.black12,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: entry.primaryImageUrl.isNotEmpty
+                          ? Image.network(
+                              entry.primaryImageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image_rounded,
+                                      size: 20, color: Colors.grey),
+                            )
+                          : const Icon(Icons.image_not_supported_rounded,
+                              size: 20, color: Colors.grey),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        if (entry.series != null &&
+                            entry.series!.isNotEmpty) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            entry.series!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isDark ? Colors.white54 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                        if (statusLabel.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withOpacity(0.4),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              statusLabel,
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

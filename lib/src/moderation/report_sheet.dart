@@ -48,9 +48,10 @@ class _ReportSheetState extends State<ReportSheet> {
             DropdownButtonFormField<ReportReason>(
               initialValue: _reason,
               decoration: InputDecoration(
-                labelText: AppLanguageScope.languageOf(context) == AppLanguage.tr
-                    ? 'Sebep'
-                    : 'Reason',
+                labelText:
+                    AppLanguageScope.languageOf(context) == AppLanguage.tr
+                        ? 'Sebep'
+                        : 'Reason',
                 prefixIcon: const Icon(Icons.flag_outlined),
               ),
               items: ReportReason.values
@@ -73,9 +74,10 @@ class _ReportSheetState extends State<ReportSheet> {
               minLines: 3,
               maxLines: 5,
               decoration: InputDecoration(
-                labelText: AppLanguageScope.languageOf(context) == AppLanguage.tr
-                    ? 'Detaylar'
-                    : 'Details',
+                labelText:
+                    AppLanguageScope.languageOf(context) == AppLanguage.tr
+                        ? 'Detaylar'
+                        : 'Details',
                 alignLabelWithHint: true,
                 prefixIcon: const Icon(Icons.notes_rounded),
               ),
@@ -88,7 +90,7 @@ class _ReportSheetState extends State<ReportSheet> {
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
                       AppLanguageScope.languageOf(context) == AppLanguage.tr
-                      ? 'Vazgeç'
+                          ? 'Vazgeç'
                           : 'Cancel',
                     ),
                   ),

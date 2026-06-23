@@ -65,7 +65,7 @@ class _UsernameProfileLoaderState extends State<UsernameProfileLoader> {
           return Scaffold(
             body: Center(
               child: CircularProgressIndicator(
-                color: isDark ? const Color(0xFFEC008C) : Colors.pink,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           );
@@ -102,23 +102,29 @@ class _UsernameProfileLoaderState extends State<UsernameProfileLoader> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFEC008C).withOpacity(0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1),
                       border: Border.all(
-                        color: const Color(0xFFEC008C).withOpacity(0.3),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.3),
                         width: 2,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.person_off_rounded,
                       size: 64,
-                      color: Color(0xFFEC008C),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     tr ? 'Kullanıcı Bulunamadı' : 'User Not Found',
                     style: const TextStyle(
-                      fontFamily: 'Cinzel',
+                      fontFamily: 'Outfit',
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -137,7 +143,7 @@ class _UsernameProfileLoaderState extends State<UsernameProfileLoader> {
                   const SizedBox(height: 32),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEC008C),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
