@@ -1330,19 +1330,10 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                         borderRadius:
                                             const BorderRadius.vertical(
                                                 top: Radius.circular(8)),
-                                        child: Image.network(
-                                          entry.primaryImageUrl,
+                                        child: DollImage(
+                                          imageUrl: entry.primaryImageUrl,
+                                          label: entry.name,
                                           fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return Container(
-                                              color: Colors.grey
-                                                  .withValues(alpha: 0.1),
-                                              child: Icon(
-                                                  Icons.broken_image_outlined,
-                                                  size: isMobile ? 24 : 36),
-                                            );
-                                          },
                                         ),
                                       ),
                                     ),
