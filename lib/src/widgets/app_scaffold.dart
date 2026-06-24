@@ -1781,7 +1781,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                             child: getWebImage(
                               imageUrl: imageUrl,
                               label: 'Announcement Banner',
-                              fit: BoxFit.cover,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
