@@ -50,7 +50,11 @@ service cloud.firestore {
         || (isOwner(userId)
           && notBanned()
           && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['role', 'isPro', 'proUntil']));
+            .hasAny([
+              'role', 'isPro', 'proUntil', 'coins',
+              'unlockedBadges', 'unlockedAvatars', 'unlockedFrames', 'unlockedCovers',
+              'lastDailyClaim', 'lastCommentCoinsClaimDate', 'dailyCommentCoinsClaimed'
+            ]));
       allow delete: if isAdmin();
     }
 
@@ -239,6 +243,36 @@ service cloud.firestore {
     match /announcements/{announcementId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    match /unlockRequests/{requestId} {
+      allow read: if signedIn() && notBanned() && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if signedIn()
+        && notBanned()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.itemType in ['badge', 'avatar', 'frame', 'cover']
+        && request.resource.data.itemId is string;
+      allow update, delete: if isAdmin();
+    }
+
+    match /dailyClaimRequests/{requestId} {
+      allow read: if signedIn() && notBanned() && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if signedIn()
+        && notBanned()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    match /coinPurchaseRequests/{requestId} {
+      allow read: if signedIn() && notBanned() && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if signedIn()
+        && notBanned()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.coinsAmount is int;
+      allow update, delete: if isAdmin();
     }
   }
 }

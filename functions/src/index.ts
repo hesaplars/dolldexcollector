@@ -2,6 +2,7 @@ import {initializeApp} from "firebase-admin/app";
 import {FieldValue, getFirestore} from "firebase-admin/firestore";
 import {getMessaging} from "firebase-admin/messaging";
 import {HttpsError, onCall} from "firebase-functions/v2/https";
+import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import {createHash} from "node:crypto";
 
 initializeApp();
@@ -228,4 +229,250 @@ export const verifyGooglePlayPurchase = onCall(async (request) => {
     "failed-precondition",
     "Google Play Developer API is not connected yet.",
   );
+});
+
+const BADGE_PRICES: Record<string, number> = {
+  queen: 1000,
+  princess: 1000,
+  legendary: 1000,
+  star: 1000,
+  creepover: 100,
+  dawn_of_dance: 100,
+  sweet_1600: 100,
+  ghouls_rule: 100,
+  skull_shores: 100,
+  thirteen_wishes: 100,
+  frights_camera: 100,
+  freaky_fusion: 100,
+  haunted_ghouls: 100,
+  boo_york: 100,
+  great_scarrier: 100,
+  skulltimate: 100,
+};
+
+export const onUnlockRequestCreated = onDocumentCreated("unlockRequests/{requestId}", async (event) => {
+  const requestRef = event.data?.ref;
+  if (!requestRef) return;
+  const requestData = event.data?.data();
+  if (!requestData || requestData.status !== "pending") return;
+
+  const userId = requestData.userId;
+  const itemType = requestData.itemType;
+  const itemId = requestData.itemId;
+
+  const userRef = db.collection("users").doc(userId);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const userSnap = await transaction.get(userRef);
+      if (!userSnap.exists) {
+        throw new Error("User document does not exist.");
+      }
+      const userData = userSnap.data() || {};
+      const coins = userData.coins ?? 20;
+
+      let cost = 0;
+      let updateField = "";
+      let currentUnlocked: string[] = [];
+
+      if (itemType === "badge") {
+        cost = BADGE_PRICES[itemId] ?? 0;
+        if (cost === 0) {
+          throw new Error("Badge is not purchasable or invalid.");
+        }
+        updateField = "unlockedBadges";
+        currentUnlocked = userData.unlockedBadges || ["novice"];
+      } else if (itemType === "avatar") {
+        cost = 100;
+        updateField = "unlockedAvatars";
+        currentUnlocked = userData.unlockedAvatars || [];
+      } else if (itemType === "frame") {
+        cost = 150;
+        updateField = "unlockedFrames";
+        currentUnlocked = userData.unlockedFrames || [];
+      } else if (itemType === "cover") {
+        cost = 200;
+        updateField = "unlockedCovers";
+        currentUnlocked = userData.unlockedCovers || [];
+      } else {
+        throw new Error("Invalid item type.");
+      }
+
+      if (currentUnlocked.includes(itemId)) {
+        transaction.update(requestRef, {
+          status: "success",
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        return;
+      }
+
+      if (coins < cost) {
+        throw new Error("Insufficient coins.");
+      }
+
+      transaction.update(userRef, {
+        coins: coins - cost,
+        [updateField]: FieldValue.arrayUnion(itemId),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(requestRef, {
+        status: "success",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    });
+  } catch (e: any) {
+    await requestRef.update({
+      status: "error",
+      errorReason: e.message || "Unknown error",
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+});
+
+export const onDailyClaimRequestCreated = onDocumentCreated("dailyClaimRequests/{requestId}", async (event) => {
+  const requestRef = event.data?.ref;
+  if (!requestRef) return;
+  const requestData = event.data?.data();
+  if (!requestData || requestData.status !== "pending") return;
+
+  const userId = requestData.userId;
+  const userRef = db.collection("users").doc(userId);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const userSnap = await transaction.get(userRef);
+      if (!userSnap.exists) {
+        throw new Error("User document does not exist.");
+      }
+      const userData = userSnap.data() || {};
+      const coins = userData.coins ?? 20;
+
+      const now = new Date();
+      const todayStr = now.toISOString().substring(0, 10);
+
+      let alreadyClaimed = false;
+      const lastDailyClaim = userData.lastDailyClaim;
+      if (lastDailyClaim) {
+        let lastClaimDate: Date;
+        if (typeof lastDailyClaim.toDate === "function") {
+          lastClaimDate = lastDailyClaim.toDate();
+        } else {
+          lastClaimDate = new Date(lastDailyClaim);
+        }
+        const lastClaimStr = lastClaimDate.toISOString().substring(0, 10);
+        if (lastClaimStr === todayStr) {
+          alreadyClaimed = true;
+        }
+      }
+
+      if (alreadyClaimed) {
+        throw new Error("Already claimed today.");
+      }
+
+      transaction.update(userRef, {
+        coins: coins + 5,
+        lastDailyClaim: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(requestRef, {
+        status: "success",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    });
+  } catch (e: any) {
+    await requestRef.update({
+      status: "error",
+      errorReason: e.message || "Unknown error",
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+});
+
+export const onCoinPurchaseRequestCreated = onDocumentCreated("coinPurchaseRequests/{requestId}", async (event) => {
+  const requestRef = event.data?.ref;
+  if (!requestRef) return;
+  const requestData = event.data?.data();
+  if (!requestData || requestData.status !== "pending") return;
+
+  const userId = requestData.userId;
+  const coinsAmount = requestData.coinsAmount;
+  const userRef = db.collection("users").doc(userId);
+
+  try {
+    if (![150, 500, 1200].includes(coinsAmount)) {
+      throw new Error("Invalid coin package amount.");
+    }
+
+    await db.runTransaction(async (transaction) => {
+      const userSnap = await transaction.get(userRef);
+      if (!userSnap.exists) {
+        throw new Error("User document does not exist.");
+      }
+      const userData = userSnap.data() || {};
+      const coins = userData.coins ?? 20;
+
+      transaction.update(userRef, {
+        coins: coins + coinsAmount,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(requestRef, {
+        status: "success",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    });
+  } catch (e: any) {
+    await requestRef.update({
+      status: "error",
+      errorReason: e.message || "Unknown error",
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+});
+
+export const onCommentCreated = onDocumentCreated("comments/{commentId}", async (event) => {
+  const commentData = event.data?.data();
+  if (!commentData) return;
+
+  const userId = commentData.userId;
+  if (!userId || userId === "local-user") return;
+
+  const text = (commentData.text || "").trim();
+  const words = text.split(/\s+/).filter((w: string) => w.length > 1);
+  const hasNoRepetitivePunctuation = !/([!?.@#\$%^&*()_+={}\[\]|\\:;\"<>,~\-\/`])\1{3,}/.test(text);
+
+  if (text.length >= 10 && words.length >= 2 && hasNoRepetitivePunctuation) {
+    const userRef = db.collection("users").doc(userId);
+    const now = new Date();
+    const todayStr = now.toISOString().substring(0, 10);
+
+    try {
+      await db.runTransaction(async (transaction) => {
+        const userSnap = await transaction.get(userRef);
+        if (!userSnap.exists) return;
+
+        const userData = userSnap.data() || {};
+        const coins = userData.coins ?? 20;
+        const lastClaimDate = userData.lastCommentCoinsClaimDate || "";
+        let dailyCoinsClaimed = userData.dailyCommentCoinsClaimed ?? 0;
+
+        if (lastClaimDate !== todayStr) {
+          dailyCoinsClaimed = 0;
+        }
+
+        if (dailyCoinsClaimed < 4) {
+          transaction.update(userRef, {
+            coins: coins + 2,
+            lastCommentCoinsClaimDate: todayStr,
+            dailyCommentCoinsClaimed: dailyCoinsClaimed + 2,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
+      });
+    } catch (e) {
+      console.error("Error awarding comment coins: ", e);
+    }
+  }
 });

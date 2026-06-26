@@ -1645,7 +1645,7 @@ Future<ResolvedReportDetails> _resolveReportDetails(
     BuildContext context, UserReport report) async {
   String reporterName = '...';
   String reportedName = '...';
-  String contentText = '...';
+  String contentText = report.targetText.isNotEmpty ? report.targetText : '...';
 
   // 1. Raporlayan Kullanıcı adını çöz
   try {
@@ -1679,11 +1679,13 @@ Future<ResolvedReportDetails> _resolveReportDetails(
               : 'Profile Page (@$username)';
         } else {
           reportedName = 'ID: ${report.targetId}';
-          contentText = 'ID: ${report.targetId}';
+          if (report.targetText.isEmpty) {
+            contentText = 'ID: ${report.targetId}';
+          }
         }
         break;
       case ReportTargetType.comment:
-        final doc = await FirebaseFirestore.instance
+        var doc = await FirebaseFirestore.instance
             .collection('comments')
             .doc(report.targetId)
             .get();
@@ -1707,7 +1709,35 @@ Future<ResolvedReportDetails> _resolveReportDetails(
             }
           }
         } else {
-          contentText = 'ID: ${report.targetId}';
+          doc = await FirebaseFirestore.instance
+              .collection('globalChatMessages')
+              .doc(report.targetId)
+              .get();
+          if (doc.exists) {
+            final text = doc.data()?['text'] as String? ?? '';
+            final senderUsername = doc.data()?['senderUsername'] as String? ?? 'Collector';
+            contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
+                ? 'Genel Sohbet: "$text"'
+                : 'Global Chat: "$text"';
+            reportedName = senderUsername;
+          } else {
+            doc = await FirebaseFirestore.instance
+                .collection('chatMessages')
+                .doc(report.targetId)
+                .get();
+            if (doc.exists) {
+              final text = doc.data()?['text'] as String? ?? '';
+              final senderUsername = doc.data()?['senderUsername'] as String? ?? 'Collector';
+              contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
+                  ? 'Özel Mesaj: "$text"'
+                  : 'Private Message: "$text"';
+              reportedName = senderUsername;
+            } else {
+              if (report.targetText.isEmpty) {
+                contentText = 'ID: ${report.targetId}';
+              }
+            }
+          }
         }
         break;
       case ReportTargetType.catalogEntry:
@@ -1721,12 +1751,81 @@ Future<ResolvedReportDetails> _resolveReportDetails(
               ? 'Katalog: "$name"'
               : 'Catalog: "$name"';
         } else {
-          contentText = 'ID: ${report.targetId}';
+          if (report.targetText.isEmpty) {
+            contentText = 'ID: ${report.targetId}';
+          }
         }
         reportedName = 'System / Catalog';
         break;
+      case ReportTargetType.collectionEntry:
+        final doc = await FirebaseFirestore.instance
+            .collection('collectionEntries')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          final notes = doc.data()?['notes'] as String? ?? '';
+          final itemId = doc.data()?['itemId'] as String? ?? '';
+          final authorId = doc.data()?['userId'] as String? ?? '';
+          
+          String itemName = '';
+          if (itemId.isNotEmpty) {
+            final itemDoc = await FirebaseFirestore.instance
+                .collection('items')
+                .doc(itemId)
+                .get();
+            if (itemDoc.exists) {
+              itemName = itemDoc.data()?['name'] as String? ?? '';
+            }
+          }
+
+          if (itemName.isNotEmpty) {
+            contentText = notes.isNotEmpty ? '$itemName ($notes)' : itemName;
+          } else {
+            contentText = notes.isNotEmpty ? notes : 'Koleksiyon Ögesi / Collection Entry';
+          }
+
+          if (authorId.isNotEmpty) {
+            final authDoc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(authorId)
+                .get();
+            if (authDoc.exists) {
+              reportedName = authDoc.data()?['username'] as String? ?? 'Collector';
+            } else {
+              reportedName = 'ID: $authorId';
+            }
+          }
+        } else {
+          if (report.targetText.isEmpty) {
+            contentText = 'ID: ${report.targetId}';
+          }
+        }
+        break;
+      case ReportTargetType.accountDeletion:
+        final doc = await FirebaseFirestore.instance
+            .collection('accountDeletionRequests')
+            .doc(report.targetId)
+            .get();
+        String email = '';
+        String reason = '';
+        if (doc.exists) {
+          email = doc.data()?['email'] as String? ?? '';
+          reason = doc.data()?['reason'] as String? ?? '';
+        }
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(report.targetId)
+            .get();
+        final username = userDoc.exists ? (userDoc.data()?['username'] as String? ?? 'Collector') : 'ID: ${report.targetId}';
+        reportedName = username;
+        contentText = AppLanguageScope.languageOf(context) == AppLanguage.tr
+            ? 'Hesap Silme Talebi (Email: $email, Sebep: $reason)'
+            : 'Account Deletion Request (Email: $email, Reason: $reason)';
+        break;
       default:
-        contentText = 'ID: ${report.targetId}';
+        if (report.targetText.isEmpty) {
+          contentText = 'ID: ${report.targetId}';
+        }
         reportedName = '...';
         break;
     }
@@ -1741,6 +1840,48 @@ Future<ResolvedReportDetails> _resolveReportDetails(
     contentText: contentText,
     formattedTime: formattedTime,
   );
+}
+
+Future<void> _adminDeleteAccountFromReport(BuildContext context, UserReport report) async {
+  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+  final userDoc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(report.targetId)
+      .get();
+  final username = userDoc.exists ? (userDoc.data()?['username'] as String? ?? '') : '';
+  final confirmed = await showGothicConfirmDialog(
+    context,
+    title: tr ? 'Hesabı Sil' : 'Delete Account',
+    content: tr
+        ? '@$username kullanıcısının tüm profil verilerini, kullanıcı adını, koleksiyonunu ve bildirimlerini KALICI OLARAK silmek istiyor musunuz? Bu işlem geri alınamaz!'
+        : 'Are you sure you want to PERMANENTLY delete @$username\'s profile, collection, notifications, and release the username? This cannot be undone!',
+    confirmText: tr ? 'Sil' : 'Delete',
+  );
+  if (!confirmed) return;
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    await profileSetupRepository.adminDeleteUserAccount(report.targetId, username);
+    await FirebaseFirestore.instance
+        .collection('accountDeletionRequests')
+        .doc(report.targetId)
+        .delete();
+    updateReportStatus(report.id, ReportStatus.resolved);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(tr
+            ? 'Kullanıcı hesabı başarıyla silindi ve rapor çözüldü.'
+            : 'User account successfully deleted and report resolved.'),
+      ),
+    );
+  } catch (e) {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(tr
+            ? 'Hata: Hesap silinemedi: $e'
+            : 'Error: Failed to delete account: $e'),
+      ),
+    );
+  }
 }
 
 class ModerationReportCard extends StatelessWidget {
@@ -1777,7 +1918,9 @@ class ModerationReportCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        reportReasonLabel(context, report.reason),
+                        report.targetType == ReportTargetType.accountDeletion
+                            ? (tr ? 'Hesap Silme Talebi' : 'Account Deletion Request')
+                            : reportReasonLabel(context, report.reason),
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
@@ -1935,6 +2078,9 @@ class ModerationReportCard extends StatelessWidget {
                           case 'destroy':
                             await deleteReportedContent(context, report);
                             break;
+                          case 'delete_account':
+                            await _adminDeleteAccountFromReport(context, report);
+                            break;
                         }
                       },
                       itemBuilder: (context) => [
@@ -2004,6 +2150,22 @@ class ModerationReportCard extends StatelessWidget {
                                 const SizedBox(width: 8),
                                 Text(
                                   tr ? 'İçeriği İmha Et' : 'Destroy Content',
+                                  style:
+                                      TextStyle(color: theme.colorScheme.error),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (report.targetType == ReportTargetType.accountDeletion)
+                          PopupMenuItem(
+                            value: 'delete_account',
+                            child: Row(
+                              children: [
+                                Icon(Icons.person_remove_rounded,
+                                    size: 18, color: theme.colorScheme.error),
+                                const SizedBox(width: 8),
+                                Text(
+                                  tr ? 'Hesabı Sil' : 'Delete Account',
                                   style:
                                       TextStyle(color: theme.colorScheme.error),
                                 ),

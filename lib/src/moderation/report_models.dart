@@ -7,6 +7,7 @@ enum ReportTargetType {
   image,
   catalogEntry,
   collectionEntry,
+  accountDeletion,
 }
 
 enum ReportReason {
@@ -36,6 +37,7 @@ class UserReport {
     required this.status,
     DateTime? createdAt,
     this.details = '',
+    this.targetText = '',
   }) : createdAt = createdAt ?? DateTime.now();
 
   final String id;
@@ -46,6 +48,7 @@ class UserReport {
   final ReportStatus status;
   final DateTime createdAt;
   final String details;
+  final String targetText;
 
   Map<String, Object?> toMap() {
     return {
@@ -56,6 +59,7 @@ class UserReport {
       'status': status.name,
       'details': details,
       'createdAt': createdAt.toIso8601String(),
+      'targetText': targetText,
     };
   }
 
@@ -69,6 +73,7 @@ class UserReport {
       status: _statusFromName(map['status'] as String?),
       details: map['details'] as String? ?? '',
       createdAt: _dateFromMapValue(map['createdAt']),
+      targetText: map['targetText'] as String? ?? '',
     );
   }
 }

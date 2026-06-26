@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../core/web_image_helper.dart';
 
 import '../../main.dart';
 import '../core/app_helpers.dart';
@@ -413,12 +415,22 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(6),
                           child: entry.primaryImageUrl.isNotEmpty
-                              ? Image.network(
-                                  entry.primaryImageUrl,
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                )
+                              ? (kIsWeb
+                                  ? getWebImage(
+                                      imageUrl: entry.primaryImageUrl,
+                                      label: entry.name,
+                                      fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                          ? BoxFit.contain
+                                          : BoxFit.cover,
+                                    )
+                                  : Image.network(
+                                      entry.primaryImageUrl,
+                                      width: 40,
+                                      height: 40,
+                                      fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                          ? BoxFit.contain
+                                          : BoxFit.cover,
+                                    ))
                               : const Icon(Icons.image_not_supported_rounded,
                                   size: 24, color: Colors.grey),
                         ),
@@ -611,12 +623,22 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                             leading: ClipRRect(
                               borderRadius: BorderRadius.circular(6),
                               child: catEntry.primaryImageUrl.isNotEmpty
-                                  ? Image.network(
-                                      catEntry.primaryImageUrl,
-                                      width: 40,
-                                      height: 40,
-                                      fit: BoxFit.cover,
-                                    )
+                                  ? (kIsWeb
+                                      ? getWebImage(
+                                          imageUrl: catEntry.primaryImageUrl,
+                                          label: catEntry.name,
+                                          fit: catEntry.primaryImageUrl.toLowerCase().contains('.png')
+                                              ? BoxFit.contain
+                                              : BoxFit.cover,
+                                        )
+                                      : Image.network(
+                                          catEntry.primaryImageUrl,
+                                          width: 40,
+                                          height: 40,
+                                          fit: catEntry.primaryImageUrl.toLowerCase().contains('.png')
+                                              ? BoxFit.contain
+                                              : BoxFit.cover,
+                                        ))
                                   : const Icon(
                                       Icons.image_not_supported_rounded,
                                       size: 24,
@@ -782,13 +804,23 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: entry.primaryImageUrl.isNotEmpty
-                          ? Image.network(
-                              entry.primaryImageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image_rounded,
-                                      size: 20, color: Colors.grey),
-                            )
+                          ? (kIsWeb
+                              ? getWebImage(
+                                  imageUrl: entry.primaryImageUrl,
+                                  label: entry.name,
+                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                      ? BoxFit.contain
+                                      : BoxFit.cover,
+                                )
+                              : Image.network(
+                                  entry.primaryImageUrl,
+                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                      ? BoxFit.contain
+                                      : BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image_rounded,
+                                          size: 20, color: Colors.grey),
+                                ))
                           : const Icon(Icons.image_not_supported_rounded,
                               size: 20, color: Colors.grey),
                     ),

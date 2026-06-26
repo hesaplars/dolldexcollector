@@ -798,7 +798,7 @@ class MyReportsCard extends StatelessWidget {
 
     return StreamBuilder<List<UserReport>>(
       stream: reportService.watchReportsForUser(userId),
-      builder: (context, snapshot) {
+      builder: (streamContext, snapshot) {
         final list = snapshot.data ?? [];
         if (list.isEmpty) {
           return const SizedBox.shrink();
@@ -821,14 +821,17 @@ class MyReportsCard extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: list.length,
-                  itemBuilder: (context, index) {
+                  itemBuilder: (itemContext, index) {
                     final report = list[index];
                     return FutureBuilder<String>(
                       future: resolveReportTargetText(report),
-                      builder: (context, targetSnap) {
+                      builder: (futureContext, targetSnap) {
                         final targetText = targetSnap.data ?? report.targetId;
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
+                          onTap: () {
+                            openReportTarget(context, report, showUserReportsOnBack: true);
+                          },
                           leading: buildNeonFlagIcon(context, size: 20),
                           title: Text(
                             '${reportReasonLabel(context, report.reason)}: $targetText',

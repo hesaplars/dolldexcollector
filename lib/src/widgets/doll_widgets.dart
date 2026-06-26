@@ -1502,26 +1502,16 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
           width: 1.5,
         ),
       ),
-      child: Stack(
-        children: [
-          CustomPaint(
-            size: const Size(double.infinity, 60),
-            painter: IvyBorderPainter(
-              color: primaryColor.withOpacity(0.15),
-            ),
+      child: Center(
+        child: Text(
+          'ADVERTISEMENT',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontFamily: 'Outfit',
+            letterSpacing: 4,
+            color: theme.textTheme.bodySmall?.color?.withOpacity(0.4),
+            fontWeight: FontWeight.bold,
           ),
-          Center(
-            child: Text(
-              'ADVERTISEMENT',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontFamily: 'Outfit',
-                letterSpacing: 4,
-                color: theme.textTheme.bodySmall?.color?.withOpacity(0.4),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1978,13 +1968,19 @@ Widget buildAvatarHelper(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(size),
             child: isNetwork
-                ? Image.network(
-                    avatarId,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return buildDefaultPlaceholder();
-                    },
-                  )
+                ? (kIsWeb
+                    ? getWebImage(
+                        imageUrl: avatarId,
+                        label: 'Avatar',
+                        fit: BoxFit.cover,
+                      )
+                    : Image.network(
+                        avatarId,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return buildDefaultPlaceholder();
+                        },
+                      ))
                 : Image.asset(
                     assetPath,
                     fit: BoxFit.cover,

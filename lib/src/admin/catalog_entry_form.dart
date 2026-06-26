@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../core/web_image_helper.dart';
 
 import '../../main.dart';
 import '../catalog/catalog_models.dart';
@@ -759,20 +761,26 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                   },
                   itemBuilder: (context, index) {
                     final url = urls[index];
-                    return Image.network(
-                      url,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey.shade900,
-                          child: const Icon(
-                            Icons.broken_image_outlined,
-                            color: Colors.white24,
-                            size: 40,
-                          ),
-                        );
-                      },
-                    );
+                    return kIsWeb
+                        ? getWebImage(
+                            imageUrl: url,
+                            label: 'Preview',
+                            fit: BoxFit.cover,
+                          )
+                        : Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey.shade900,
+                                child: const Icon(
+                                  Icons.broken_image_outlined,
+                                  color: Colors.white24,
+                                  size: 40,
+                                ),
+                              );
+                            },
+                          );
                   },
                 ),
                 if (urls.length > 1) ...[

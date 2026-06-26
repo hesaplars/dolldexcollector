@@ -331,6 +331,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await authService.signOut();
       collectionEntriesNotifier.value = <CollectionEntry>[];
       reportsNotifier.value = <UserReport>[];
+      if (mounted) {
+        context.go('/');
+      }
     } catch (error) {
       if (!mounted) {
         return;

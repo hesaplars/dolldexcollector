@@ -40,5 +40,16 @@ class AccountDeletionRepository {
       'status': 'open',
       'requestedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+
+    final reportId = 'report-deletion-$userId';
+    await db.collection('reports').doc(reportId).set({
+      'reporterId': userId,
+      'targetType': 'accountDeletion',
+      'targetId': userId,
+      'reason': 'other',
+      'status': 'open',
+      'details': reason,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 }

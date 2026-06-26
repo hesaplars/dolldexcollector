@@ -2168,8 +2168,118 @@ void _showReportSheet(
       return ReportSheet(
         targetType: targetType,
         targetId: targetId,
-        onSubmit: (draft) {
+        onSubmit: (draft) async {
           final reporterId = authService.currentUser?.uid ?? 'local-user';
+          String targetText = '';
+          try {
+            switch (draft.targetType) {
+              case ReportTargetType.user:
+              case ReportTargetType.profile:
+                final doc = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(draft.targetId)
+                    .get();
+                if (doc.exists) {
+                  final username = doc.data()?['username'] as String?;
+                  if (username != null && username.isNotEmpty) {
+                    targetText = '@$username';
+                  }
+                }
+                break;
+              case ReportTargetType.comment:
+                var doc = await FirebaseFirestore.instance
+                    .collection('comments')
+                    .doc(draft.targetId)
+                    .get();
+                if (doc.exists) {
+                  final text = doc.data()?['text'] as String?;
+                  if (text != null && text.isNotEmpty) {
+                    targetText = text;
+                  }
+                } else {
+                  doc = await FirebaseFirestore.instance
+                      .collection('globalChatMessages')
+                      .doc(draft.targetId)
+                      .get();
+                  if (doc.exists) {
+                    final text = doc.data()?['text'] as String?;
+                    if (text != null && text.isNotEmpty) {
+                      targetText = text;
+                    }
+                  } else {
+                    doc = await FirebaseFirestore.instance
+                        .collection('chatMessages')
+                        .doc(draft.targetId)
+                        .get();
+                    if (doc.exists) {
+                      final text = doc.data()?['text'] as String?;
+                      if (text != null && text.isNotEmpty) {
+                        targetText = text;
+                      }
+                    }
+                  }
+                }
+                break;
+              case ReportTargetType.catalogEntry:
+                final doc = await FirebaseFirestore.instance
+                    .collection('items')
+                    .doc(draft.targetId)
+                    .get();
+                if (doc.exists) {
+                  final name = doc.data()?['name'] as String?;
+                  if (name != null && name.isNotEmpty) {
+                    targetText = name;
+                  }
+                }
+                break;
+              case ReportTargetType.collectionEntry:
+                final doc = await FirebaseFirestore.instance
+                    .collection('collectionEntries')
+                    .doc(draft.targetId)
+                    .get();
+                if (doc.exists) {
+                  final notes = doc.data()?['notes'] as String? ?? '';
+                  final itemId = doc.data()?['itemId'] as String? ?? '';
+                  if (itemId.isNotEmpty) {
+                    final itemDoc = await FirebaseFirestore.instance
+                        .collection('items')
+                        .doc(itemId)
+                        .get();
+                    final itemName = itemDoc.exists
+                        ? (itemDoc.data()?['name'] as String? ?? '')
+                        : '';
+                    if (itemName.isNotEmpty) {
+                      targetText =
+                          notes.isNotEmpty ? '$itemName ($notes)' : itemName;
+                    } else {
+                      targetText =
+                          notes.isNotEmpty ? notes : 'Koleksiyon Ögesi';
+                    }
+                  } else {
+                    targetText = notes.isNotEmpty ? notes : 'Koleksiyon Ögesi';
+                  }
+                }
+                break;
+              case ReportTargetType.accountDeletion:
+                final doc = await FirebaseFirestore.instance
+                    .collection('accountDeletionRequests')
+                    .doc(draft.targetId)
+                    .get();
+                if (doc.exists) {
+                  final email = doc.data()?['email'] as String? ?? '';
+                  final reason = doc.data()?['reason'] as String? ?? '';
+                  targetText = 'Email: $email | Neden: $reason';
+                }
+                break;
+              default:
+                break;
+            }
+          } catch (_) {}
+
+          if (targetText.isEmpty) {
+            targetText = 'ID: ${draft.targetId}';
+          }
+
           final report = UserReport(
             id: 'report-${DateTime.now().millisecondsSinceEpoch}',
             reporterId: reporterId,
@@ -2178,6 +2288,7 @@ void _showReportSheet(
             reason: draft.reason,
             status: ReportStatus.open,
             details: draft.details,
+            targetText: targetText,
           );
           reportsNotifier.value = [report, ...reportsNotifier.value];
           reportService.createReport(report).catchError((_) => '');
@@ -2255,7 +2366,12 @@ Future<void> _deleteReportedContent(
 
   final messenger = ScaffoldMessenger.of(context);
   if (report.targetType == ReportTargetType.comment) {
-    commentRepository.delete(report.targetId).then((_) {
+    final db = FirebaseFirestore.instance;
+    Future.wait([
+      commentRepository.delete(report.targetId).catchError((_) {}),
+      db.collection('globalChatMessages').doc(report.targetId).delete().catchError((_) {}),
+      db.collection('chatMessages').doc(report.targetId).delete().catchError((_) {}),
+    ]).then((_) {
       final newMap = <String, List<AppComment>>{};
       commentsNotifier.value.forEach((itemId, list) {
         newMap[itemId] = list.where((c) => c.id != report.targetId).toList();
@@ -2265,15 +2381,15 @@ Future<void> _deleteReportedContent(
       messenger.showSnackBar(
         SnackBar(
             content: Text(tr
-                ? 'Yorum veritabanından imha edildi.'
-                : 'Comment destroyed from database.')),
+                ? 'İçerik veritabanından imha edildi (Yorum / Mesaj).'
+                : 'Content destroyed from database (Comment / Message).')),
       );
     }).catchError((err) {
       messenger.showSnackBar(
         SnackBar(
             content: Text(tr
-                ? 'Hata: Yorum silinemedi.'
-                : 'Error: Failed to delete comment.')),
+                ? 'Hata: İçerik silinemedi.'
+                : 'Error: Failed to delete content.')),
       );
     });
   } else if (report.targetType == ReportTargetType.catalogEntry) {
@@ -2493,45 +2609,144 @@ String _formatMessageTime(DateTime? value) {
   return '${two(local.day)}.${two(local.month)}.${local.year} ${two(local.hour)}:${two(local.minute)}';
 }
 
-void _openReportTarget(BuildContext context, UserReport report) {
+void _openReportTarget(BuildContext context, UserReport report, {bool showUserReportsOnBack = false}) async {
   final router = GoRouter.of(context);
-  if (report.targetType == ReportTargetType.catalogEntry) {
-    router.go('/i/${report.targetId}');
-  } else if (report.targetType == ReportTargetType.profile ||
-      report.targetType == ReportTargetType.user) {
-    router.go('/users/${report.targetId}');
-  } else if (report.targetType == ReportTargetType.collectionEntry) {
-    router.go('/c/${report.targetId}');
-  } else if (report.targetType == ReportTargetType.comment) {
-    FirebaseFirestore.instance
-        .collection('comments')
-        .doc(report.targetId)
-        .get()
-        .then((doc) {
-      if (doc.exists) {
-        final targetType = doc.data()?['targetType'] as String?;
-        final targetId = doc.data()?['targetId'] as String?;
-        if (targetType == 'catalogEntry') {
-          router.go('/i/$targetId');
-        } else if (targetType == 'collectionEntry') {
-          router.go('/c/$targetId');
-        } else if (targetType == 'profile') {
-          router.go('/users/$targetId');
+  final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+  final messenger = ScaffoldMessenger.of(context);
+
+  void showDeletedMessage() {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(tr ? 'Bu öge silinmiştir.' : 'This item has been deleted.'),
+      ),
+    );
+  }
+
+  bool navigated = false;
+
+  try {
+    switch (report.targetType) {
+      case ReportTargetType.catalogEntry:
+        final doc = await FirebaseFirestore.instance
+            .collection('items')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          navigated = true;
+          await router.push('/i/${report.targetId}');
         } else {
-          router.go('/social');
+          showDeletedMessage();
         }
-      } else {
-        router.push('/social');
-      }
-    }).catchError((_) {
-      router.push('/social');
-    });
-  } else {
-    router.push('/social');
+        break;
+      case ReportTargetType.profile:
+      case ReportTargetType.user:
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          navigated = true;
+          await router.push('/users/${report.targetId}');
+        } else {
+          showDeletedMessage();
+        }
+        break;
+      case ReportTargetType.collectionEntry:
+        final doc = await FirebaseFirestore.instance
+            .collection('collectionEntries')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          navigated = true;
+          await router.push('/c/${report.targetId}');
+        } else {
+          showDeletedMessage();
+        }
+        break;
+      case ReportTargetType.comment:
+        final doc = await FirebaseFirestore.instance
+            .collection('comments')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          final targetType = doc.data()?['targetType'] as String?;
+          final targetId = doc.data()?['targetId'] as String?;
+          if (targetType == 'catalogEntry') {
+            navigated = true;
+            await router.push('/i/$targetId');
+          } else if (targetType == 'collectionEntry') {
+            navigated = true;
+            await router.push('/c/$targetId');
+          } else if (targetType == 'profile') {
+            navigated = true;
+            await router.push('/users/$targetId');
+          } else {
+            navigated = true;
+            await router.push('/social');
+          }
+        } else {
+          final gDoc = await FirebaseFirestore.instance
+              .collection('globalChatMessages')
+              .doc(report.targetId)
+              .get();
+          if (gDoc.exists) {
+            navigated = true;
+            await router.push('/social');
+          } else {
+            final cDoc = await FirebaseFirestore.instance
+                .collection('chatMessages')
+                .doc(report.targetId)
+                .get();
+            if (cDoc.exists) {
+              final senderId = cDoc.data()?['senderId'] as String?;
+              if (senderId != null) {
+                navigated = true;
+                await router.push('/social');
+                Future.delayed(const Duration(milliseconds: 150), () {
+                  _openDirectMessagesModal(context, initialChatUserId: senderId);
+                });
+              } else {
+                navigated = true;
+                await router.push('/social');
+              }
+            } else {
+              showDeletedMessage();
+            }
+          }
+        }
+        break;
+      case ReportTargetType.accountDeletion:
+        final doc = await FirebaseFirestore.instance
+            .collection('accountDeletionRequests')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          navigated = true;
+          await router.push('/users/${report.targetId}');
+        } else {
+          showDeletedMessage();
+        }
+        break;
+      default:
+        showDeletedMessage();
+        break;
+    }
+  } catch (_) {
+    showDeletedMessage();
+  }
+
+  if (navigated && showUserReportsOnBack && context.mounted) {
+    final currentUid = authService.currentUser?.uid;
+    if (currentUid != null) {
+      _showReportsModal(context, currentUid);
+    }
   }
 }
 
 Future<String> _resolveReportTargetText(UserReport report) async {
+  if (report.targetText.isNotEmpty) {
+    return report.targetText;
+  }
   try {
     switch (report.targetType) {
       case ReportTargetType.user:
@@ -2548,8 +2763,28 @@ Future<String> _resolveReportTargetText(UserReport report) async {
         }
         return 'ID: ${report.targetId}';
       case ReportTargetType.comment:
-        final doc = await FirebaseFirestore.instance
+        var doc = await FirebaseFirestore.instance
             .collection('comments')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          final text = doc.data()?['text'] as String?;
+          if (text != null && text.isNotEmpty) {
+            return text;
+          }
+        }
+        doc = await FirebaseFirestore.instance
+            .collection('globalChatMessages')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          final text = doc.data()?['text'] as String?;
+          if (text != null && text.isNotEmpty) {
+            return text;
+          }
+        }
+        doc = await FirebaseFirestore.instance
+            .collection('chatMessages')
             .doc(report.targetId)
             .get();
         if (doc.exists) {
@@ -2571,6 +2806,41 @@ Future<String> _resolveReportTargetText(UserReport report) async {
           }
         }
         return 'ID: ${report.targetId}';
+      case ReportTargetType.collectionEntry:
+        final doc = await FirebaseFirestore.instance
+            .collection('collectionEntries')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          final notes = doc.data()?['notes'] as String? ?? '';
+          final itemId = doc.data()?['itemId'] as String? ?? '';
+          if (itemId.isNotEmpty) {
+            final itemDoc = await FirebaseFirestore.instance
+                .collection('items')
+                .doc(itemId)
+                .get();
+            final itemName = itemDoc.exists
+                ? (itemDoc.data()?['name'] as String? ?? '')
+                : '';
+            if (itemName.isNotEmpty) {
+              return notes.isNotEmpty ? '$itemName ($notes)' : itemName;
+            }
+            return notes.isNotEmpty ? notes : 'Koleksiyon Ögesi';
+          }
+          return notes.isNotEmpty ? notes : 'Koleksiyon Ögesi';
+        }
+        return 'ID: ${report.targetId}';
+      case ReportTargetType.accountDeletion:
+        final doc = await FirebaseFirestore.instance
+            .collection('accountDeletionRequests')
+            .doc(report.targetId)
+            .get();
+        if (doc.exists) {
+          final email = doc.data()?['email'] as String? ?? '';
+          final reason = doc.data()?['reason'] as String? ?? '';
+          return 'Email: $email | Neden: $reason';
+        }
+        return 'Hesap silme talebi (ID: ${report.targetId})';
       default:
         return 'ID: ${report.targetId}';
     }
@@ -2602,6 +2872,7 @@ Future<void> _addModerationNotification(
       ReportTargetType.image => 'görsel',
       ReportTargetType.catalogEntry => 'katalog',
       ReportTargetType.collectionEntry => 'koleksiyon',
+      ReportTargetType.accountDeletion => 'hesap silme talebi',
     };
     final targetLabelEn = switch (report.targetType) {
       ReportTargetType.user => 'user',
@@ -2610,6 +2881,7 @@ Future<void> _addModerationNotification(
       ReportTargetType.image => 'image',
       ReportTargetType.catalogEntry => 'catalog entry',
       ReportTargetType.collectionEntry => 'collection entry',
+      ReportTargetType.accountDeletion => 'account deletion request',
     };
 
     await db.collection('notifications').add({
@@ -3236,6 +3508,70 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                                         color: isDark
                                             ? Colors.white60
                                             : Colors.black54)),
+                                trailing: isOwnProfile
+                                    ? PopupMenuButton<String>(
+                                        icon: Icon(Icons.more_vert_rounded,
+                                            color: isDark ? Colors.white60 : Colors.black54),
+                                        onSelected: (value) async {
+                                          if (value == 'unfriend') {
+                                            final confirmed = await _showGothicConfirmDialog(
+                                              context,
+                                              title: tr ? 'Arkadaşı Çıkar' : 'Remove Friend',
+                                              content: tr
+                                                  ? '@${user.username} kullanıcısını arkadaşlarınızdan çıkarmak istiyor musunuz?'
+                                                  : 'Are you sure you want to remove @${user.username} from your friends?',
+                                              confirmText: tr ? 'Çıkar' : 'Remove',
+                                            );
+                                            if (confirmed) {
+                                              await socialRepository.removeFriend(
+                                                userA: userId,
+                                                userB: user.id,
+                                              );
+                                            }
+                                          } else if (value == 'block') {
+                                            final confirmed = await _showGothicConfirmDialog(
+                                              context,
+                                              title: tr ? 'Kullanıcıyı Engelle' : 'Block User',
+                                              content: tr
+                                                  ? '@${user.username} kullanıcısını engellemek istiyor musunuz? Bu işlem arkadaşlığınızı sonlandıracaktır.'
+                                                  : 'Are you sure you want to block @${user.username}? This will end your friendship.',
+                                              confirmText: tr ? 'Engelle' : 'Block',
+                                            );
+                                            if (confirmed) {
+                                              await socialRepository.blockUser(
+                                                blockerId: userId,
+                                                blockedId: user.id,
+                                              );
+                                            }
+                                          }
+                                        },
+                                        itemBuilder: (context) => [
+                                          PopupMenuItem(
+                                            value: 'unfriend',
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.person_remove_outlined, size: 18),
+                                                const SizedBox(width: 8),
+                                                Text(tr ? 'Arkadaşlıktan Çıkar' : 'Remove Friend'),
+                                              ],
+                                            ),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'block',
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.block_rounded, size: 18, color: Theme.of(context).colorScheme.error),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  tr ? 'Engelle' : 'Block',
+                                                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : null,
                                 onTap: () {
                                   final currentPath =
                                       GoRouterState.of(parentContext)
@@ -3301,6 +3637,70 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                                         color: isDark
                                             ? Colors.white60
                                             : Colors.black54)),
+                                trailing: isOwnProfile
+                                    ? PopupMenuButton<String>(
+                                        icon: Icon(Icons.more_vert_rounded,
+                                            color: isDark ? Colors.white60 : Colors.black54),
+                                        onSelected: (value) async {
+                                          if (value == 'unfollow') {
+                                            final confirmed = await _showGothicConfirmDialog(
+                                              context,
+                                              title: tr ? 'Takibi Bırak' : 'Unfollow',
+                                              content: tr
+                                                  ? '@${user.username} kullanıcısını takip etmeyi bırakmak istiyor musunuz?'
+                                                  : 'Are you sure you want to unfollow @${user.username}?',
+                                              confirmText: tr ? 'Takibi Bırak' : 'Unfollow',
+                                            );
+                                            if (confirmed) {
+                                              await socialRepository.unfollowUser(
+                                                currentUserId: userId,
+                                                targetUserId: user.id,
+                                              );
+                                            }
+                                          } else if (value == 'block') {
+                                            final confirmed = await _showGothicConfirmDialog(
+                                              context,
+                                              title: tr ? 'Kullanıcıyı Engelle' : 'Block User',
+                                              content: tr
+                                                  ? '@${user.username} kullanıcısını engellemek istiyor musunuz? Bu işlem takibinizi sonlandıracaktır.'
+                                                  : 'Are you sure you want to block @${user.username}? This will end your follow.',
+                                              confirmText: tr ? 'Engelle' : 'Block',
+                                            );
+                                            if (confirmed) {
+                                              await socialRepository.blockUser(
+                                                blockerId: userId,
+                                                blockedId: user.id,
+                                              );
+                                            }
+                                          }
+                                        },
+                                        itemBuilder: (context) => [
+                                          PopupMenuItem(
+                                            value: 'unfollow',
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.star_border_rounded, size: 18),
+                                                const SizedBox(width: 8),
+                                                Text(tr ? 'Takibi Bırak' : 'Unfollow'),
+                                              ],
+                                            ),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'block',
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.block_rounded, size: 18, color: Theme.of(context).colorScheme.error),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  tr ? 'Engelle' : 'Block',
+                                                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : null,
                                 onTap: () {
                                   final currentPath =
                                       GoRouterState.of(parentContext)
@@ -3364,6 +3764,85 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
                                         color: isDark
                                             ? Colors.white60
                                             : Colors.black54)),
+                                trailing: isOwnProfile
+                                    ? StreamBuilder<bool>(
+                                        stream: socialRepository.watchIsFollowing(userId, user.id),
+                                        builder: (context, followSnap) {
+                                          final isFollowing = followSnap.data ?? false;
+                                          return PopupMenuButton<String>(
+                                            icon: Icon(Icons.more_vert_rounded,
+                                                color: isDark ? Colors.white60 : Colors.black54),
+                                            onSelected: (value) async {
+                                              if (value == 'follow_toggle') {
+                                                if (isFollowing) {
+                                                  final confirmed = await _showGothicConfirmDialog(
+                                                    context,
+                                                    title: tr ? 'Takibi Bırak' : 'Unfollow',
+                                                    content: tr
+                                                        ? '@${user.username} kullanıcısını takip etmeyi bırakmak istiyor musunuz?'
+                                                        : 'Are you sure you want to unfollow @${user.username}?',
+                                                    confirmText: tr ? 'Takibi Bırak' : 'Unfollow',
+                                                  );
+                                                  if (confirmed) {
+                                                    await socialRepository.unfollowUser(
+                                                      currentUserId: userId,
+                                                      targetUserId: user.id,
+                                                    );
+                                                  }
+                                                } else {
+                                                  await socialRepository.followUser(
+                                                    currentUserId: userId,
+                                                    targetUserId: user.id,
+                                                  );
+                                                }
+                                              } else if (value == 'block') {
+                                                final confirmed = await _showGothicConfirmDialog(
+                                                  context,
+                                                  title: tr ? 'Kullanıcıyı Engelle' : 'Block User',
+                                                  content: tr
+                                                      ? '@${user.username} kullanıcısını engellemek istiyor musunuz? Bu işlem takipleşmenizi sonlandıracaktır.'
+                                                      : 'Are you sure you want to block @${user.username}? This will end your follow relationships.',
+                                                  confirmText: tr ? 'Engelle' : 'Block',
+                                                );
+                                                if (confirmed) {
+                                                  await socialRepository.blockUser(
+                                                    blockerId: userId,
+                                                    blockedId: user.id,
+                                                  );
+                                                }
+                                              }
+                                            },
+                                            itemBuilder: (context) => [
+                                              PopupMenuItem(
+                                                value: 'follow_toggle',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(isFollowing ? Icons.star_border_rounded : Icons.star_rounded, size: 18),
+                                                    const SizedBox(width: 8),
+                                                    Text(isFollowing
+                                                        ? (tr ? 'Takibi Bırak' : 'Unfollow')
+                                                        : (tr ? 'Geri Takip Et' : 'Follow Back')),
+                                                  ],
+                                                ),
+                                              ),
+                                              PopupMenuItem(
+                                                value: 'block',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.block_rounded, size: 18, color: Theme.of(context).colorScheme.error),
+                                                    const SizedBox(width: 8),
+                                                    Text(
+                                                      tr ? 'Engelle' : 'Block',
+                                                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      )
+                                    : null,
                                 onTap: () {
                                   final currentPath =
                                       GoRouterState.of(parentContext)
@@ -3483,14 +3962,14 @@ void _showReportsModal(BuildContext context, String userId) {
       side: BorderSide(
           color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
     ),
-    builder: (context) {
-      final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    builder: (modalContext) {
+      final tr = AppLanguageScope.languageOf(modalContext) == AppLanguage.tr;
       return DraggableScrollableSheet(
         initialChildSize: 0.75,
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (context, scrollController) {
+        builder: (sheetContext, scrollController) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
@@ -3508,7 +3987,7 @@ void _showReportsModal(BuildContext context, String userId) {
                 Expanded(
                   child: StreamBuilder<List<UserReport>>(
                     stream: reportService.watchReportsForUser(userId),
-                    builder: (context, snapshot) {
+                    builder: (streamContext, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
@@ -3528,11 +4007,11 @@ void _showReportsModal(BuildContext context, String userId) {
                       return ListView.builder(
                         controller: scrollController,
                         itemCount: list.length,
-                        itemBuilder: (context, index) {
+                        itemBuilder: (itemContext, index) {
                           final report = list[index];
                           return FutureBuilder<String>(
                             future: _resolveReportTargetText(report),
-                            builder: (context, targetSnap) {
+                            builder: (futureContext, targetSnap) {
                               final targetText =
                                   targetSnap.data ?? report.targetId;
                               final statusColor = switch (report.status) {
@@ -3543,9 +4022,13 @@ void _showReportsModal(BuildContext context, String userId) {
                               };
                               return ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                leading: _buildNeonFlagIcon(context, size: 20),
+                                onTap: () {
+                                  Navigator.of(sheetContext).pop();
+                                  _openReportTarget(context, report, showUserReportsOnBack: true);
+                                },
+                                leading: _buildNeonFlagIcon(modalContext, size: 20),
                                 title: Text(
-                                  '${_reportReasonLabel(context, report.reason)}: $targetText',
+                                  '${_reportReasonLabel(modalContext, report.reason)}: $targetText',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
@@ -3576,7 +4059,7 @@ void _showReportsModal(BuildContext context, String userId) {
                                         color: statusColor, width: 1),
                                   ),
                                   child: Text(
-                                    _reportStatusLabel(context, report.status),
+                                    _reportStatusLabel(modalContext, report.status),
                                     style: TextStyle(
                                       color: statusColor,
                                       fontSize: 10,
@@ -4108,8 +4591,8 @@ Future<void> deleteReportedContent(BuildContext context, UserReport report) =>
 void updateReportStatus(String id, ReportStatus status) =>
     _updateReportStatus(id, status);
 void deleteReport(String id) => _deleteReport(id);
-void openReportTarget(BuildContext context, UserReport report) =>
-    _openReportTarget(context, report);
+void openReportTarget(BuildContext context, UserReport report, {bool showUserReportsOnBack = false}) =>
+    _openReportTarget(context, report, showUserReportsOnBack: showUserReportsOnBack);
 Future<String> resolveReportTargetText(UserReport report) =>
     _resolveReportTargetText(report);
 bool isTemplateEntry(CatalogEntry entry) => _isTemplateEntry(entry);

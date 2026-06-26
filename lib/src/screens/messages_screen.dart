@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../core/web_image_helper.dart';
 
 import '../../main.dart';
 
@@ -14,6 +16,7 @@ import '../users/user_models.dart';
 import '../users/profile_setup_repository.dart';
 import '../auth/sign_in_panel.dart';
 import 'social_screen.dart';
+import '../moderation/report_models.dart';
 import '../catalog/catalog_models.dart';
 
 class DirectMessagesModalContent extends StatefulWidget {
@@ -881,107 +884,132 @@ class _DirectChatConversationViewState
   Widget _buildDirectMsgBubble(
       BuildContext context, ChatMessage msg, bool isMe) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: IntrinsicWidth(
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 6),
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.72,
-            minWidth: 50,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(16),
-              topRight: const Radius.circular(16),
-              bottomLeft: Radius.circular(isMe ? 16 : 4),
-              bottomRight: Radius.circular(isMe ? 4 : 16),
+      child: Row(
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!isMe) ...[
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              tooltip: tr ? 'Bildir' : 'Report',
+              onPressed: () => showReportSheet(
+                context,
+                ReportTargetType.comment,
+                msg.id,
+              ),
+              icon: buildNeonFlagIcon(context, size: 16),
             ),
-            color: isMe
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.secondaryContainer,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              StreamBuilder<ProfileSetupStatus>(
-                stream: profileSetupRepository.watch(msg.senderId),
-                builder: (context, snapshot) {
-                  final badge = snapshot.data?.selectedBadge ?? '';
-                  final username =
-                      snapshot.data?.username ?? msg.senderUsername;
-                  final displayUsername = username.isNotEmpty
-                      ? '@$username'
-                      : (isMe ? 'Ben' : 'Collector');
+            const SizedBox(width: 4),
+          ],
+          Flexible(
+            child: IntrinsicWidth(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.72,
+                  minWidth: 50,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: Radius.circular(isMe ? 16 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 16),
+                  ),
+                  color: isMe
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.secondaryContainer,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    StreamBuilder<ProfileSetupStatus>(
+                      stream: profileSetupRepository.watch(msg.senderId),
+                      builder: (context, snapshot) {
+                        final badge = snapshot.data?.selectedBadge ?? '';
+                        final username =
+                            snapshot.data?.username ?? msg.senderUsername;
+                        final displayUsername = username.isNotEmpty
+                            ? '@$username'
+                            : (isMe ? 'Ben' : 'Collector');
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (badge.isNotEmpty) ...[
-                        ProfileBadgeWidget(badgeId: badge, size: 7),
-                        const SizedBox(height: 2),
-                      ],
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (badge.isNotEmpty) ...[
+                              ProfileBadgeWidget(badgeId: badge, size: 7),
+                              const SizedBox(height: 2),
+                            ],
+                            Text(
+                              displayUsername,
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                color: isMe
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary
+                                        .withOpacity(0.9)
+                                    : Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                          ],
+                        );
+                      },
+                    ),
+                    if (msg.text.isNotEmpty) ...[
                       Text(
-                        displayUsername,
+                        msg.text,
                         style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
+                          fontFamily: 'Outfit',
                           color: isMe
-                              ? Theme.of(context)
-                                  .colorScheme
-                                  .onPrimary
-                                  .withOpacity(0.9)
-                              : Theme.of(context).colorScheme.primary,
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurface,
+                          fontSize: 13.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
                     ],
-                  );
-                },
+                    if (msg.sharedSource.isNotEmpty) ...[
+                      _buildSharedItemCard(context, msg, isMe),
+                    ],
+                    if (msg.createdAt != null) ...[
+                      const SizedBox(height: 2),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: Text(
+                          formatMessageTime(msg.createdAt!),
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontSize: 8.5,
+                            color: isMe
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary
+                                    .withOpacity(0.7)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              if (msg.text.isNotEmpty) ...[
-                Text(
-                  msg.text,
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: isMe
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.onSurface,
-                    fontSize: 13.5,
-                  ),
-                ),
-              ],
-              if (msg.sharedSource.isNotEmpty) ...[
-                _buildSharedItemCard(context, msg, isMe),
-              ],
-              if (msg.createdAt != null) ...[
-                const SizedBox(height: 2),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
-                    formatMessageTime(msg.createdAt!),
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      fontSize: 8.5,
-                      color: isMe
-                          ? Theme.of(context)
-                              .colorScheme
-                              .onPrimary
-                              .withOpacity(0.7)
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.5),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -1061,13 +1089,23 @@ class _DirectChatConversationViewState
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: entry.primaryImageUrl.isNotEmpty
-                          ? Image.network(
-                              entry.primaryImageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.broken_image_rounded,
-                                      size: 20, color: Colors.grey),
-                            )
+                          ? (kIsWeb
+                              ? getWebImage(
+                                  imageUrl: entry.primaryImageUrl,
+                                  label: entry.name,
+                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                      ? BoxFit.contain
+                                      : BoxFit.cover,
+                                )
+                              : Image.network(
+                                  entry.primaryImageUrl,
+                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                      ? BoxFit.contain
+                                      : BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image_rounded,
+                                          size: 20, color: Colors.grey),
+                                ))
                           : const Icon(Icons.image_not_supported_rounded,
                               size: 20, color: Colors.grey),
                     ),

@@ -49,15 +49,21 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 8,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
-        ),
-        child: Column(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.of(context).pop();
+      },
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 8,
+            bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
+          ),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -279,7 +285,7 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
           ],
         ),
       ),
-    );
+    ),);
   }
 }
 

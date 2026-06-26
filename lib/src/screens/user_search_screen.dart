@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   List<AppUser> _filteredResults = const <AppUser>[];
   bool _isSearching = false;
   bool _isSigningIn = false;
+  StreamSubscription<List<String>>? _friendsSubscription;
+  Set<String> _friendIds = const {};
 
   Future<void> _handleGoogleSignIn() async {
     setState(() {
@@ -43,11 +46,26 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   @override
   void initState() {
     super.initState();
-    // Do not perform initial search so that users list is empty by default
+    _subscribeToFriends();
+  }
+
+  void _subscribeToFriends() {
+    final myUid = authService.currentUser?.uid ?? '';
+    if (myUid.isNotEmpty) {
+      _friendsSubscription =
+          socialRepository.watchFriends(myUid).listen((uids) {
+        if (mounted) {
+          setState(() {
+            _friendIds = uids.toSet();
+          });
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
+    _friendsSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -157,8 +175,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       builder: (context) {
         final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
 
-        return GothicIvyContainer(
-          borderRadius: 20,
+        return Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -373,23 +390,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               padding: EdgeInsets.symmetric(vertical: 32),
               child: Center(child: CircularProgressIndicator()),
             )
-          else if (_searchQuery.trim().isEmpty)
-            const SizedBox.shrink()
-          else if (_filteredResults.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              child: Center(
-                child: Text(
-                  tr ? 'Kullanıcı bulunamadı.' : 'No users found.',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: isDark ? Colors.white30 : Colors.black38,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            )
-          else
+          else if (_filteredResults.isNotEmpty)
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -500,16 +501,17 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          tooltip: tr
-                              ? 'Arkadaş İsteği Gönder'
-                              : 'Send Friend Request',
-                          icon: Icon(Icons.person_add_alt_1_rounded,
-                              size: 20,
-                              color: Theme.of(context).colorScheme.secondary),
-                          onPressed: () =>
-                              _sendFriendRequest(context, target.id),
-                        ),
+                        if (!_friendIds.contains(target.id))
+                          IconButton(
+                            tooltip: tr
+                                ? 'Arkadaş İsteği Gönder'
+                                : 'Send Friend Request',
+                            icon: Icon(Icons.person_add_alt_1_rounded,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.secondary),
+                            onPressed: () =>
+                                _sendFriendRequest(context, target.id),
+                          ),
                         IconButton(
                           tooltip: tr ? 'Profili Görüntüle' : 'View Profile',
                           icon: Icon(Icons.account_circle_outlined,
@@ -530,6 +532,22 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   ),
                 );
               },
+            )
+          else if (_searchQuery.trim().isEmpty)
+            const SizedBox.shrink()
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  tr ? 'Kullanıcı bulunamadı.' : 'No users found.',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    color: isDark ? Colors.white30 : Colors.black38,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
             ),
         ],
       ),

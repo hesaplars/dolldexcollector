@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../core/replay_stream.dart';
@@ -348,128 +349,116 @@ class ProfileSetupRepository {
     }, SetOptions(merge: true));
   }
 
-  Future<void> unlockBadge(String userId, String badgeId, int coinCost) async {
+  Future<void> _processRequest({
+    required String collectionName,
+    required Map<String, dynamic> data,
+  }) async {
     final db = _db;
     if (db == null) return;
-    final docRef = db.collection('users').doc(userId);
-    await db.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
-      final data = snapshot.data() ?? {};
-      final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(
-          docRef,
-          {
-            'unlockedBadges': FieldValue.arrayUnion([badgeId]),
-            if (coinCost > 0) 'coins': currentCoins - coinCost,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
+
+    final docRef = await db.collection(collectionName).add({
+      ...data,
+      'createdAt': FieldValue.serverTimestamp(),
     });
+
+    final completer = Completer<void>();
+    StreamSubscription<DocumentSnapshot>? subscription;
+
+    subscription = docRef.snapshots().listen((snapshot) {
+      if (!snapshot.exists) return;
+      final statusData = snapshot.data() as Map<String, dynamic>? ?? {};
+      final status = statusData['status'] as String? ?? 'pending';
+      if (status == 'success') {
+        subscription?.cancel();
+        completer.complete();
+      } else if (status == 'error') {
+        subscription?.cancel();
+        final errorReason = statusData['errorReason'] as String? ?? 'Request failed';
+        completer.completeError(Exception(errorReason));
+      }
+    }, onError: (err) {
+      subscription?.cancel();
+      completer.completeError(err);
+    });
+
+    await completer.future.timeout(
+      const Duration(seconds: 15),
+      onTimeout: () {
+        subscription?.cancel();
+        throw TimeoutException('Request timed out. Please try again.');
+      },
+    );
+  }
+
+  Future<void> unlockBadge(String userId, String badgeId, int coinCost) async {
+    await _processRequest(
+      collectionName: 'unlockRequests',
+      data: {
+        'userId': userId,
+        'itemType': 'badge',
+        'itemId': badgeId,
+        'status': 'pending',
+      },
+    );
   }
 
   Future<void> unlockAvatar(
       String userId, String avatarId, int coinCost) async {
-    final db = _db;
-    if (db == null) return;
-    final docRef = db.collection('users').doc(userId);
-    await db.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
-      final data = snapshot.data() ?? {};
-      final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(
-          docRef,
-          {
-            'unlockedAvatars': FieldValue.arrayUnion([avatarId]),
-            if (coinCost > 0) 'coins': currentCoins - coinCost,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
-    });
+    await _processRequest(
+      collectionName: 'unlockRequests',
+      data: {
+        'userId': userId,
+        'itemType': 'avatar',
+        'itemId': avatarId,
+        'status': 'pending',
+      },
+    );
   }
 
   Future<void> unlockFrame(
       String userId, String frameColor, int coinCost) async {
-    final db = _db;
-    if (db == null) return;
-    final docRef = db.collection('users').doc(userId);
-    await db.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
-      final data = snapshot.data() ?? {};
-      final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(
-          docRef,
-          {
-            'unlockedFrames': FieldValue.arrayUnion([frameColor]),
-            if (coinCost > 0) 'coins': currentCoins - coinCost,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
-    });
-  }
-
-  Future<void> unlockFrameDirect(String userId, String frameColor) async {
-    final db = _db;
-    if (db == null) return;
-    await db.collection('users').doc(userId).set({
-      'unlockedFrames': FieldValue.arrayUnion([frameColor]),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _processRequest(
+      collectionName: 'unlockRequests',
+      data: {
+        'userId': userId,
+        'itemType': 'frame',
+        'itemId': frameColor,
+        'status': 'pending',
+      },
+    );
   }
 
   Future<void> unlockCover(String userId, String coverId, int coinCost) async {
-    final db = _db;
-    if (db == null) return;
-    final docRef = db.collection('users').doc(userId);
-    await db.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
-      final data = snapshot.data() ?? {};
-      final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(
-          docRef,
-          {
-            'unlockedCovers': FieldValue.arrayUnion([coverId]),
-            if (coinCost > 0) 'coins': currentCoins - coinCost,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
-    });
+    await _processRequest(
+      collectionName: 'unlockRequests',
+      data: {
+        'userId': userId,
+        'itemType': 'cover',
+        'itemId': coverId,
+        'status': 'pending',
+      },
+    );
   }
 
   Future<void> claimDailyCoins(String userId) async {
-    final db = _db;
-    if (db == null) return;
-    final docRef = db.collection('users').doc(userId);
-    await db.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
-      final data = snapshot.data() ?? {};
-      final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(
-          docRef,
-          {
-            'coins': currentCoins + 5,
-            'lastDailyClaim': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
-    });
+    await _processRequest(
+      collectionName: 'dailyClaimRequests',
+      data: {
+        'userId': userId,
+        'status': 'pending',
+      },
+    );
   }
 
   Future<void> buyCoinPackage(String userId, int coinsAmount) async {
-    final db = _db;
-    if (db == null) return;
-    final docRef = db.collection('users').doc(userId);
-    await db.runTransaction((transaction) async {
-      final snapshot = await transaction.get(docRef);
-      final data = snapshot.data() ?? {};
-      final currentCoins = data['coins'] as int? ?? 20;
-      transaction.set(
-          docRef,
-          {
-            'coins': currentCoins + coinsAmount,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
-    });
+    await _processRequest(
+      collectionName: 'coinPurchaseRequests',
+      data: {
+        'userId': userId,
+        'coinsAmount': coinsAmount,
+        'status': 'pending',
+      },
+    );
   }
 
   Future<ProfileSetupStatus?> getProfile(String userId) async {
