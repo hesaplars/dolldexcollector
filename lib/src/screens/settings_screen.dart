@@ -21,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
     Widget buildGothicCard(
         {required String title, required List<Widget> children}) {
       return Container(
-        margin: const EdgeInsets.only(bottom: 14),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
@@ -39,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -47,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 16,
+                  fontSize: 17,
                   letterSpacing: 0,
                   fontFamily: 'Outfit',
                   color: isDark ? Colors.white : DollDexTheme.ink,
@@ -70,14 +70,12 @@ class SettingsScreen extends StatelessWidget {
     }) {
       return InkWell(
         onTap: onTap,
-        splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-        highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
           child: Row(
             children: [
-              buildNeonIcon(context, icon, size: 22),
+              buildNeonIcon(context, icon, size: 24),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -103,7 +101,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
               const Icon(Icons.chevron_right_rounded,
-                  color: DollDexTheme.cocoa, size: 14),
+                  color: DollDexTheme.cocoa),
             ],
           ),
         ),

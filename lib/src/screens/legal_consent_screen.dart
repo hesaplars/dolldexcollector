@@ -191,7 +191,6 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                             _accepted = !_accepted;
                           });
                         },
-                        borderRadius: BorderRadius.circular(12),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -224,9 +223,9 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                     ),
                     const SizedBox(height: 20),
                     Container(
-                      height: 48,
+                      height: 54,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(22),
                         gradient: _accepted && !_isLoading
                             ? LinearGradient(
                                 colors: [primaryColor, const Color(0xFFFF7A1F)],
@@ -261,7 +260,7 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(22),
                           ),
                         ),
                         icon: _isLoading

@@ -417,10 +417,10 @@ class AnnouncementScreen extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: Theme.of(context).colorScheme.primary,
                 width: 1.5,

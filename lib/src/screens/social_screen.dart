@@ -93,8 +93,7 @@ class ShareItemSelectionModal extends StatefulWidget {
   });
   final String userId;
   final Future<void> Function(String catalogId)? onShareCatalog;
-  final Future<void> Function(
-      String catalogId, String collectionId, String status)? onShareCollection;
+  final Future<void> Function(String catalogId, String collectionId, String status)? onShareCollection;
 
   @override
   State<ShareItemSelectionModal> createState() =>
@@ -420,9 +419,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                                   ? getWebImage(
                                       imageUrl: entry.primaryImageUrl,
                                       label: entry.name,
-                                      fit: entry.primaryImageUrl
-                                              .toLowerCase()
-                                              .contains('.png')
+                                      fit: entry.primaryImageUrl.toLowerCase().contains('.png')
                                           ? BoxFit.contain
                                           : BoxFit.cover,
                                     )
@@ -430,9 +427,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                                       entry.primaryImageUrl,
                                       width: 40,
                                       height: 40,
-                                      fit: entry.primaryImageUrl
-                                              .toLowerCase()
-                                              .contains('.png')
+                                      fit: entry.primaryImageUrl.toLowerCase().contains('.png')
                                           ? BoxFit.contain
                                           : BoxFit.cover,
                                     ))
@@ -632,9 +627,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                                       ? getWebImage(
                                           imageUrl: catEntry.primaryImageUrl,
                                           label: catEntry.name,
-                                          fit: catEntry.primaryImageUrl
-                                                  .toLowerCase()
-                                                  .contains('.png')
+                                          fit: catEntry.primaryImageUrl.toLowerCase().contains('.png')
                                               ? BoxFit.contain
                                               : BoxFit.cover,
                                         )
@@ -642,9 +635,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                                           catEntry.primaryImageUrl,
                                           width: 40,
                                           height: 40,
-                                          fit: catEntry.primaryImageUrl
-                                                  .toLowerCase()
-                                                  .contains('.png')
+                                          fit: catEntry.primaryImageUrl.toLowerCase().contains('.png')
                                               ? BoxFit.contain
                                               : BoxFit.cover,
                                         ))
@@ -817,17 +808,13 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                               ? getWebImage(
                                   imageUrl: entry.primaryImageUrl,
                                   label: entry.name,
-                                  fit: entry.primaryImageUrl
-                                          .toLowerCase()
-                                          .contains('.png')
+                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
                                       ? BoxFit.contain
                                       : BoxFit.cover,
                                 )
                               : Image.network(
                                   entry.primaryImageUrl,
-                                  fit: entry.primaryImageUrl
-                                          .toLowerCase()
-                                          .contains('.png')
+                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
                                       ? BoxFit.contain
                                       : BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>
@@ -978,9 +965,11 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
             const SizedBox(height: 8),
             Row(
               children: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () {
+                IconButton(
+                  icon: Icon(Icons.add_circle_outline_rounded,
+                      color: Theme.of(context).colorScheme.primary),
+                  tooltip: tr ? 'Paylaş' : 'Share',
+                  onPressed: () {
                     showModalBottomSheet<void>(
                       context: context,
                       isScrollControlled: true,
@@ -996,21 +985,7 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                       },
                     );
                   },
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(Icons.add_rounded,
-                        color: Theme.of(context).colorScheme.primary),
-                  ),
                 ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _globalMessageController,
@@ -1024,15 +999,6 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                       labelText: t(context, 'globalMessage'),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
                     ),
                   ),
                 ),
@@ -1110,22 +1076,14 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(isMe ? 18 : 4),
-                    topRight: const Radius.circular(18),
-                    bottomLeft: const Radius.circular(18),
-                    bottomRight: Radius.circular(isMe ? 4 : 18),
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: Radius.circular(isMe ? 16 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 16),
                   ),
-                  color: isMe ? null : Theme.of(context).colorScheme.surface,
-                  gradient: isMe
-                      ? LinearGradient(
-                          colors: [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.primary.withRed(
-                                (Theme.of(context).colorScheme.primary.red - 20)
-                                    .clamp(0, 255)),
-                          ],
-                        )
-                      : null,
+                  color: isMe
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.secondaryContainer,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

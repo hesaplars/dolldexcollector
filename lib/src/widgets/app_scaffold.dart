@@ -28,8 +28,7 @@ class AppScaffold extends StatefulWidget {
   State<AppScaffold> createState() => _AppScaffoldState();
 }
 
-class _AppScaffoldState extends State<AppScaffold>
-    with SingleTickerProviderStateMixin {
+class _AppScaffoldState extends State<AppScaffold> {
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<ProfileSetupStatus>? _profileSubscription;
   bool _profileComplete = false;
@@ -46,9 +45,6 @@ class _AppScaffoldState extends State<AppScaffold>
   AppNotification? _currentHudNotification;
   bool _showHudBanner = false;
   Timer? _hudTimer;
-  late final AnimationController _hudBannerController;
-  late final Animation<Offset> _hudSlideAnimation;
-  late final Animation<double> _hudFadeAnimation;
   final Set<String> _shownNotificationIds = {};
   bool _isFirstNotificationsLoad = true;
   StreamSubscription<List<AppNotification>>? _notificationsSubscription;
@@ -65,19 +61,6 @@ class _AppScaffoldState extends State<AppScaffold>
   @override
   void initState() {
     super.initState();
-    _hudBannerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-    final hudCurve = CurvedAnimation(
-      parent: _hudBannerController,
-      curve: Curves.easeOutCubic,
-    );
-    _hudSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(hudCurve);
-    _hudFadeAnimation = hudCurve;
     _authSubscription = authService.authStateChanges.listen((user) {
       _updateProfileSubscription(user);
     });
@@ -89,18 +72,6 @@ class _AppScaffoldState extends State<AppScaffold>
       icon,
       color: DollDexTheme.cocoa,
       size: 24,
-    );
-  }
-
-  Widget _buildTopActionButton({
-    required String tooltip,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return _TopActionButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      child: _buildNeonTopIcon(icon),
     );
   }
 
@@ -308,9 +279,9 @@ class _AppScaffoldState extends State<AppScaffold>
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: DollDexTheme.teal.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: DollDexTheme.teal, size: 16),
+            child: Icon(icon, color: DollDexTheme.teal, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -320,7 +291,7 @@ class _AppScaffoldState extends State<AppScaffold>
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -329,7 +300,7 @@ class _AppScaffoldState extends State<AppScaffold>
                 Text(
                   content,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     height: 1.45,
                     color: Theme.of(context)
                         .colorScheme
@@ -353,29 +324,28 @@ class _AppScaffoldState extends State<AppScaffold>
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: isDark ? DollDexTheme.darkPanel : const Color(0xFFFFF4DC),
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(28),
             border: Border.all(
               color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
-              width: 1.0,
+              width: 1.1,
             ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(isDark ? 0.24 : 0.13),
-                blurRadius: 24,
-                offset: const Offset(0, -4),
+                blurRadius: 18,
+                offset: const Offset(0, -2),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(28),
             child: NavigationBar(
               selectedIndex: selectedIndex,
               onDestinationSelected: (index) {
-                HapticFeedback.lightImpact();
                 final path = _pathForIndex(index);
                 _goGuarded(path);
               },
@@ -396,14 +366,7 @@ class _AppScaffoldState extends State<AppScaffold>
       );
     }
     final location = GoRouterState.of(context).uri.path;
-    const mainTabs = {
-      '/',
-      '/collection',
-      '/messages',
-      '/user_search',
-      '/social',
-      '/admin'
-    };
+    const mainTabs = {'/', '/collection', '/messages', '/user_search', '/social', '/admin'};
     final showTopBackButton = !mainTabs.contains(location) &&
         (GoRouter.of(context).canPop() ||
             Navigator.of(context).canPop() ||
@@ -438,7 +401,7 @@ class _AppScaffoldState extends State<AppScaffold>
     final destinations = [
       NavigationDestination(
         icon: Opacity(
-          opacity: selectedIndex == 0 ? 1.0 : 0.60,
+          opacity: selectedIndex == 0 ? 1.0 : 0.45,
           child: Image.asset(
             'assets/icons/nav_catalog.png',
             width: 28,
@@ -452,7 +415,7 @@ class _AppScaffoldState extends State<AppScaffold>
       ),
       NavigationDestination(
         icon: Opacity(
-          opacity: selectedIndex == 1 ? 1.0 : 0.60,
+          opacity: selectedIndex == 1 ? 1.0 : 0.45,
           child: Image.asset(
             'assets/icons/nav_collection.png',
             width: 28,
@@ -470,7 +433,7 @@ class _AppScaffoldState extends State<AppScaffold>
           label: Text('$_unreadDMsCount'),
           backgroundColor: Theme.of(context).colorScheme.primary,
           child: Opacity(
-            opacity: selectedIndex == 2 ? 1.0 : 0.60,
+            opacity: selectedIndex == 2 ? 1.0 : 0.45,
             child: Image.asset(
               'assets/icons/nav_messages.png',
               width: 28,
@@ -485,7 +448,7 @@ class _AppScaffoldState extends State<AppScaffold>
       ),
       NavigationDestination(
         icon: Opacity(
-          opacity: selectedIndex == 3 ? 1.0 : 0.60,
+          opacity: selectedIndex == 3 ? 1.0 : 0.45,
           child: Icon(
             Icons.person_search_rounded,
             size: 28,
@@ -498,7 +461,7 @@ class _AppScaffoldState extends State<AppScaffold>
       ),
       NavigationDestination(
         icon: Opacity(
-          opacity: selectedIndex == 4 ? 1.0 : 0.60,
+          opacity: selectedIndex == 4 ? 1.0 : 0.45,
           child: Image.asset(
             'assets/icons/nav_social.png',
             width: 28,
@@ -513,7 +476,7 @@ class _AppScaffoldState extends State<AppScaffold>
       if (_isAdmin)
         NavigationDestination(
           icon: Opacity(
-            opacity: selectedIndex == 5 ? 1.0 : 0.60,
+            opacity: selectedIndex == 5 ? 1.0 : 0.45,
             child: Image.asset(
               'assets/icons/nav_admin.png',
               width: 28,
@@ -533,7 +496,7 @@ class _AppScaffoldState extends State<AppScaffold>
     final mainScaffold = Scaffold(
       backgroundColor: Colors.transparent,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(72 + MediaQuery.of(context).padding.top),
+        preferredSize: Size.fromHeight(90 + MediaQuery.of(context).padding.top),
         child: Container(
           color: Colors.transparent,
           padding: EdgeInsets.only(
@@ -556,13 +519,12 @@ class _AppScaffoldState extends State<AppScaffold>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.outfit(
-                            fontSize: 19,
+                            fontSize: 20,
                             fontWeight: FontWeight.w900,
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFFE7D2B8)
-                                    : DollDexTheme.ink,
-                            letterSpacing: 0.5,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFFE7D2B8)
+                                : DollDexTheme.ink,
+                            letterSpacing: 0,
                           ),
                         ),
                         Text(
@@ -572,10 +534,9 @@ class _AppScaffoldState extends State<AppScaffold>
                           style: TextStyle(
                             fontFamily: 'Outfit',
                             fontSize: 10,
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFFE7D2B8).withOpacity(0.65)
-                                    : DollDexTheme.cocoa.withOpacity(0.65),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFFE7D2B8).withOpacity(0.72)
+                                : DollDexTheme.cocoa.withOpacity(0.72),
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0,
                           ),
@@ -627,12 +588,12 @@ class _AppScaffoldState extends State<AppScaffold>
                         lastDailyClaim: _lastDailyClaim,
                       ),
                       const SizedBox(width: 4),
-                      _buildTopActionButton(
+                      IconButton(
                         tooltip: AppLanguageScope.languageOf(context) ==
                                 AppLanguage.tr
                             ? 'Kullanım Rehberi & Bilgi'
                             : 'User Guide & Info',
-                        icon: Icons.info_outline_rounded,
+                        icon: _buildNeonTopIcon(Icons.info_outline_rounded),
                         onPressed: () => _showInfoModal(context),
                       ),
                     ],
@@ -640,11 +601,11 @@ class _AppScaffoldState extends State<AppScaffold>
                     ValueListenableBuilder<AppLanguage>(
                       valueListenable: appLanguageController,
                       builder: (context, language, _) {
-                        return _buildTopActionButton(
+                        return IconButton(
                           tooltip: language == AppLanguage.tr
                               ? 'Change language'
                               : 'Dili değiştir',
-                          icon: Icons.translate_rounded,
+                          icon: _buildNeonTopIcon(Icons.translate_rounded),
                           onPressed: () {
                             final nextLang = language == AppLanguage.tr
                                 ? AppLanguage.en
@@ -658,7 +619,7 @@ class _AppScaffoldState extends State<AppScaffold>
                       valueListenable: appThemeKeyController,
                       builder: (context, themeKey, _) {
                         final isDark = themeKey != 'goth_light';
-                        return _buildTopActionButton(
+                        return IconButton(
                           tooltip: t(context, 'theme'),
                           onPressed: () {
                             final nextTheme =
@@ -670,18 +631,20 @@ class _AppScaffoldState extends State<AppScaffold>
                                   currentUser.uid, nextTheme);
                             }
                           },
-                          icon: isDark
-                              ? Icons.light_mode_rounded
-                              : Icons.dark_mode_rounded,
+                          icon: _buildNeonTopIcon(
+                            isDark
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
+                          ),
                         );
                       },
                     ),
-                    _buildTopActionButton(
+                    IconButton(
                       tooltip:
                           AppLanguageScope.languageOf(context) == AppLanguage.tr
                               ? 'Mağaza / Jeton Al'
                               : 'Shop / Buy Coins',
-                      icon: Icons.storefront,
+                      icon: _buildNeonTopIcon(Icons.storefront),
                       onPressed: () => showProSubscriptionModal(context),
                     ),
                     Badge(
@@ -689,10 +652,11 @@ class _AppScaffoldState extends State<AppScaffold>
                       label: Text('$_unreadNotificationsCount'),
                       backgroundColor: Colors.redAccent,
                       textColor: Colors.white,
-                      child: _buildTopActionButton(
+                      child: IconButton(
                         tooltip: t(context, 'notifications'),
                         onPressed: () => showNotificationsModal(context),
-                        icon: Icons.notifications_active_rounded,
+                        icon: _buildNeonTopIcon(
+                            Icons.notifications_active_rounded),
                       ),
                     ),
                     Padding(
@@ -708,7 +672,7 @@ class _AppScaffoldState extends State<AppScaffold>
                           authService.currentUser != null
                               ? _avatarFrameColor
                               : '',
-                          size: 34,
+                          size: 32,
                         ),
                       ),
                     ),
@@ -865,7 +829,6 @@ class _AppScaffoldState extends State<AppScaffold>
     _deletedThreadsSubscription?.cancel();
     _monetizationSubscription?.cancel();
     _hudTimer?.cancel();
-    _hudBannerController.dispose();
     super.dispose();
   }
 
@@ -1048,115 +1011,99 @@ class _AppScaffoldState extends State<AppScaffold>
       _currentHudNotification = notification;
       _showHudBanner = true;
     });
-    _hudBannerController.forward(from: 0);
 
     _hudTimer = Timer(const Duration(seconds: 4), () {
       if (mounted) {
         setState(() {
           _showHudBanner = false;
         });
-        _hudBannerController.reverse();
       }
     });
   }
 
   Widget _buildHudBanner(AppNotification notification) {
     final topPadding = MediaQuery.of(context).padding.top + 8;
-    return Positioned(
-      top: topPadding,
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.fastOutSlowIn,
+      top: _showHudBanner ? topPadding : -120,
       left: 12,
       right: 12,
-      child: IgnorePointer(
-        ignoring: !_showHudBanner,
-        child: SlideTransition(
-          position: _hudSlideAnimation,
-          child: FadeTransition(
-            opacity: _hudFadeAnimation,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _showHudBanner = false;
-                });
-                _hudBannerController.reverse();
-                notificationRepository.markRead(notification.id);
-                if (notification.deepLink.isNotEmpty) {
-                  context.push(notification.deepLink);
-                }
-              },
-              child: Material(
-                elevation: 12,
-                borderRadius: BorderRadius.circular(16),
-                color: Theme.of(context).colorScheme.surface,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 1.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.3),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Row(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _showHudBanner = false;
+          });
+          notificationRepository.markRead(notification.id);
+          if (notification.deepLink.isNotEmpty) {
+            context.push(notification.deepLink);
+          }
+        },
+        child: Material(
+          elevation: 12,
+          borderRadius: BorderRadius.circular(16),
+          color: Theme.of(context).colorScheme.surface,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: Theme.of(context).colorScheme.primary, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _buildNeonIcon(
+                    context, _notificationTypeIcon(notification.type),
+                    size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildNeonIcon(
-                          context, _notificationTypeIcon(notification.type),
-                          size: 24),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              notification.title,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              notification.body,
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.7),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        notification.title,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13,
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.close,
-                            size: 16,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.6)),
-                        onPressed: () {
-                          setState(() {
-                            _showHudBanner = false;
-                          });
-                          _hudBannerController.reverse();
-                        },
+                      const SizedBox(height: 2),
+                      Text(
+                        notification.body,
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+                IconButton(
+                  icon: Icon(Icons.close,
+                      size: 16,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6)),
+                  onPressed: () {
+                    setState(() {
+                      _showHudBanner = false;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -1758,8 +1705,7 @@ class _AppScaffoldState extends State<AppScaffold>
       if (endsAt != null && now.isAfter(endsAt)) return;
 
       // Check if already viewed in LocalStorage
-      final lastViewedId =
-          await LocalStorage.getString('last_viewed_announcement_id');
+      final lastViewedId = await LocalStorage.getString('last_viewed_announcement_id');
       if (lastViewedId == id) return;
 
       // Show the dialog
@@ -1781,8 +1727,7 @@ class _AppScaffoldState extends State<AppScaffold>
     final titleColorStr = data['titleColor'] as String? ?? '';
     final bodyColorStr = data['bodyColor'] as String? ?? '';
     final backgroundColorStr = data['backgroundColor'] as String? ?? '';
-    final buttonText =
-        data['buttonText'] as String? ?? (tr ? 'Anladım' : 'Got it');
+    final buttonText = data['buttonText'] as String? ?? (tr ? 'Anladım' : 'Got it');
     final buttonUrl = data['buttonUrl'] as String? ?? '';
     final iconName = data['iconName'] as String? ?? 'announcement';
 
@@ -1791,10 +1736,8 @@ class _AppScaffoldState extends State<AppScaffold>
     final Color? customBodyColor = _parseHexColor(bodyColorStr);
 
     final dialogBg = customBgColor ?? Theme.of(context).colorScheme.surface;
-    final titleColor =
-        customTitleColor ?? Theme.of(context).colorScheme.primary;
-    final bodyColor = customBodyColor ??
-        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85);
+    final titleColor = customTitleColor ?? Theme.of(context).colorScheme.primary;
+    final bodyColor = customBodyColor ?? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85);
 
     showDialog<void>(
       context: context,
@@ -1802,8 +1745,7 @@ class _AppScaffoldState extends State<AppScaffold>
       builder: (context) {
         return Dialog(
           backgroundColor: dialogBg,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Container(
             constraints: const BoxConstraints(
               maxWidth: 420,
@@ -1812,18 +1754,12 @@ class _AppScaffoldState extends State<AppScaffold>
               color: dialogBg,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.5),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.25),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
                   blurRadius: 20,
                   spreadRadius: 1,
                 ),
@@ -1838,8 +1774,7 @@ class _AppScaffoldState extends State<AppScaffold>
                       // Banner Image if present
                       if (imageUrl.isNotEmpty)
                         ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(22)),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
                           child: SizedBox(
                             height: 180,
                             width: double.infinity,
@@ -1866,15 +1801,9 @@ class _AppScaffoldState extends State<AppScaffold>
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.12),
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                                   border: Border.all(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: 0.3),
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -1914,13 +1843,11 @@ class _AppScaffoldState extends State<AppScaffold>
                               child: ElevatedButton(
                                 onPressed: () async {
                                   // Mark as viewed
-                                  await LocalStorage.setString(
-                                      'last_viewed_announcement_id', id);
+                                  await LocalStorage.setString('last_viewed_announcement_id', id);
                                   if (context.mounted) {
                                     Navigator.of(context).pop();
                                     if (buttonUrl.isNotEmpty) {
-                                      if (buttonUrl.startsWith('http://') ||
-                                          buttonUrl.startsWith('https://')) {
+                                      if (buttonUrl.startsWith('http://') || buttonUrl.startsWith('https://')) {
                                         launchExternalUrl(buttonUrl);
                                       } else {
                                         _goGuarded(buttonUrl);
@@ -1929,11 +1856,9 @@ class _AppScaffoldState extends State<AppScaffold>
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -1961,24 +1886,19 @@ class _AppScaffoldState extends State<AppScaffold>
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.black
-                          .withOpacity(imageUrl.isNotEmpty ? 0.4 : 0.0),
+                      color: Colors.black.withOpacity(imageUrl.isNotEmpty ? 0.4 : 0.0),
                     ),
                     child: IconButton(
                       icon: Icon(
                         Icons.close_rounded,
                         color: imageUrl.isNotEmpty
                             ? Colors.white
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                         size: 20,
                       ),
                       onPressed: () async {
                         // Mark as viewed
-                        await LocalStorage.setString(
-                            'last_viewed_announcement_id', id);
+                        await LocalStorage.setString('last_viewed_announcement_id', id);
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }
@@ -1991,63 +1911,6 @@ class _AppScaffoldState extends State<AppScaffold>
           ),
         );
       },
-    );
-  }
-}
-
-class _TopActionButton extends StatefulWidget {
-  const _TopActionButton({
-    required this.tooltip,
-    required this.onPressed,
-    required this.child,
-  });
-
-  final String tooltip;
-  final VoidCallback onPressed;
-  final Widget child;
-
-  @override
-  State<_TopActionButton> createState() => _TopActionButtonState();
-}
-
-class _TopActionButtonState extends State<_TopActionButton> {
-  bool _pressed = false;
-
-  void _setPressed(bool value) {
-    if (_pressed == value) return;
-    setState(() => _pressed = value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.secondary;
-    return Tooltip(
-      message: widget.tooltip,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: widget.onPressed,
-          onTapDown: (_) => _setPressed(true),
-          onTapUp: (_) => _setPressed(false),
-          onTapCancel: () => _setPressed(false),
-          child: AnimatedScale(
-            scale: _pressed ? 0.88 : 1.0,
-            duration: const Duration(milliseconds: 120),
-            curve: Curves.easeInOut,
-            child: Container(
-              width: 38,
-              height: 38,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: muted.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: widget.child,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

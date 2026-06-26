@@ -62,22 +62,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: InkWell(
                         onTap: () => showAvatarStudioModal(context, user.uid),
                         borderRadius: BorderRadius.circular(38),
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Theme.of(context).colorScheme.surface,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.20),
-                                blurRadius: 12,
-                              ),
-                            ],
-                          ),
-                          child: buildAvatarHelper(
-                              context, avatarId, frameColor,
-                              size: 76),
-                        ),
+                        child: buildAvatarHelper(context, avatarId, frameColor,
+                            size: 76),
                       ),
                     ),
                     Positioned(

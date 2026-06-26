@@ -55,17 +55,14 @@ class _SignInPanelState extends State<SignInPanel> {
                   height: 62,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(
-                      colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
-                    ),
+                    color: DollDexTheme.mist,
                     border: Border.all(
                         color:
                             isDark ? DollDexTheme.darkLine : DollDexTheme.line),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(isDark ? 0.18 : 0.08),
-                        blurRadius: 24,
-                        spreadRadius: 2,
+                        blurRadius: 14,
                         offset: const Offset(0, 6),
                       ),
                     ],
@@ -180,9 +177,9 @@ class _SignInPanelState extends State<SignInPanel> {
                 const SizedBox(height: 18),
                 Container(
                   width: double.infinity,
-                  height: 48,
+                  height: 52,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(22),
                     gradient: _canContinue
                         ? const LinearGradient(
                             colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
@@ -216,7 +213,7 @@ class _SignInPanelState extends State<SignInPanel> {
                       shadowColor: Colors.transparent,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24)),
+                          borderRadius: BorderRadius.circular(22)),
                     ),
                     icon: widget.isLoading
                         ? const SizedBox.square(
