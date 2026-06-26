@@ -590,99 +590,106 @@ class ThreadListTile extends StatelessWidget {
         final prefix = isMe ? (tr ? 'Siz: ' : 'You: ') : '';
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return ListTile(
-          onTap: onTap,
-          leading: buildAvatarHelper(context, avatarId, frameColor, size: 40),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (status.selectedBadge.isNotEmpty) ...[
-                ProfileBadgeWidget(badgeId: status.selectedBadge, size: 8),
-                const SizedBox(height: 2),
-              ],
-              Text(
-                username,
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          subtitle: Row(
-            children: [
-              if (hasUnread) ...[
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              if (isMuted) ...[
-                Icon(Icons.volume_off_rounded,
-                    size: 14, color: isDark ? Colors.white30 : Colors.black38),
-                const SizedBox(width: 4),
-              ],
-              Expanded(
-                child: Text(
-                  thread.lastMessagePreview.isNotEmpty
-                      ? '$prefix${thread.lastMessagePreview}'
-                      : displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: isDark ? Colors.white54 : Colors.black54,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-              if (thread.updatedAt != null) ...[
-                const SizedBox(width: 8),
+          child: ListTile(
+            onTap: onTap,
+            leading: buildAvatarHelper(context, avatarId, frameColor, size: 46),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (status.selectedBadge.isNotEmpty) ...[
+                  ProfileBadgeWidget(badgeId: status.selectedBadge, size: 8),
+                  const SizedBox(height: 2),
+                ],
                 Text(
-                  formatMessageTime(thread.updatedAt!),
+                  username,
                   style: TextStyle(
-                    fontFamily: 'Outfit',
-                    color: isDark ? Colors.white24 : Colors.black38,
-                    fontSize: 10,
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
-            ],
-          ),
-          trailing: PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded,
-                color: isDark ? Colors.white30 : Colors.black38),
-            padding: EdgeInsets.zero,
-            onSelected: (val) {
-              if (val == 'mute') {
-                onMute();
-              } else if (val == 'delete') {
-                onDelete();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'mute',
-                child: Text(
-                  isMuted
-                      ? (tr ? 'Sesi Aç' : 'Unmute')
-                      : (tr ? 'Sessize Al' : 'Mute'),
+            ),
+            subtitle: Row(
+              children: [
+                if (hasUnread) ...[
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                if (isMuted) ...[
+                  Icon(Icons.volume_off_rounded,
+                      size: 14,
+                      color: isDark ? Colors.white30 : Colors.black38),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Text(
+                    thread.lastMessagePreview.isNotEmpty
+                        ? '$prefix${thread.lastMessagePreview}'
+                        : displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      fontSize: 12.5,
+                    ),
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Text(
-                  tr ? 'Sohbeti Sil' : 'Delete',
-                  style: const TextStyle(color: Colors.redAccent),
+                if (thread.updatedAt != null) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    formatMessageTime(thread.updatedAt!),
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      color: isDark ? Colors.white24 : Colors.black38,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            trailing: PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert_rounded,
+                  color: isDark ? Colors.white30 : Colors.black38),
+              padding: EdgeInsets.zero,
+              onSelected: (val) {
+                if (val == 'mute') {
+                  onMute();
+                } else if (val == 'delete') {
+                  onDelete();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'mute',
+                  child: Text(
+                    isMuted
+                        ? (tr ? 'Sesi Aç' : 'Unmute')
+                        : (tr ? 'Sessize Al' : 'Mute'),
+                  ),
                 ),
-              ),
-            ],
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(
+                    tr ? 'Sohbeti Sil' : 'Delete',
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -806,19 +813,17 @@ class _DirectChatConversationViewState
           color: Theme.of(context).colorScheme.secondaryContainer,
           child: Row(
             children: [
-              IconButton(
-                icon: Icon(Icons.add_circle_outline_rounded,
-                    color: Theme.of(context).colorScheme.primary),
-                tooltip: tr ? 'Paylaş' : 'Share',
-                onPressed: () {
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
                   showModalBottomSheet<void>(
                     context: context,
                     isScrollControlled: true,
                     showDragHandle: true,
                     backgroundColor: Theme.of(context).colorScheme.surface,
                     shape: RoundedRectangleBorder(
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(24)),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
                       side: BorderSide(color: Theme.of(context).dividerColor),
                     ),
                     builder: (context) {
@@ -833,7 +838,8 @@ class _DirectChatConversationViewState
                             sharedSource: 'catalog',
                           );
                         },
-                        onShareCollection: (catalogId, collectionId, status) async {
+                        onShareCollection:
+                            (catalogId, collectionId, status) async {
                           await socialRepository.sendDirectMessage(
                             threadId: widget.threadId,
                             senderId: widget.myUid,
@@ -848,7 +854,19 @@ class _DirectChatConversationViewState
                     },
                   );
                 },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.add_rounded,
+                      color: Theme.of(context).colorScheme.primary),
+                ),
               ),
+              const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: _controller,
@@ -862,17 +880,36 @@ class _DirectChatConversationViewState
                     hintText: tr ? 'Mesaj yaz...' : 'Write message...',
                     hintStyle: TextStyle(
                         color: isDark ? Colors.white30 : Colors.black38),
-                    border: InputBorder.none,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   onSubmitted: (_) => _sendMessage(),
                 ),
               ),
-              IconButton(
-                icon: Icon(Icons.send_rounded,
-                    color: Theme.of(context).colorScheme.primary),
-                onPressed: _sendMessage,
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: _sendMessage,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  child: const Icon(Icons.send_rounded,
+                      size: 18, color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -915,17 +952,26 @@ class _DirectChatConversationViewState
                   maxWidth: MediaQuery.of(context).size.width * 0.72,
                   minWidth: 50,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(16),
-                    topRight: const Radius.circular(16),
-                    bottomLeft: Radius.circular(isMe ? 16 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 16),
+                    topLeft: Radius.circular(isMe ? 18 : 4),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: const Radius.circular(18),
+                    bottomRight: Radius.circular(isMe ? 4 : 18),
                   ),
-                  color: isMe
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.secondaryContainer,
+                  color: isMe ? null : Theme.of(context).colorScheme.surface,
+                  gradient: isMe
+                      ? LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.primary.withRed(
+                                (Theme.of(context).colorScheme.primary.red - 20)
+                                    .clamp(0, 255)),
+                          ],
+                        )
+                      : null,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1093,13 +1139,17 @@ class _DirectChatConversationViewState
                               ? getWebImage(
                                   imageUrl: entry.primaryImageUrl,
                                   label: entry.name,
-                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                  fit: entry.primaryImageUrl
+                                          .toLowerCase()
+                                          .contains('.png')
                                       ? BoxFit.contain
                                       : BoxFit.cover,
                                 )
                               : Image.network(
                                   entry.primaryImageUrl,
-                                  fit: entry.primaryImageUrl.toLowerCase().contains('.png')
+                                  fit: entry.primaryImageUrl
+                                          .toLowerCase()
+                                          .contains('.png')
                                       ? BoxFit.contain
                                       : BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>

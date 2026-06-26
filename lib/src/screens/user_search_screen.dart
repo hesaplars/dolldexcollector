@@ -191,14 +191,14 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildFilterOption(context, null,
-                  tr ? 'Tüm Kullanıcılar' : 'All Users'),
+              _buildFilterOption(
+                  context, null, tr ? 'Tüm Kullanıcılar' : 'All Users'),
               const SizedBox(height: 8),
               _buildFilterOption(context, 'pro',
                   tr ? 'Sadece Pro Üyeler' : 'Pro Members Only'),
               const SizedBox(height: 8),
-              _buildFilterOption(context, 'admin',
-                  tr ? 'Yöneticiler' : 'Staff / Admins'),
+              _buildFilterOption(
+                  context, 'admin', tr ? 'Yöneticiler' : 'Staff / Admins'),
             ],
           ),
         );
@@ -206,8 +206,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     );
   }
 
-  Widget _buildFilterOption(
-      BuildContext context, String? type, String label) {
+  Widget _buildFilterOption(BuildContext context, String? type, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _roleFilter == type;
 
@@ -295,10 +294,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
             decoration: BoxDecoration(
               color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                   color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
               boxShadow: [
@@ -312,7 +311,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
             child: Row(
               children: [
                 const SizedBox(width: 4),
-                _buildNeonIcon(context, Icons.search_rounded, size: 16),
+                _buildNeonIcon(context, Icons.search_rounded, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -354,10 +353,12 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+                        color:
+                            isDark ? DollDexTheme.darkLine : DollDexTheme.line,
                         width: 1.0,
                       ),
-                      color: isDark ? DollDexTheme.darkPaper : DollDexTheme.mist,
+                      color:
+                          isDark ? DollDexTheme.darkPaper : DollDexTheme.mist,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -400,7 +401,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Theme.of(context).dividerColor,
                       width: 1.2,
@@ -429,7 +430,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: buildAvatarHelper(
                         context, target.avatarId, target.avatarFrameColor,
-                        size: 40),
+                        size: 44),
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,

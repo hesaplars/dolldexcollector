@@ -111,8 +111,21 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                     Positioned(
                       top: 80,
                       left: 16,
-                      child: buildAvatarHelper(context, avatarId, frameColor,
-                          size: 76),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Theme.of(context).colorScheme.surface,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.20),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                        child: buildAvatarHelper(context, avatarId, frameColor,
+                            size: 76),
+                      ),
                     ),
                     Positioned(
                       top: 10,

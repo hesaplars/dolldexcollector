@@ -411,9 +411,11 @@ class _CommentsPanel extends StatelessWidget {
                           ? DollDexTheme.darkLine
                           : DollDexTheme.line,
                     ),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     leading: GestureDetector(
                       onTap: () {
                         if (comment.senderUsername.isNotEmpty) {

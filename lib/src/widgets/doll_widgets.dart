@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -148,12 +149,11 @@ class DollDexTheme {
       cardTheme: CardThemeData(
         color: panel,
         surfaceTintColor: Colors.transparent,
-        elevation: 4,
-        shadowColor: Colors.black
-            .withOpacity(brightness == Brightness.dark ? 0.28 : 0.1),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: line, width: 1.1),
         ),
       ),
@@ -161,7 +161,7 @@ class DollDexTheme {
         backgroundColor: panel,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           side: BorderSide(color: line, width: 1.2),
         ),
       ),
@@ -172,22 +172,24 @@ class DollDexTheme {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           side: BorderSide(color: line, width: 1.2),
         ),
-        dragHandleColor: line,
-        dragHandleSize: const Size(48, 5),
+        dragHandleColor: muted.withOpacity(0.4),
+        dragHandleSize: const Size(40, 4),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: panel,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: accent, width: 1.6),
         ),
       ),
@@ -198,32 +200,32 @@ class DollDexTheme {
         style: FilledButton.styleFrom(
           backgroundColor: accent,
           foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: accent.withOpacity(0.35),
+          elevation: 0,
+          shadowColor: accent.withOpacity(0.45),
           textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: accent,
           foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: accent.withOpacity(0.35),
+          elevation: 0,
+          shadowColor: accent.withOpacity(0.45),
           textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: muted,
-          side: BorderSide(color: line, width: 1.5),
+          foregroundColor: accent,
+          side: BorderSide(color: accent.withOpacity(0.35), width: 1.5),
           textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w800),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           shape:
@@ -231,25 +233,26 @@ class DollDexTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 74,
+        height: 80,
         backgroundColor: panelAlt,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: accent.withOpacity(0.12),
+        indicatorColor: accent.withOpacity(0.18),
+        indicatorShape: const StadiumBorder(),
         shadowColor: Colors.black.withOpacity(0.18),
         elevation: 12,
         iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? accent : muted.withOpacity(0.75),
-            size: selected ? 28 : 25,
+            color: selected ? accent : muted.withOpacity(0.60),
+            size: selected ? 26 : 22,
           );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
-            fontSize: 11,
+            fontSize: isSelected ? 11.5 : 11,
             fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-            color: isSelected ? accent : muted.withOpacity(0.72),
+            color: isSelected ? accent : muted.withOpacity(0.60),
             overflow: TextOverflow.ellipsis,
             fontFamily: 'Outfit',
             height: 1.0,
@@ -1190,9 +1193,10 @@ class EmptyState extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
               side: BorderSide(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.05),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.08),
                 width: 1.5,
               ),
             ),
@@ -1202,13 +1206,13 @@ class EmptyState extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(20),
                       color: Theme.of(context)
                           .colorScheme
                           .primaryContainer
-                          .withValues(alpha: 0.4),
+                          .withValues(alpha: 0.35),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.primary,
                         width: 1.5,
@@ -1240,7 +1244,8 @@ class EmptyState extends StatelessWidget {
                     body,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.65),
                       height: 1.3,
                     ),
                   ),
@@ -1492,11 +1497,11 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
     final panelAltColor = theme.colorScheme.secondaryContainer;
 
     return Container(
-      height: 60,
+      height: 52,
       width: double.infinity,
       decoration: BoxDecoration(
         color: panelAltColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: outlineColor,
           width: 1.5,
@@ -1507,7 +1512,7 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
           'ADVERTISEMENT',
           style: theme.textTheme.bodySmall?.copyWith(
             fontFamily: 'Outfit',
-            letterSpacing: 4,
+            letterSpacing: 3,
             color: theme.textTheme.bodySmall?.color?.withOpacity(0.4),
             fontWeight: FontWeight.bold,
           ),
@@ -1637,7 +1642,7 @@ class PageShell extends StatelessWidget {
     return SafeArea(
       child: ListView(
         key: listViewKey,
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           Center(
             child: ConstrainedBox(
@@ -1670,7 +1675,7 @@ class PageShell extends StatelessWidget {
                               .textTheme
                               .headlineSmall
                               ?.copyWith(
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w900,
                                 height: 1.05,
                                 color: theme.brightness == Brightness.dark
@@ -1690,12 +1695,12 @@ class PageShell extends StatelessWidget {
                         return Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                              horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: isDark
                                 ? DollDexTheme.darkPanel
                                 : DollDexTheme.panel,
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isDark
                                   ? DollDexTheme.darkLine
@@ -1705,7 +1710,7 @@ class PageShell extends StatelessWidget {
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black
-                                    .withOpacity(isDark ? 0.18 : 0.07),
+                                    .withOpacity(isDark ? 0.18 : 0.05),
                                 blurRadius: 14,
                                 offset: const Offset(0, 6),
                               ),
@@ -1770,15 +1775,15 @@ Widget buildGothicNeonIconButton({
   final child = Container(
     padding: padding,
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       color: isDark ? DollDexTheme.darkPanel : Colors.white,
       border: Border.all(
         color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
-        width: 1.2,
+        width: 1.0,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(isDark ? 0.2 : 0.08),
+          color: Colors.black.withOpacity(isDark ? 0.2 : 0.06),
           blurRadius: 8,
           offset: const Offset(0, 3),
         ),
@@ -1788,7 +1793,7 @@ Widget buildGothicNeonIconButton({
   );
 
   if (onPressed != null) {
-    return InkWell(
+    return _PressScale(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(size + 20),
       child: child,
@@ -1796,6 +1801,49 @@ Widget buildGothicNeonIconButton({
   }
 
   return child;
+}
+
+class _PressScale extends StatefulWidget {
+  const _PressScale({
+    required this.onTap,
+    required this.borderRadius,
+    required this.child,
+  });
+
+  final VoidCallback? onTap;
+  final BorderRadius borderRadius;
+  final Widget child;
+
+  @override
+  State<_PressScale> createState() => _PressScaleState();
+}
+
+class _PressScaleState extends State<_PressScale> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onTapDown: (_) => _setPressed(true),
+        onTapUp: (_) => _setPressed(false),
+        onTapCancel: () => _setPressed(false),
+        child: AnimatedScale(
+          scale: _pressed ? 0.90 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeInOut,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
 }
 
 Widget buildNeonFlagIcon(BuildContext context, {double size = 24}) {
@@ -2038,13 +2086,17 @@ void showPhotoGalleryDialog(
             Positioned(
               top: 10,
               right: 10,
-              child: ClipOval(
-                child: Container(
-                  color: Colors.black54,
-                  child: IconButton(
-                    icon: buildNeonIcon(context, Icons.close_rounded, size: 24),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.70),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded,
+                      size: 24, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
             ),
@@ -2097,23 +2149,30 @@ class _GothicImageSliderState extends State<GothicImageSlider> {
         Positioned(
           bottom: 12,
           right: 12,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.65),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFEC008C).withOpacity(0.5),
-                width: 1.0,
-              ),
-            ),
-            child: Text(
-              '${_currentIndex + 1} / ${widget.imageUrls.length}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Outfit',
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.50),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFEC008C).withOpacity(0.5),
+                    width: 1.0,
+                  ),
+                ),
+                child: Text(
+                  '${_currentIndex + 1} / ${widget.imageUrls.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Outfit',
+                  ),
+                ),
               ),
             ),
           ),
@@ -2130,7 +2189,7 @@ Widget buildCoverPhoto(BuildContext context, String? coverId,
 
   if (showDefault) {
     return Container(
-      height: 125,
+      height: 140,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
@@ -2218,7 +2277,7 @@ Widget buildCoverPhoto(BuildContext context, String? coverId,
 
   final String assetName = coverId.replaceAll('-', '_');
   return Container(
-    height: 125,
+    height: 140,
     width: double.infinity,
     child: Image.asset(
       'assets/covers/$assetName.png',
@@ -2305,7 +2364,7 @@ class GuestLoginBanner extends StatelessWidget {
           elevation: 2,
           color: isDark ? const Color(0xFF130B1E) : Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(14),
             side: BorderSide(
               color: const Color(0xFFEC008C).withOpacity(0.2),
               width: 1,
@@ -2341,7 +2400,7 @@ class GuestLoginBanner extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(14)),
                       backgroundColor: const Color(0xFFEC008C),
                       foregroundColor: Colors.white,
                       elevation: 0,
@@ -2411,13 +2470,13 @@ class AvatarOption extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: primaryColor,
-                  width: 3,
+                  width: 2.5,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: primaryColor.withOpacity(0.4),
                     blurRadius: 8,
-                    spreadRadius: 2,
+                    spreadRadius: 1,
                   ),
                 ],
               )
@@ -2459,10 +2518,10 @@ class GothicStatButton extends StatelessWidget {
     final borderCol = outlineColor.withOpacity(0.4);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         color: bgCol,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: borderCol,
           width: 1.5,
@@ -2481,7 +2540,7 @@ class GothicStatButton extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(10),
               color: surfaceColor,
               border: Border.all(
                 color: primaryColor.withOpacity(0.8),
@@ -2495,7 +2554,7 @@ class GothicStatButton extends StatelessWidget {
                 ),
               ],
             ),
-            child: buildNeonIcon(context, icon, size: 16),
+            child: buildNeonIcon(context, icon, size: 14),
           ),
           const SizedBox(height: 6),
           Text(
@@ -2503,7 +2562,7 @@ class GothicStatButton extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 9.5,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
               color: theme.textTheme.bodyMedium?.color,
             ),
@@ -2514,7 +2573,7 @@ class GothicStatButton extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 8.0,
+              fontSize: 8.5,
               color: secondaryColor,
               fontWeight: FontWeight.w600,
             ),
@@ -2914,10 +2973,10 @@ class ProfileBadgeWidget extends StatelessWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
       decoration: BoxDecoration(
         color: badge.color,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: badge.textColor.withOpacity(0.3), width: 0.8),
         boxShadow: [
           BoxShadow(
@@ -2931,7 +2990,7 @@ class ProfileBadgeWidget extends StatelessWidget {
         badge.name(context).toUpperCase(),
         style: TextStyle(
           color: badge.textColor,
-          fontSize: size,
+          fontSize: size + 0.5,
           fontWeight: FontWeight.bold,
           fontFamily: 'Outfit',
           letterSpacing: 0.5,
@@ -2960,7 +3019,7 @@ void showAnnouncementModalDetail(BuildContext context,
           constraints: const BoxConstraints(maxHeight: 500),
           decoration: BoxDecoration(
             color: surfaceColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: outlineColor,
               width: 1.5,
@@ -2980,7 +3039,7 @@ void showAnnouncementModalDetail(BuildContext context,
               // Header
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
@@ -2990,13 +3049,13 @@ void showAnnouncementModalDetail(BuildContext context,
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.campaign_rounded, color: primaryColor, size: 24),
+                    Icon(Icons.campaign_rounded, color: primaryColor, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         tr ? 'Duyuru Detayı' : 'Announcement Detail',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Outfit',
                           color: primaryColor,
@@ -3004,7 +3063,7 @@ void showAnnouncementModalDetail(BuildContext context,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
+                      icon: const Icon(Icons.close_rounded, size: 18),
                       color: theme.iconTheme.color?.withOpacity(0.7) ??
                           Colors.black54,
                       onPressed: () => Navigator.of(context).pop(),
@@ -3324,23 +3383,24 @@ class _NotificationsModalState extends State<NotificationsModal> {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(vertical: 11),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           color: isActive ? primaryColor.withOpacity(0.15) : surfaceColor,
           border: Border.all(
             color: isActive ? primaryColor : outlineColor.withOpacity(0.5),
-            width: 1.2,
+            width: isActive ? 1.5 : 1.2,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: isActive ? primaryColor : secondaryColor,
           ),
@@ -3400,7 +3460,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
             background: Container(
               decoration: BoxDecoration(
                 color: primaryColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.only(left: 16),
@@ -3411,7 +3471,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                 ? Container(
                     decoration: BoxDecoration(
                       color: errorColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 16),
@@ -3433,7 +3493,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
             child: Card(
               margin: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
                   color: notification.isRead
                       ? Colors.transparent
@@ -3445,7 +3505,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
               child: ListTile(
                 dense: true,
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 onTap: () async {
                   final route = notification.deepLink;
                   if (!notification.isRead) {
@@ -3472,9 +3532,11 @@ class _NotificationsModalState extends State<NotificationsModal> {
                   }
                 },
                 leading: Container(
-                  padding: const EdgeInsets.all(6),
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(10),
                     color: notification.isRead
                         ? outlineColor.withOpacity(0.1)
                         : primaryColor.withOpacity(0.1),
@@ -3482,7 +3544,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                   child: Icon(
                     notificationTypeIcon(notification.type),
                     color: notification.isRead ? secondaryColor : primaryColor,
-                    size: 16,
+                    size: 18,
                   ),
                 ),
                 title: Text(
@@ -3524,8 +3586,8 @@ class _NotificationsModalState extends State<NotificationsModal> {
                 trailing: notification.isRead
                     ? null
                     : Container(
-                        width: 6,
-                        height: 6,
+                        width: 7,
+                        height: 7,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: primaryColor,
@@ -3583,10 +3645,10 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
   Widget _buildTimeBox(
       String value, String label, Color accentColor, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF160E26) : const Color(0xFFF3E8FF),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: accentColor.withValues(alpha: 0.3),
           width: 1.5,
@@ -3606,7 +3668,7 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
             value,
             style: GoogleFonts.outfit(
               color: accentColor,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.0,
             ),
@@ -3616,7 +3678,7 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
             label.toUpperCase(),
             style: GoogleFonts.outfit(
               color: isDark ? Colors.white54 : Colors.black54,
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
@@ -3684,10 +3746,10 @@ class PriceOptionCard extends StatelessWidget {
     final accentColor = const Color(0xFFFFD700);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1B0F2B) : const Color(0xFFFBF4FF),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSelected
               ? primaryColor
@@ -3721,7 +3783,7 @@ class PriceOptionCard extends StatelessWidget {
             price,
             style: GoogleFonts.outfit(
               color: isDark ? accentColor : primaryColor,
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -3731,7 +3793,7 @@ class PriceOptionCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               color: isDark ? Colors.white38 : Colors.black38,
-              fontSize: 9,
+              fontSize: 8.5,
               fontWeight: FontWeight.w400,
             ),
           ),

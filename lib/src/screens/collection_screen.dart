@@ -274,8 +274,9 @@ class CollectionSearchPanel extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
               ? finalColor.withOpacity(0.15)
@@ -291,7 +292,7 @@ class CollectionSearchPanel extends StatelessWidget {
               ? [
                   BoxShadow(
                     color: finalColor.withOpacity(0.25),
-                    blurRadius: 6,
+                    blurRadius: 4,
                     spreadRadius: 0.5,
                   )
                 ]
@@ -303,7 +304,7 @@ class CollectionSearchPanel extends StatelessWidget {
             color: isSelected
                 ? (isDark ? Colors.white : DollDexTheme.teal)
                 : (isDark ? Colors.white60 : DollDexTheme.cocoa),
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -317,10 +318,10 @@ class CollectionSearchPanel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
         color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
             color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
         boxShadow: [
@@ -334,7 +335,7 @@ class CollectionSearchPanel extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 4),
-          buildNeonIcon(context, Icons.search_rounded, size: 16),
+          buildNeonIcon(context, Icons.search_rounded, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(

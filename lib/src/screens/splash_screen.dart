@@ -16,6 +16,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  bool _showDots = false;
 
   @override
   void initState() {
@@ -43,6 +44,12 @@ class _SplashScreenState extends State<SplashScreen>
     ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _controller.forward();
+
+    Future.delayed(const Duration(milliseconds: 2600), () {
+      if (mounted) {
+        setState(() => _showDots = true);
+      }
+    });
 
     Future.delayed(const Duration(milliseconds: 2800), () {
       if (mounted) {
@@ -82,8 +89,8 @@ class _SplashScreenState extends State<SplashScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 86,
-                          height: 86,
+                          width: 80,
+                          height: 80,
                           decoration: BoxDecoration(
                             color: isDark
                                 ? DollDexTheme.darkPanel
@@ -99,14 +106,14 @@ class _SplashScreenState extends State<SplashScreen>
                               BoxShadow(
                                 color: Colors.black
                                     .withOpacity(isDark ? 0.26 : 0.12),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
+                                blurRadius: 28,
+                                offset: const Offset(0, 12),
                               ),
                             ],
                           ),
                           child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 46,
+                            Icons.collections_bookmark_rounded,
+                            size: 40,
                             color: DollDexTheme.teal,
                           ),
                         ),
@@ -115,9 +122,11 @@ class _SplashScreenState extends State<SplashScreen>
                           t(context, 'appName'),
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            fontSize: 36,
+                            fontSize: 32,
                             fontWeight: FontWeight.w900,
-                            color: isDark ? const Color(0xFFE7D2B8) : DollDexTheme.ink,
+                            color: isDark
+                                ? const Color(0xFFE7D2B8)
+                                : DollDexTheme.ink,
                             letterSpacing: 0,
                           ),
                         ),
@@ -127,7 +136,7 @@ class _SplashScreenState extends State<SplashScreen>
                               ? 'Online Bebek Koleksiyonu'
                               : 'Online Doll Collection',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             color: isDark
                                 ? const Color(0xFFE7D2B8).withOpacity(0.8)
                                 : DollDexTheme.cocoa,
@@ -136,6 +145,41 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 48,
+                child: AnimatedOpacity(
+                  opacity: _showDots ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      3,
+                      (index) => AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) {
+                          final pulse =
+                              (((_controller.value * 3) + index) % 1.0);
+                          return Opacity(
+                            opacity: 0.45 + (pulse * 0.55),
+                            child: child,
+                          );
+                        },
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
