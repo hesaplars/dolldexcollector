@@ -274,5 +274,14 @@ service cloud.firestore {
         && request.resource.data.coinsAmount is int;
       allow update, delete: if isAdmin();
     }
+
+    match /rewardedAdRequests/{requestId} {
+      allow read: if signedIn() && notBanned() && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if signedIn()
+        && notBanned()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
   }
 }

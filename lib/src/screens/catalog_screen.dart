@@ -23,6 +23,7 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> {
   late String _query;
   CatalogItemType? _type;
+  int? _year;
   late final TextEditingController _searchController;
 
   @override
@@ -60,6 +61,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           SearchPanel(
             controller: _searchController,
             selectedType: _type,
+            selectedYear: _year,
             onQueryChanged: (value) {
               setState(() {
                 _query = value;
@@ -68,6 +70,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
             onTypeChanged: (value) {
               setState(() {
                 _type = value;
+              });
+            },
+            onYearChanged: (value) {
+              setState(() {
+                _year = value;
               });
             },
           ),
@@ -85,7 +92,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               return const SizedBox.shrink();
             },
           ),
-          FeaturedGrid(query: _query, type: _type),
+          FeaturedGrid(query: _query, type: _type, year: _year),
         ],
       ),
     );
@@ -96,15 +103,19 @@ class SearchPanel extends StatelessWidget {
   const SearchPanel({
     required this.controller,
     required this.selectedType,
+    required this.selectedYear,
     required this.onQueryChanged,
     required this.onTypeChanged,
+    required this.onYearChanged,
     super.key,
   });
 
   final TextEditingController controller;
   final CatalogItemType? selectedType;
+  final int? selectedYear;
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<CatalogItemType?> onTypeChanged;
+  final ValueChanged<int?> onYearChanged;
 
   Widget _buildNeonIcon(BuildContext context, IconData icon,
       {double size = 24}) {
@@ -123,24 +134,28 @@ class SearchPanel extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      splashColor: finalColor.withValues(alpha: 0.08),
+      highlightColor: finalColor.withValues(alpha: 0.04),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? finalColor.withOpacity(0.15)
+              ? finalColor.withValues(alpha: 0.15)
               : (isDark ? DollDexTheme.darkPanel : DollDexTheme.panel),
           border: Border.all(
             color: isSelected
                 ? finalColor
                 : (isDark ? DollDexTheme.darkLine : DollDexTheme.line),
-            width: 1.2,
+            width: isSelected ? 1.5 : 1.0,
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: finalColor.withOpacity(0.25),
-                    blurRadius: 6,
+                    color: finalColor.withValues(alpha: 0.20),
+                    blurRadius: 4,
                     spreadRadius: 0.5,
                   )
                 ]
@@ -152,7 +167,7 @@ class SearchPanel extends StatelessWidget {
             color: isSelected
                 ? (isDark ? Colors.white : DollDexTheme.teal)
                 : (isDark ? Colors.white60 : DollDexTheme.cocoa),
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -166,17 +181,18 @@ class SearchPanel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
         color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+            width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.22 : 0.09),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -268,7 +284,16 @@ class SearchPanel extends StatelessWidget {
               ? profileSetupRepository.watch(currentUser.uid)
               : const Stream.empty(),
           builder: (context, snap) {
-            final isPro = snap.data?.isPro == true;
+            final isPro = snap.data?.isPro == true || snap.data?.role == 'admin';
+
+            // Get unique years from the catalog
+            final years = catalogEntriesNotifier.value
+                .map((e) => e.year)
+                .where((y) => y != null)
+                .cast<int>()
+                .toSet()
+                .toList();
+            years.sort((a, b) => b.compareTo(a));
 
             return Container(
               decoration: BoxDecoration(
@@ -276,68 +301,157 @@ class SearchPanel extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
               ),
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr ? 'Katalog Filtrele' : 'Filter Catalog',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : DollDexTheme.ink,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildFilterChip(
-                        context: context,
-                        isSelected: selectedType == null,
-                        label: t(context, 'all'),
-                        onTap: () {
-                          onTypeChanged(null);
-                          Navigator.of(context).pop();
-                        },
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr ? 'Katalog Filtrele' : 'Filter Catalog',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : DollDexTheme.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      for (final type in CatalogItemType.values)
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr ? 'Öğe Türü' : 'Item Type',
+                      style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
                         _buildFilterChip(
                           context: context,
-                          isSelected: selectedType == type,
-                          label: catalogTypeLabel(context, type),
+                          isSelected: selectedType == null,
+                          label: t(context, 'all'),
                           onTap: () {
-                            final isRestricted = type == CatalogItemType.set ||
-                                type == CatalogItemType.pet ||
-                                type == CatalogItemType.accessory;
-                            if (isRestricted && !isPro) {
-                              Navigator.of(context).pop();
-                              showGothicConfirmDialog(
-                                context,
-                                title: tr
-                                    ? 'Pro Filtre Özelliği'
-                                    : 'Pro Filter Feature',
-                                content: tr
-                                    ? 'Set, Pet ve Aksesuar filtreleri DollDex Pro üyelerine özeldir. Avantajları görmek ve Pro\'ya yükseltmek ister misiniz?'
-                                    : 'Set, Pet, and Accessory filters are exclusive to DollDex Pro members. Would you like to view the benefits and upgrade to Pro?',
-                                confirmText:
-                                    tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
-                                cancelText: tr ? 'Vazgeç' : 'Cancel',
-                              ).then((confirmed) {
-                                if (confirmed && context.mounted) {
-                                  showProSubscriptionModal(context);
-                                }
-                              });
-                            } else {
-                              onTypeChanged(type);
-                              Navigator.of(context).pop();
-                            }
+                            onTypeChanged(null);
+                            Navigator.of(context).pop();
                           },
                         ),
-                    ],
-                  ),
-                ],
+                        for (final type in CatalogItemType.values)
+                          _buildFilterChip(
+                            context: context,
+                            isSelected: selectedType == type,
+                            label: catalogTypeLabel(context, type),
+                            onTap: () {
+                              final isRestricted = type == CatalogItemType.set ||
+                                  type == CatalogItemType.pet ||
+                                  type == CatalogItemType.accessory;
+                              if (isRestricted && !isPro) {
+                                Navigator.of(context).pop();
+                                showGothicConfirmDialog(
+                                  context,
+                                  title: tr ? 'Pro Filtre Özelliği' : 'Pro Filter Feature',
+                                  content: tr
+                                      ? 'Set, Pet ve Aksesuar filtreleri DollDex Pro üyelerine özeldir. Avantajları görmek ve Pro\'ya yükseltmek ister misiniz?'
+                                      : 'Set, Pet, and Accessory filters are exclusive to DollDex Pro members. Would you like to view the benefits and upgrade to Pro?',
+                                  confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                  cancelText: tr ? 'Vazgeç' : 'Cancel',
+                                ).then((confirmed) {
+                                  if (confirmed && context.mounted) {
+                                    showProSubscriptionModal(context);
+                                  }
+                                });
+                              } else {
+                                onTypeChanged(type);
+                                Navigator.of(context).pop();
+                              }
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Text(
+                          tr ? 'Yıla Göre Filtrele' : 'Filter by Year',
+                          style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black54,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        if (!isPro) ...[
+                          const SizedBox(width: 6),
+                          const Icon(Icons.lock_rounded, size: 14, color: Colors.orangeAccent),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildFilterChip(
+                            context: context,
+                            isSelected: selectedYear == null,
+                            label: t(context, 'all'),
+                            onTap: () {
+                              if (!isPro) {
+                                Navigator.of(context).pop();
+                                showGothicConfirmDialog(
+                                  context,
+                                  title: tr ? 'Pro Yıl Filtresi' : 'Pro Year Filter',
+                                  content: tr
+                                      ? 'Yıla göre filtreleme yapmak DollDex Pro üyelerine özeldir. Pro\'ya yükseltmek ister misiniz?'
+                                      : 'Filtering by year is exclusive to DollDex Pro members. Would you like to upgrade to Pro?',
+                                  confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                  cancelText: tr ? 'Vazgeç' : 'Cancel',
+                                ).then((confirmed) {
+                                  if (confirmed && context.mounted) {
+                                    showProSubscriptionModal(context);
+                                  }
+                                });
+                                return;
+                              }
+                              onYearChanged(null);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ...years.map((yr) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: _buildFilterChip(
+                                context: context,
+                                isSelected: selectedYear == yr,
+                                label: yr.toString(),
+                                onTap: () {
+                                  if (!isPro) {
+                                    Navigator.of(context).pop();
+                                    showGothicConfirmDialog(
+                                      context,
+                                      title: tr ? 'Pro Yıl Filtresi' : 'Pro Year Filter',
+                                      content: tr
+                                          ? 'Yıla göre filtreleme yapmak DollDex Pro üyelerine özeldir. Pro\'ya yükseltmek ister misiniz?'
+                                          : 'Filtering by year is exclusive to DollDex Pro members. Would you like to upgrade to Pro?',
+                                      confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                      cancelText: tr ? 'Vazgeç' : 'Cancel',
+                                    ).then((confirmed) {
+                                      if (confirmed && context.mounted) {
+                                        showProSubscriptionModal(context);
+                                      }
+                                    });
+                                    return;
+                                  }
+                                  onYearChanged(yr);
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -351,11 +465,13 @@ class FeaturedGrid extends StatelessWidget {
   const FeaturedGrid({
     required this.query,
     required this.type,
+    required this.year,
     super.key,
   });
 
   final String query;
   final CatalogItemType? type;
+  final int? year;
 
   @override
   Widget build(BuildContext context) {
@@ -370,7 +486,7 @@ class FeaturedGrid extends StatelessWidget {
         return ValueListenableBuilder<List<CatalogEntry>>(
           valueListenable: catalogEntriesNotifier,
           builder: (context, entries, _) {
-            final items = filterCatalogEntries(entries, query, type);
+            final items = filterCatalogEntries(entries, query, type, year: year);
             if (items.isEmpty) {
               return EmptyState(
                 icon: Icons.search_off_rounded,
@@ -381,22 +497,26 @@ class FeaturedGrid extends StatelessWidget {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                const columns = 4;
+                final w = constraints.maxWidth;
+                final columns = w >= 900 ? 7 : w >= 550 ? 5 : 4;
 
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
+                  cacheExtent: 1000,
                   itemCount: items.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
                     mainAxisSpacing: 6,
                     crossAxisSpacing: 6,
                     childAspectRatio: 0.58,
                   ),
-                  itemBuilder: (context, index) => CatalogCard(
-                    item: items[index],
-                    isPro: isPro,
-                    isSearching: query.trim().isNotEmpty,
+                  itemBuilder: (context, index) => RepaintBoundary(
+                    child: CatalogCard(
+                      item: items[index],
+                      isPro: isPro,
+                      isSearching: query.trim().isNotEmpty,
+                    ),
                   ),
                 );
               },
@@ -422,7 +542,6 @@ class CatalogCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPng = item.primaryImageUrl.toLowerCase().contains('.png');
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final shouldBlur = isSearching && !isPro;
 
@@ -582,7 +701,7 @@ class CatalogCard extends StatelessWidget {
           ),
           Positioned.fill(
             child: Material(
-              color: Colors.black.withOpacity(0.35),
+              color: Colors.black.withValues(alpha: 0.35),
               child: InkWell(
                 onTap: () => showProSubscriptionModal(context),
                 child: Padding(
@@ -620,16 +739,17 @@ class CatalogCard extends StatelessWidget {
       );
     }
 
-    return Card(
-      color: isPng ? Colors.transparent : null,
-      elevation: isPng ? 0 : null,
-      clipBehavior: Clip.antiAlias,
-      child: shouldBlur
-          ? cardBody
-          : InkWell(
-              onTap: () => context.go('/i/${item.id}'),
-              child: cardBody,
-            ),
+    return PressableButton(
+      onTap: shouldBlur ? null : () => context.go('/i/${item.id}'),
+      scaleFactor: 0.96,
+      borderRadius: 14,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: cardBody,
+      ),
     );
   }
 }
@@ -667,9 +787,9 @@ class _CardActionButton extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isActive
-                ? finalColor.withOpacity(0.25)
+                ? finalColor.withValues(alpha: 0.25)
                 : (isDark
-                    ? const Color(0xFF160E22).withOpacity(0.5)
+                    ? const Color(0xFF160E22).withValues(alpha: 0.5)
                     : const Color(0xFFFAF2FF)),
             border: Border.all(
               color: isActive
@@ -678,14 +798,14 @@ class _CardActionButton extends StatelessWidget {
                       ? Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(isDark ? 0.6 : 0.8)
-                      : finalColor.withOpacity(isDark ? 0.35 : 0.6)),
+                          .withValues(alpha: isDark ? 0.6 : 0.8)
+                      : finalColor.withValues(alpha: isDark ? 0.35 : 0.6)),
               width: 1.5,
             ),
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: finalColor.withOpacity(0.4),
+                      color: finalColor.withValues(alpha: 0.4),
                       blurRadius: 6,
                       spreadRadius: 1,
                     )
@@ -699,10 +819,10 @@ class _CardActionButton extends StatelessWidget {
                   colors: isActive
                       ? [finalColor, Colors.white]
                       : [
-                          finalColor.withOpacity(isDark ? 0.5 : 0.85),
+                          finalColor.withValues(alpha: isDark ? 0.5 : 0.85),
                           (activeColor ??
                                   Theme.of(context).colorScheme.secondary)
-                              .withOpacity(isDark ? 0.5 : 0.85)
+                              .withValues(alpha: isDark ? 0.5 : 0.85)
                         ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

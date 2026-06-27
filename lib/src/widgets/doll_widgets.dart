@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../core/app_language.dart';
@@ -142,53 +143,57 @@ class DollDexTheme {
         foregroundColor: text,
         elevation: 0,
         centerTitle: true,
+        scrolledUnderElevation: 0,
       ),
       iconTheme: IconThemeData(color: muted),
       dividerColor: line,
       cardTheme: CardThemeData(
         color: panel,
         surfaceTintColor: Colors.transparent,
-        elevation: 4,
-        shadowColor: Colors.black
-            .withOpacity(brightness == Brightness.dark ? 0.28 : 0.1),
+        elevation: 0,
+        shadowColor: Colors.transparent,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: line, width: 1.1),
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: line, width: 1.0),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: panel,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: BorderSide(color: line, width: 1.2),
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: line, width: 1.0),
         ),
+        elevation: 8,
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: panel,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          side: BorderSide(color: line, width: 1.2),
+          side: BorderSide(color: line, width: 1.0),
         ),
-        dragHandleColor: line,
-        dragHandleSize: const Size(48, 5),
+        dragHandleColor: muted.withValues(alpha: 0.35),
+        dragHandleSize: const Size(40, 4),
+        elevation: 0,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: panel,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: accent, width: 1.6),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: accent, width: 1.8),
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -198,58 +203,60 @@ class DollDexTheme {
         style: FilledButton.styleFrom(
           backgroundColor: accent,
           foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: accent.withOpacity(0.35),
+          elevation: 0,
+          shadowColor: accent.withValues(alpha: 0.45),
           textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: accent,
           foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: accent.withOpacity(0.35),
+          elevation: 0,
+          shadowColor: accent.withValues(alpha: 0.45),
           textStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: muted,
-          side: BorderSide(color: line, width: 1.5),
-          textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w800),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          foregroundColor: accent,
+          side: BorderSide(color: accent.withValues(alpha: 0.35), width: 1.5),
+          textStyle:
+              GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 74,
+        height: 72,
         backgroundColor: panelAlt,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: accent.withOpacity(0.12),
-        shadowColor: Colors.black.withOpacity(0.18),
-        elevation: 12,
+        indicatorColor: accent.withValues(alpha: 0.18),
+        indicatorShape: const StadiumBorder(),
+        shadowColor: Colors.black.withValues(alpha: 0.25),
+        elevation: 16,
         iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? accent : muted.withOpacity(0.75),
-            size: selected ? 28 : 25,
+            color: selected ? accent : muted.withValues(alpha: 0.60),
+            size: selected ? 26 : 23,
           );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
-            fontSize: 11,
+            fontSize: isSelected ? 11.5 : 11.0,
             fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-            color: isSelected ? accent : muted.withOpacity(0.72),
+            color: isSelected ? accent : muted.withValues(alpha: 0.60),
             overflow: TextOverflow.ellipsis,
             fontFamily: 'Outfit',
             height: 1.0,
@@ -283,7 +290,7 @@ class GothicBackgroundPainter extends CustomPainter {
     // Draw scattered gothic motifs (yarasalar, bal kabakları, kalpler, hilaller, kuru kafalar, örümcek ağları, tabutlar, anahtarlar)
     final paintMotif = Paint()
       ..color = (isDark ? const Color(0xFF00FFCC) : const Color(0xFFEC008C))
-          .withOpacity(0.05)
+          .withValues(alpha: 0.05)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -422,7 +429,7 @@ class IvyBorderPainter extends CustomPainter {
     canvas.drawPath(path, paint);
 
     final leafPaint = Paint()
-      ..color = color.withOpacity(0.95)
+      ..color = color.withValues(alpha: 0.95)
       ..style = PaintingStyle.fill;
 
     void drawLeaf(double x, double y, double angle) {
@@ -493,7 +500,7 @@ class GothicIvyContainer extends StatelessWidget {
     final theme = Theme.of(context);
 
     final bgCol = color ?? theme.colorScheme.surface;
-    final borderCol = borderColor ?? theme.colorScheme.primary.withOpacity(0.5);
+    final borderCol = borderColor ?? theme.colorScheme.primary.withValues(alpha: 0.5);
 
     return Container(
       decoration: BoxDecoration(
@@ -1175,77 +1182,70 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: SizedBox(
           width: double.infinity,
-          child: Card(
-            elevation: 0,
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.02)
-                : Colors.black.withValues(alpha: 0.01),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-              side: BorderSide(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.black.withValues(alpha: 0.05),
-                width: 1.5,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primaryContainer
-                          .withValues(alpha: 0.4),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.25),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
+          child: GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+            borderRadius: 24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.6),
+                        Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.1),
                       ],
                     ),
-                    child: buildNeonIcon(context, icon, size: 40),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+                      width: 1.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.18),
+                        blurRadius: 24,
+                        spreadRadius: 4,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    body,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                      height: 1.3,
-                    ),
+                  child: buildNeonIcon(context, icon, size: 42),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                    fontSize: 17,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  body,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.60),
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1308,7 +1308,7 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
     final surfaceColor = theme.colorScheme.surface;
 
     final bgColor =
-        isDark ? surfaceColor.withOpacity(0.85) : surfaceColor.withOpacity(0.9);
+        isDark ? surfaceColor.withValues(alpha: 0.85) : surfaceColor.withValues(alpha: 0.9);
     final borderColor = primaryColor;
 
     return AnimatedBuilder(
@@ -1330,19 +1330,19 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
               color: bgColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: borderColor.withOpacity(0.4 + _glowAnimation.value),
+                color: borderColor.withValues(alpha: 0.4 + _glowAnimation.value),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withOpacity(
+                  color: primaryColor.withValues(alpha: 
                       _glowAnimation.value * (_isHovered ? 1.4 : 1.0)),
                   blurRadius: (10 + (_glowAnimation.value * 15)) *
                       (_isHovered ? 1.2 : 1.0),
                   spreadRadius: 1,
                 ),
                 BoxShadow(
-                  color: secondaryColor.withOpacity(_glowAnimation.value * 0.4),
+                  color: secondaryColor.withValues(alpha: _glowAnimation.value * 0.4),
                   blurRadius: 5 + (_glowAnimation.value * 10),
                   spreadRadius: -1,
                 ),
@@ -1374,14 +1374,14 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                     Container(
                       height: 1,
                       width: 35,
-                      color: secondaryColor.withOpacity(0.5),
+                      color: secondaryColor.withValues(alpha: 0.5),
                     ),
                   ],
                 ),
                 Icon(
                   widget.icon,
                   size: 32,
-                  color: primaryColor.withOpacity(0.85),
+                  color: primaryColor.withValues(alpha: 0.85),
                 ),
                 Text(
                   widget.subtitle,
@@ -1425,7 +1425,7 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                             'DollDex Collector özel indirim kodunuz: ${widget.promoCode}\nKeyifli koleksiyonlar dileriz!',
                             style: TextStyle(
                                 color: theme.textTheme.bodyMedium?.color
-                                    ?.withOpacity(0.8)),
+                                    ?.withValues(alpha: 0.8)),
                           ),
                           actions: [
                             TextButton(
@@ -1447,9 +1447,9 @@ class _GothicAdBannerVerticalState extends State<GothicAdBannerVertical>
                         border: Border.all(color: primaryColor, width: 1),
                         gradient: LinearGradient(
                           colors: [
-                            primaryColor.withOpacity(_isHovered ? 0.35 : 0.15),
+                            primaryColor.withValues(alpha: _isHovered ? 0.35 : 0.15),
                             secondaryColor
-                                .withOpacity(_isHovered ? 0.35 : 0.15),
+                                .withValues(alpha: _isHovered ? 0.35 : 0.15),
                           ],
                         ),
                       ),
@@ -1492,11 +1492,11 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
     final panelAltColor = theme.colorScheme.secondaryContainer;
 
     return Container(
-      height: 60,
+      height: 52,
       width: double.infinity,
       decoration: BoxDecoration(
         color: panelAltColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: outlineColor,
           width: 1.5,
@@ -1507,8 +1507,8 @@ class _GothicAdBannerHorizontalState extends State<GothicAdBannerHorizontal> {
           'ADVERTISEMENT',
           style: theme.textTheme.bodySmall?.copyWith(
             fontFamily: 'Outfit',
-            letterSpacing: 4,
-            color: theme.textTheme.bodySmall?.color?.withOpacity(0.4),
+            letterSpacing: 3,
+            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -1545,7 +1545,7 @@ class GothicPageBackgroundPainter extends CustomPainter {
 
     final dotPaint = Paint()
       ..color = (isDark ? const Color(0xFFFFC48A) : const Color(0xFFB79268))
-          .withOpacity(isDark ? 0.12 : 0.22)
+          .withValues(alpha: isDark ? 0.12 : 0.22)
       ..style = PaintingStyle.fill;
     const step = 34.0;
     for (double y = 16; y < size.height; y += step) {
@@ -1562,7 +1562,7 @@ class GothicPageBackgroundPainter extends CustomPainter {
 
     final linePaint = Paint()
       ..color = (isDark ? Colors.white : const Color(0xFF6B4328))
-          .withOpacity(isDark ? 0.04 : 0.055)
+          .withValues(alpha: isDark ? 0.04 : 0.055)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
 
@@ -1578,7 +1578,7 @@ class GothicPageBackgroundPainter extends CustomPainter {
     canvas.drawPath(path, linePaint);
 
     final accentPaint = Paint()
-      ..color = accent.withOpacity(isDark ? 0.11 : 0.08)
+      ..color = accent.withValues(alpha: isDark ? 0.11 : 0.08)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(
         Offset(size.width * 0.92, size.height * 0.08), 72, accentPaint);
@@ -1637,7 +1637,7 @@ class PageShell extends StatelessWidget {
     return SafeArea(
       child: ListView(
         key: listViewKey,
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           Center(
             child: ConstrainedBox(
@@ -1670,7 +1670,7 @@ class PageShell extends StatelessWidget {
                               .textTheme
                               .headlineSmall
                               ?.copyWith(
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w900,
                                 height: 1.05,
                                 color: theme.brightness == Brightness.dark
@@ -1690,12 +1690,12 @@ class PageShell extends StatelessWidget {
                         return Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                              horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: isDark
                                 ? DollDexTheme.darkPanel
                                 : DollDexTheme.panel,
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isDark
                                   ? DollDexTheme.darkLine
@@ -1705,7 +1705,7 @@ class PageShell extends StatelessWidget {
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black
-                                    .withOpacity(isDark ? 0.18 : 0.07),
+                                    .withValues(alpha: isDark ? 0.14 : 0.05),
                                 blurRadius: 14,
                                 offset: const Offset(0, 6),
                               ),
@@ -1770,16 +1770,16 @@ Widget buildGothicNeonIconButton({
   final child = Container(
     padding: padding,
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       color: isDark ? DollDexTheme.darkPanel : Colors.white,
       border: Border.all(
         color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
-        width: 1.2,
+        width: 1.0,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(isDark ? 0.2 : 0.08),
-          blurRadius: 8,
+          color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.05),
+          blurRadius: 6,
           offset: const Offset(0, 3),
         ),
       ],
@@ -1790,7 +1790,7 @@ Widget buildGothicNeonIconButton({
   if (onPressed != null) {
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(size + 20),
+      borderRadius: BorderRadius.circular(14),
       child: child,
     );
   }
@@ -1801,6 +1801,412 @@ Widget buildGothicNeonIconButton({
 Widget buildNeonFlagIcon(BuildContext context, {double size = 24}) {
   return buildNeonIcon(context, Icons.flag_outlined, size: size);
 }
+
+// ──────────────────────────────────────────────────────
+// PREMIUM WIDGET LIBRARY — 2026 Android Premium Design
+// ──────────────────────────────────────────────────────
+
+/// Buton dokunuşunda yay-tabanlı ölçek animasyonu (premium Android his)
+class PressableButton extends StatefulWidget {
+  const PressableButton({
+    required this.child,
+    required this.onTap,
+    this.onLongPress,
+    this.scaleFactor = 0.94,
+    this.duration = const Duration(milliseconds: 100),
+    this.borderRadius = 16.0,
+    super.key,
+  });
+
+  final Widget child;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final double scaleFactor;
+  final Duration duration;
+  final double borderRadius;
+
+  @override
+  State<PressableButton> createState() => _PressableButtonState();
+}
+
+class _PressableButtonState extends State<PressableButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+      reverseDuration: const Duration(milliseconds: 80),
+    );
+    _scale = Tween<double>(begin: 1.0, end: widget.scaleFactor).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails _) => _controller.forward();
+
+  void _onTapUp(TapUpDetails _) => _controller.reverse();
+  void _onTapCancel() => _controller.reverse();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = widget.onTap == null;
+    return MouseRegion(
+      cursor: isDisabled
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTapDown: !isDisabled ? _onTapDown : null,
+        onTapUp: !isDisabled ? _onTapUp : null,
+        onTapCancel: !isDisabled ? _onTapCancel : null,
+        onTap: isDisabled
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                widget.onTap!();
+              },
+        onLongPress: widget.onLongPress,
+        child: ScaleTransition(
+          scale: _scale,
+          child: _isHovered && !isDisabled
+              ? DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(widget.borderRadius),
+                  ),
+                  child: widget.child,
+                )
+              : widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Glassmorphism kart — frosted glass efekti
+class GlassCard extends StatelessWidget {
+  const GlassCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.borderRadius = 20.0,
+    this.opacity = 0.08,
+    super.key,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final double borderRadius;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: opacity)
+              : Colors.white.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(borderRadius),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.12)
+                : primary.withValues(alpha: 0.10),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: isDark ? 0.08 : 0.06),
+              blurRadius: 20,
+              spreadRadius: -2,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Shimmer / skeleton yükleme efekti
+class ShimmerBox extends StatefulWidget {
+  const ShimmerBox({
+    this.width = double.infinity,
+    this.height = 20,
+    this.borderRadius = 10.0,
+    super.key,
+  });
+
+  final double width;
+  final double height;
+  final double borderRadius;
+
+  @override
+  State<ShimmerBox> createState() => _ShimmerBoxState();
+}
+
+class _ShimmerBoxState extends State<ShimmerBox>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+    _anim = Tween<double>(begin: -1.5, end: 1.5).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? const Color(0xFF2C2218) : const Color(0xFFEDE0CC);
+    final shimmerColor =
+        isDark ? const Color(0xFF3E3020) : const Color(0xFFFFF8EB);
+
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) {
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            gradient: LinearGradient(
+              begin: Alignment(_anim.value - 1, 0),
+              end: Alignment(_anim.value + 1, 0),
+              colors: [baseColor, shimmerColor, baseColor],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Gradient + glow efektli premium buton
+class GradientButton extends StatelessWidget {
+  const GradientButton({
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.isLoading = false,
+    this.fullWidth = true,
+    super.key,
+  });
+
+  final String label;
+  final VoidCallback? onTap;
+  final IconData? icon;
+  final bool isLoading;
+  final bool fullWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+    final accentDark = HSLColor.fromColor(accent)
+        .withLightness(
+            (HSLColor.fromColor(accent).lightness - 0.12).clamp(0.0, 1.0))
+        .toColor();
+
+    return PressableButton(
+      onTap: onTap,
+      scaleFactor: 0.96,
+      borderRadius: 28,
+      child: Container(
+        width: fullWidth ? double.infinity : null,
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [accentDark, accent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.40),
+              blurRadius: 18,
+              spreadRadius: -2,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
+            : Row(
+                mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: Colors.white, size: 18),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(
+                    label,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+/// Animated unread/notification badge — nabız atan nokta
+class AnimatedPulseDot extends StatefulWidget {
+  const AnimatedPulseDot({this.size = 8.0, this.color, super.key});
+  final double size;
+  final Color? color;
+
+  @override
+  State<AnimatedPulseDot> createState() => _AnimatedPulseDotState();
+}
+
+class _AnimatedPulseDotState extends State<AnimatedPulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.color ?? Theme.of(context).colorScheme.primary;
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (_, __) => Container(
+        width: widget.size + (widget.size * 0.5 * (1 - _pulse.value)),
+        height: widget.size + (widget.size * 0.5 * (1 - _pulse.value)),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: _pulse.value),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.4 * _pulse.value),
+              blurRadius: widget.size,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium icon button — glow efektiyle
+class PremiumIconButton extends StatelessWidget {
+  const PremiumIconButton({
+    required this.icon,
+    required this.onTap,
+    this.size = 20.0,
+    this.padding = 10.0,
+    this.color,
+    this.showGlow = false,
+    super.key,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final double size;
+  final double padding;
+  final Color? color;
+  final bool showGlow;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = color ?? Theme.of(context).colorScheme.primary;
+
+    return PressableButton(
+      onTap: onTap,
+      scaleFactor: 0.88,
+      borderRadius: 14,
+      child: Container(
+        padding: EdgeInsets.all(padding),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: isDark ? DollDexTheme.darkPanel : Colors.white,
+          border: Border.all(
+            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: (showGlow ? primary : Colors.black)
+                  .withValues(alpha: isDark ? 0.15 : 0.07),
+              blurRadius: showGlow ? 10 : 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: primary, size: size),
+      ),
+    );
+  }
+}
+
+
 
 Widget buildAvatarHelper(
     BuildContext context, String avatarId, String frameColor,
@@ -1867,7 +2273,7 @@ Widget buildAvatarHelper(
             ),
             boxShadow: [
               BoxShadow(
-                color: primaryColor.withOpacity(0.3),
+                color: primaryColor.withValues(alpha: 0.3),
                 blurRadius: 6,
                 spreadRadius: 1,
               ),
@@ -1912,7 +2318,7 @@ Widget buildAvatarHelper(
         ),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.3),
+            color: primaryColor.withValues(alpha: 0.3),
             blurRadius: 6,
             spreadRadius: 1,
           ),
@@ -1948,14 +2354,14 @@ Widget buildAvatarHelper(
           shape: BoxShape.circle,
           border: hasFrame
               ? Border.all(
-                  color: borderColor ?? outlineColor.withOpacity(0.5),
+                  color: borderColor ?? outlineColor.withValues(alpha: 0.5),
                   width: borderColor != null ? 3.0 : 1.5,
                 )
               : null,
           boxShadow: borderColor != null
               ? [
                   BoxShadow(
-                    color: borderColor.withOpacity(0.35),
+                    color: borderColor.withValues(alpha: 0.35),
                     blurRadius: 6,
                     spreadRadius: 1,
                   ),
@@ -2004,7 +2410,7 @@ void showPhotoGalleryDialog(
   if (imageUrls.isEmpty) return;
   showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.9),
+    barrierColor: Colors.black.withValues(alpha: 0.9),
     builder: (context) {
       return Dialog(
         backgroundColor: Colors.transparent,
@@ -2039,10 +2445,10 @@ void showPhotoGalleryDialog(
               top: 10,
               right: 10,
               child: ClipOval(
-                child: Container(
-                  color: Colors.black54,
+                  child: Container(
+                  color: Colors.black.withValues(alpha: 0.72),
                   child: IconButton(
-                    icon: buildNeonIcon(context, Icons.close_rounded, size: 24),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -2098,12 +2504,12 @@ class _GothicImageSliderState extends State<GothicImageSlider> {
           bottom: 12,
           right: 12,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.65),
-              borderRadius: BorderRadius.circular(16),
+              color: Colors.black.withValues(alpha: 0.50),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFFEC008C).withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.20),
                 width: 1.0,
               ),
             ),
@@ -2130,7 +2536,7 @@ Widget buildCoverPhoto(BuildContext context, String? coverId,
 
   if (showDefault) {
     return Container(
-      height: 125,
+      height: 140,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
@@ -2218,7 +2624,7 @@ Widget buildCoverPhoto(BuildContext context, String? coverId,
 
   final String assetName = coverId.replaceAll('-', '_');
   return Container(
-    height: 125,
+    height: 140,
     width: double.infinity,
     child: Image.asset(
       'assets/covers/$assetName.png',
@@ -2290,80 +2696,235 @@ Widget buildCoverPhotoPreview(String coverId) {
   );
 }
 
-class GuestLoginBanner extends StatelessWidget {
+class GuestLoginBanner extends StatefulWidget {
   const GuestLoginBanner({super.key});
+
+  @override
+  State<GuestLoginBanner> createState() => _GuestLoginBannerState();
+}
+
+class _GuestLoginBannerState extends State<GuestLoginBanner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shimmerCtrl;
+  late final Animation<double> _shimmer;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    )..repeat(reverse: true); // Düzgün ileri-geri, donma hissi yok
+    // CurvedAnimation YOK — linear shimmer daha akıcı görünür
+    _shimmer = _shimmerCtrl;
+  }
+
+  @override
+  void dispose() {
+    _shimmerCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
 
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 340),
-        child: Card(
-          elevation: 2,
-          color: isDark ? const Color(0xFF130B1E) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(
-              color: const Color(0xFFEC008C).withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.cloud_upload_outlined,
-                  color: Color(0xFF00FFCC),
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    tr
-                        ? 'Koleksiyonunu yedeklemek için giriş yap'
-                        : 'Sign in to backup your collection',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10.5,
-                      fontFamily: 'Outfit',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  height: 26,
-                  child: ElevatedButton(
-                    onPressed: () => context.push('/consent'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      backgroundColor: const Color(0xFFEC008C),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      tr ? 'Giriş Yap' : 'Sign In',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Outfit',
-                      ),
-                    ),
-                  ),
+    final grad1 = isDark
+        ? const Color(0xFF1A0B2E)
+        : accent.withValues(alpha: 0.06);
+    final grad2 = isDark
+        ? const Color(0xFF0D1A2E)
+        : const Color(0xFFFFF0F8);
+    final borderColor = accent.withValues(alpha: isDark ? 0.30 : 0.20);
+
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _shimmer,
+        builder: (context, child) {
+          return Container(
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [grad1, grad2, grad1],
+                stops: [
+                  0.0,
+                  (_shimmer.value * 0.6 + 0.2).clamp(0.2, 0.8),
+                  1.0,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: borderColor, width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: isDark ? 0.12 : 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
+            child: child,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Sol: İkon
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Orta: Metin + avantajlar
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr ? 'Giriş Yap (+10 Jeton Hediye!)' : 'Sign In (Get 10 Coins Gift!)',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    _BenefitRow(
+                      icon: Icons.cloud_done_outlined,
+                      text: tr ? 'Koleksiyonunu bulutta yedekle' : 'Back up your collection to cloud',
+                    ),
+                    const SizedBox(height: 3),
+                    _BenefitRow(
+                      icon: Icons.people_outline_rounded,
+                      text: tr ? 'Toplulukla paylaş ve etkileşime gir' : 'Share and interact with community',
+                    ),
+                    const SizedBox(height: 3),
+                    _BenefitRow(
+                      icon: Icons.stars_rounded,
+                      text: tr ? 'Kayıt bonusu: 10 Jeton hediye!' : 'Registration bonus: 10 Coins gift!',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Sağ: Buton
+              PressableButton(
+                onTap: () => context.push('/consent'),
+                scaleFactor: 0.94,
+                borderRadius: 14,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.75),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.35),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    tr ? 'Giriş Yap' : 'Sign In',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
+class _BenefitRow extends StatelessWidget {
+  const _BenefitRow({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: accent.withValues(alpha: 0.75)),
+        const SizedBox(width: 5),
+        Text(
+          text,
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withValues(alpha: 0.65),
+            height: 1.2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 
 class FeatureLine extends StatelessWidget {
   const FeatureLine({required this.text, super.key});
@@ -2411,13 +2972,13 @@ class AvatarOption extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: primaryColor,
-                  width: 3,
+                  width: 2.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.4),
+                    color: primaryColor.withValues(alpha: 0.4),
                     blurRadius: 8,
-                    spreadRadius: 2,
+                    spreadRadius: 1,
                   ),
                 ],
               )
@@ -2451,51 +3012,38 @@ class GothicStatButton extends StatelessWidget {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
     final secondaryColor = theme.colorScheme.secondary;
-    final outlineColor = theme.colorScheme.outline;
-    final surfaceColor = theme.colorScheme.surface;
-    final primaryContainerColor = theme.colorScheme.primaryContainer;
 
-    final bgCol = primaryContainerColor.withOpacity(0.15);
-    final borderCol = outlineColor.withOpacity(0.4);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      decoration: BoxDecoration(
-        color: bgCol,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: borderCol,
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withOpacity(0.08),
-            blurRadius: 6,
-            spreadRadius: 0.5,
-          ),
-        ],
-      ),
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      borderRadius: 16,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: surfaceColor,
+              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(
+                colors: [
+                  primaryColor.withValues(alpha: 0.15),
+                  primaryColor.withValues(alpha: 0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               border: Border.all(
-                color: primaryColor.withOpacity(0.8),
-                width: 1.5,
+                color: primaryColor.withValues(alpha: 0.35),
+                width: 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withOpacity(0.15),
-                  blurRadius: 4,
-                  spreadRadius: 0.5,
+                  color: primaryColor.withValues(alpha: 0.20),
+                  blurRadius: 8,
+                  spreadRadius: 0,
                 ),
               ],
             ),
-            child: buildNeonIcon(context, icon, size: 16),
+            child: buildNeonIcon(context, icon, size: 15),
           ),
           const SizedBox(height: 6),
           Text(
@@ -2503,20 +3051,22 @@ class GothicStatButton extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
               color: theme.textTheme.bodyMedium?.color,
+              fontFamily: 'Outfit',
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 8.0,
+              fontSize: 8.5,
               color: secondaryColor,
               fontWeight: FontWeight.w600,
+              fontFamily: 'Outfit',
             ),
           ),
         ],
@@ -2914,14 +3464,14 @@ class ProfileBadgeWidget extends StatelessWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
       decoration: BoxDecoration(
         color: badge.color,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: badge.textColor.withOpacity(0.3), width: 0.8),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: badge.textColor.withValues(alpha: 0.3), width: 0.8),
         boxShadow: [
           BoxShadow(
-            color: badge.glowColor.withOpacity(0.6),
+            color: badge.glowColor.withValues(alpha: 0.6),
             blurRadius: 4,
             spreadRadius: 0.5,
           ),
@@ -2960,14 +3510,14 @@ void showAnnouncementModalDetail(BuildContext context,
           constraints: const BoxConstraints(maxHeight: 500),
           decoration: BoxDecoration(
             color: surfaceColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: outlineColor,
-              width: 1.5,
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: primaryColor.withOpacity(0.2),
+                color: primaryColor.withValues(alpha: 0.15),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -2980,17 +3530,17 @@ void showAnnouncementModalDetail(BuildContext context,
               // Header
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: outlineColor.withOpacity(0.3),
+                      color: outlineColor.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.campaign_rounded, color: primaryColor, size: 24),
+                    Icon(Icons.campaign_rounded, color: primaryColor, size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -3004,8 +3554,8 @@ void showAnnouncementModalDetail(BuildContext context,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      color: theme.iconTheme.color?.withOpacity(0.7) ??
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      color: theme.iconTheme.color?.withValues(alpha: 0.7) ??
                           Colors.black54,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
@@ -3073,6 +3623,15 @@ void showNotificationsModal(BuildContext context, {int? initialTab}) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
+    useSafeArea: true,
+    useRootNavigator: true,
+    constraints: BoxConstraints(
+      maxWidth: MediaQuery.of(context).size.width >= 600 ? 560 : double.infinity,
+    ),
+    transitionAnimationController: AnimationController(
+      vsync: Navigator.of(context, rootNavigator: true),
+      duration: const Duration(milliseconds: 300),
+    )..forward(),
     builder: (context) {
       return NotificationsModal(initialTab: initialTab);
     },
@@ -3104,7 +3663,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
     final user = authService.currentUser;
     final userId = user?.uid ?? 'local-user';
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // isDark used in child widgets via Theme.of(context)
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -3200,7 +3759,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                         color: panelAltColor,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: primaryColor.withOpacity(0.15),
+                          color: primaryColor.withValues(alpha: 0.15),
                           width: 1,
                         ),
                       ),
@@ -3324,23 +3883,23 @@ class _NotificationsModalState extends State<NotificationsModal> {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 11),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: isActive ? primaryColor.withOpacity(0.15) : surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          color: isActive ? primaryColor.withValues(alpha: 0.15) : surfaceColor,
           border: Border.all(
-            color: isActive ? primaryColor : outlineColor.withOpacity(0.5),
-            width: 1.2,
+            color: isActive ? primaryColor : outlineColor.withValues(alpha: 0.5),
+            width: isActive ? 1.5 : 1.0,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: isActive ? primaryColor : secondaryColor,
           ),
@@ -3367,7 +3926,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                 : 'No notifications in this category.',
             style: TextStyle(
                 fontStyle: FontStyle.italic,
-                color: theme.colorScheme.secondary.withOpacity(0.7)),
+                color: theme.colorScheme.secondary.withValues(alpha: 0.7)),
           ),
         ),
       );
@@ -3399,7 +3958,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                 : DismissDirection.startToEnd,
             background: Container(
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.15),
+                color: primaryColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.centerLeft,
@@ -3410,7 +3969,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
             secondaryBackground: canDelete
                 ? Container(
                     decoration: BoxDecoration(
-                      color: errorColor.withOpacity(0.15),
+                      color: errorColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.centerRight,
@@ -3433,11 +3992,11 @@ class _NotificationsModalState extends State<NotificationsModal> {
             child: Card(
               margin: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
                   color: notification.isRead
                       ? Colors.transparent
-                      : primaryColor.withOpacity(0.3),
+                      : primaryColor.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -3445,7 +4004,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
               child: ListTile(
                 dense: true,
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 onTap: () async {
                   final route = notification.deepLink;
                   if (!notification.isRead) {
@@ -3471,18 +4030,22 @@ class _NotificationsModalState extends State<NotificationsModal> {
                     }
                   }
                 },
-                leading: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: notification.isRead
-                        ? outlineColor.withOpacity(0.1)
-                        : primaryColor.withOpacity(0.1),
-                  ),
-                  child: Icon(
-                    notificationTypeIcon(notification.type),
-                    color: notification.isRead ? secondaryColor : primaryColor,
-                    size: 16,
+                leading: SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: notification.isRead
+                          ? outlineColor.withValues(alpha: 0.1)
+                          : primaryColor.withValues(alpha: 0.1),
+                    ),
+                    child: Icon(
+                      notificationTypeIcon(notification.type),
+                      color: notification.isRead ? secondaryColor : primaryColor,
+                      size: 18,
+                    ),
                   ),
                 ),
                 title: Text(
@@ -3506,7 +4069,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                       style: TextStyle(
                         fontSize: 11,
                         color: secondaryColor
-                            .withOpacity(notification.isRead ? 0.7 : 1.0),
+                            .withValues(alpha: notification.isRead ? 0.7 : 1.0),
                       ),
                     ),
                     if (notification.createdAt != null) ...[
@@ -3515,7 +4078,7 @@ class _NotificationsModalState extends State<NotificationsModal> {
                         formatMessageTime(notification.createdAt!),
                         style: TextStyle(
                           fontSize: 9,
-                          color: secondaryColor.withOpacity(0.5),
+                          color: secondaryColor.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -3524,8 +4087,8 @@ class _NotificationsModalState extends State<NotificationsModal> {
                 trailing: notification.isRead
                     ? null
                     : Container(
-                        width: 6,
-                        height: 6,
+                        width: 7,
+                        height: 7,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: primaryColor,
@@ -3583,10 +4146,10 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
   Widget _buildTimeBox(
       String value, String label, Color accentColor, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF160E26) : const Color(0xFFF3E8FF),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: accentColor.withValues(alpha: 0.3),
           width: 1.5,
@@ -3606,7 +4169,7 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
             value,
             style: GoogleFonts.outfit(
               color: accentColor,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.0,
             ),
@@ -3616,7 +4179,7 @@ class _GothicCampaignCountdownState extends State<GothicCampaignCountdown> {
             label.toUpperCase(),
             style: GoogleFonts.outfit(
               color: isDark ? Colors.white54 : Colors.black54,
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
@@ -3684,15 +4247,15 @@ class PriceOptionCard extends StatelessWidget {
     final accentColor = const Color(0xFFFFD700);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1B0F2B) : const Color(0xFFFBF4FF),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSelected
               ? primaryColor
               : (isDark ? const Color(0xFF2C1F45) : const Color(0xFFE9D8FA)),
-          width: isSelected ? 2.0 : 1.2,
+          width: isSelected ? 2.0 : 1.0,
         ),
         boxShadow: isSelected
             ? [
@@ -3721,7 +4284,7 @@ class PriceOptionCard extends StatelessWidget {
             price,
             style: GoogleFonts.outfit(
               color: isDark ? accentColor : primaryColor,
-              fontSize: 16,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -3731,7 +4294,7 @@ class PriceOptionCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               color: isDark ? Colors.white38 : Colors.black38,
-              fontSize: 9,
+              fontSize: 8.5,
               fontWeight: FontWeight.w400,
             ),
           ),

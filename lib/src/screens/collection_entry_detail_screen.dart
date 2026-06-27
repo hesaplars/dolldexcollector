@@ -12,6 +12,7 @@ import '../core/app_language.dart';
 import '../moderation/report_models.dart';
 import '../notifications/notification_models.dart';
 import '../widgets/doll_widgets.dart';
+import '../ads/ad_banner_widget.dart';
 import '../users/profile_setup_repository.dart';
 import '../collection/collection_action_sheet.dart';
 import '../comments/comment_models.dart';
@@ -49,6 +50,7 @@ class _UserCollectionEntryDetailScreenState
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+    useRootNavigator: true,
       showDragHandle: true,
       builder: (sheetContext) {
         return CollectionActionSheet(
@@ -437,12 +439,12 @@ class _UserCollectionEntryDetailScreenState
                       backgroundColor: Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.08),
+                          .withValues(alpha: 0.08),
                       side: BorderSide(
                         color: Theme.of(context)
                             .colorScheme
                             .primary
-                            .withOpacity(0.4),
+                            .withValues(alpha: 0.4),
                         width: 1.0,
                       ),
                       padding: const EdgeInsets.symmetric(
@@ -585,7 +587,7 @@ class _UserCollectionEntryDetailScreenState
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     backgroundColor: const Color(0xFFFFCC00)
-                                        .withOpacity(0.08),
+                                        .withValues(alpha: 0.08),
                                   ),
                                   child: Text(
                                     isFeatured
@@ -747,7 +749,9 @@ class _UserCollectionEntryDetailScreenState
                               infoPanel,
                               const SizedBox(height: 16),
                               statusPanel,
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 12),
+                              const AdBannerWidget(),
+                              const SizedBox(height: 12),
                               SetPartsWidget(item: item),
                               const SizedBox(height: 16),
                               ownerPanel,
@@ -773,7 +777,9 @@ class _UserCollectionEntryDetailScreenState
                   infoPanel,
                   const SizedBox(height: 16),
                   statusPanel,
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  const AdBannerWidget(),
+                  const SizedBox(height: 12),
                   SetPartsWidget(item: item),
                   const SizedBox(height: 16),
                   ownerPanel,
@@ -851,7 +857,7 @@ class MyReportsCard extends StatelessWidget {
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color:
-                                  _statusColor(report.status).withOpacity(0.15),
+                                  _statusColor(report.status).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                   color: _statusColor(report.status), width: 1),

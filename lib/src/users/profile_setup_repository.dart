@@ -18,7 +18,7 @@ class ProfileSetupStatus {
     required this.coverId,
     this.photoUrl = '',
     this.featuredEntryIds = const [],
-    this.coins = 20,
+    this.coins = 10,
     this.unlockedBadges = const ['novice'],
     this.selectedBadge = '',
     this.unlockedAvatars = const [],
@@ -30,6 +30,8 @@ class ProfileSetupStatus {
     this.isBanned = false,
     this.banUntil,
     this.selectedTheme = 'goth_dark',
+    this.dailyRewardedAdCount = 0,
+    this.lastRewardedAdDate = '',
   });
 
   final String userId;
@@ -57,6 +59,8 @@ class ProfileSetupStatus {
   final bool isBanned;
   final DateTime? banUntil;
   final String selectedTheme;
+  final int dailyRewardedAdCount;
+  final String lastRewardedAdDate;
 
   bool get isComplete {
     return username.isNotEmpty &&
@@ -106,7 +110,7 @@ class ProfileSetupStatus {
       photoUrl: photoUrlVal,
       featuredEntryIds:
           List<String>.from(map['featuredEntryIds'] as List? ?? []),
-      coins: map['coins'] as int? ?? 20,
+      coins: map['coins'] as int? ?? 10,
       unlockedBadges:
           List<String>.from(map['unlockedBadges'] as List? ?? ['novice']),
       selectedBadge: map['selectedBadge'] as String? ?? '',
@@ -120,6 +124,8 @@ class ProfileSetupStatus {
       isBanned: map['isBanned'] as bool? ?? false,
       banUntil: parsedBanUntil,
       selectedTheme: map['selectedTheme'] as String? ?? 'goth_dark',
+      dailyRewardedAdCount: map['dailyRewardedAdCount'] as int? ?? 0,
+      lastRewardedAdDate: map['lastRewardedAdDate'] as String? ?? '',
     );
   }
 }
@@ -144,7 +150,7 @@ class ProfileSetupRepository {
   ProfileSetupRepository({FirebaseFirestore? firestore})
       : _firestore = firestore;
 
-  static const minAge = 13;
+  static const minAge = 14;
   static const usernameChangeCooldownDays = 183;
   static const privacyVersion = '2026-06-13';
   static const termsVersion = '2026-06-13';
@@ -382,7 +388,7 @@ class ProfileSetupRepository {
     });
 
     await completer.future.timeout(
-      const Duration(seconds: 15),
+      const Duration(seconds: 30),
       onTimeout: () {
         subscription?.cancel();
         throw TimeoutException('Request timed out. Please try again.');
@@ -441,13 +447,28 @@ class ProfileSetupRepository {
   }
 
   Future<void> claimDailyCoins(String userId) async {
-    await _processRequest(
-      collectionName: 'dailyClaimRequests',
-      data: {
-        'userId': userId,
-        'status': 'pending',
-      },
-    );
+    final db = _db;
+    if (db == null) return;
+    // Fire-and-forget: belgeyi yaz, Cloud Function'ı bekleme.
+    // Jeton profil stream'den otomatik güncellenir.
+    await db.collection('dailyClaimRequests').add({
+      'userId': userId,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Rewarded reklam izlendikten sonra +5 jeton talep eder.
+  /// Günde maksimum 5 kez çağrılabilir (kontrol AppScaffold'da yapılır).
+  Future<void> claimRewardedAdCoins(String userId) async {
+    final db = _db;
+    if (db == null) return;
+    await db.collection('rewardedAdRequests').add({
+      'userId': userId,
+      'status': 'pending',
+      'coinsAmount': 5,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> buyCoinPackage(String userId, int coinsAmount) async {

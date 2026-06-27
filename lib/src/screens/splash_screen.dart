@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../core/app_language.dart';
 import '../widgets/doll_widgets.dart';
@@ -46,7 +47,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(milliseconds: 2800), () {
       if (mounted) {
-        context.go('/');
+        final user = FirebaseAuth.instance.currentUser;
+        context.go(user != null ? '/collection' : '/');
       }
     });
   }
@@ -82,31 +84,38 @@ class _SplashScreenState extends State<SplashScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 86,
-                          height: 86,
+                          width: 80,
+                          height: 80,
                           decoration: BoxDecoration(
                             color: isDark
                                 ? DollDexTheme.darkPanel
                                 : DollDexTheme.panel,
-                            borderRadius: BorderRadius.circular(28),
+                            borderRadius: BorderRadius.circular(26),
                             border: Border.all(
                               color: isDark
                                   ? DollDexTheme.darkLine
                                   : DollDexTheme.line,
-                              width: 1.2,
+                              width: 1.0,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black
-                                    .withOpacity(isDark ? 0.26 : 0.12),
-                                blurRadius: 20,
+                                color: DollDexTheme.teal
+                                    .withValues(alpha: isDark ? 0.30 : 0.18),
+                                blurRadius: 28,
+                                spreadRadius: 2,
                                 offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
+                                color: Colors.black
+                                    .withValues(alpha: isDark ? 0.26 : 0.10),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
                           child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 46,
+                            Icons.collections_bookmark_rounded,
+                            size: 40,
                             color: DollDexTheme.teal,
                           ),
                         ),
@@ -115,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
                           t(context, 'appName'),
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            fontSize: 36,
+                            fontSize: 32,
                             fontWeight: FontWeight.w900,
                             color: isDark ? const Color(0xFFE7D2B8) : DollDexTheme.ink,
                             letterSpacing: 0,
@@ -127,9 +136,9 @@ class _SplashScreenState extends State<SplashScreen>
                               ? 'Online Bebek Koleksiyonu'
                               : 'Online Doll Collection',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             color: isDark
-                                ? const Color(0xFFE7D2B8).withOpacity(0.8)
+                                ? const Color(0xFFE7D2B8).withValues(alpha: 0.8)
                                 : DollDexTheme.cocoa,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0,

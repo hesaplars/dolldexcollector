@@ -129,7 +129,7 @@ Future<bool> showGothicConfirmDialog(
                   color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.28 : 0.14),
+                  color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.14),
                   blurRadius: 22,
                   offset: const Offset(0, 10),
                 ),

@@ -105,12 +105,12 @@ class _UsernameProfileLoaderState extends State<UsernameProfileLoader> {
                       color: Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       border: Border.all(
                         color: Theme.of(context)
                             .colorScheme
                             .primary
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         width: 2,
                       ),
                     ),

@@ -98,6 +98,12 @@
 
   <title>DollDex Collector</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Google AdSense — Replace ca-pub-XXXXXXXXXXXXXXXX with your Publisher ID after account approval -->
+  <!-- Uncomment below when AdSense account is approved:
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+     crossorigin="anonymous"></script>
+  -->
 </head>
 <body>
   <!--
@@ -108,6 +114,34 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <!-- Service Worker: Yeni versiyon deploy edilince anında devreye girer, eski cache görünmez -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        // Yeni service worker devreye girdi → sayfayı bir kez yenile
+        if (!sessionStorage.getItem('sw_reloaded')) {
+          sessionStorage.setItem('sw_reloaded', '1');
+          window.location.reload();
+        }
+      });
+      navigator.serviceWorker.getRegistration().then(function (reg) {
+        if (reg) {
+          reg.addEventListener('updatefound', function () {
+            var newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', function () {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Yeni versiyon hazır, eski controller var → anında geçiş
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

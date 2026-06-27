@@ -6,6 +6,7 @@ import '../../main.dart';
 import '../core/app_helpers.dart';
 import '../core/app_language.dart';
 import '../widgets/doll_widgets.dart';
+import '../ads/ad_banner_widget.dart';
 import '../notifications/notification_models.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 : 'No notifications in this category.',
             style: TextStyle(
               fontStyle: FontStyle.italic,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -59,7 +60,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 : DismissDirection.startToEnd,
             background: Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.centerLeft,
@@ -71,7 +72,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ? Container(
                     decoration: BoxDecoration(
                       color:
-                          Theme.of(context).colorScheme.error.withOpacity(0.2),
+                          Theme.of(context).colorScheme.error.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.centerRight,
@@ -101,7 +102,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       : Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(isDark ? 0.5 : 0.25),
+                          .withValues(alpha: isDark ? 0.5 : 0.25),
                   width: 1,
                 ),
               ),
@@ -129,11 +130,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ? Theme.of(context)
                             .colorScheme
                             .secondary
-                            .withOpacity(0.1)
+                            .withValues(alpha: 0.1)
                         : Theme.of(context)
                             .colorScheme
                             .primary
-                            .withOpacity(0.1),
+                            .withValues(alpha: 0.1),
                   ),
                   child: Icon(
                     notificationTypeIcon(notification.type),
@@ -154,7 +155,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ? Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.7)
+                            .withValues(alpha: 0.7)
                         : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -170,11 +171,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             ? Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.5)
+                                .withValues(alpha: 0.5)
                             : Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.8),
+                                .withValues(alpha: 0.8),
                       ),
                     ),
                     if (notification.createdAt != null) ...[
@@ -186,7 +187,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.4),
+                              .withValues(alpha: 0.4),
                         ),
                       ),
                     ],
@@ -287,7 +288,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.7),
+                                    .withValues(alpha: 0.7),
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
@@ -342,7 +343,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              const AdBannerWidget(),
+              const SizedBox(height: 8),
               if (_activeTab == 0)
                 _buildNotificationsList(
                   context,
@@ -381,7 +384,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: isActive
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
               : Theme.of(context).colorScheme.surface,
           border: Border.all(
             color: isActive
@@ -397,7 +400,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: isActive
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ),

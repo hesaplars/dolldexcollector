@@ -14,6 +14,7 @@ import '../moderation/report_models.dart';
 import '../social/social_models.dart';
 import '../users/user_models.dart';
 import '../widgets/doll_widgets.dart';
+import '../ads/ad_banner_widget.dart';
 import '../catalog/catalog_models.dart';
 import 'catalog_detail_screen.dart';
 import '../comments/comment_models.dart';
@@ -60,9 +61,20 @@ class _SocialScreenState extends State<SocialScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = authService.currentUser!;
+    final user = authService.currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+
+    if (user == null) {
+      return const SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(
+            child: GuestLoginBanner(),
+          ),
+        ),
+      );
+    }
 
     return SafeArea(
       child: Padding(
@@ -103,9 +115,12 @@ class ShareItemSelectionModal extends StatefulWidget {
 class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
   String _catalogSearchQuery = '';
   CatalogItemType? _catalogSelectedType;
+  int? _catalogSelectedYear;
 
   String _collectionSearchQuery = '';
-  String? _selectedCollectionStatus;
+  CollectionStatus? _selectedCollectionStatus;
+  CollectionCondition? _collectionSelectedCondition;
+  int? _collectionSelectedYear;
 
   late Future<List<CollectionEntry>> _collectionFuture;
 
@@ -149,7 +164,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
             TabBar(
               labelColor: Theme.of(context).colorScheme.primary,
               unselectedLabelColor:
-                  Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               indicatorColor: Theme.of(context).colorScheme.primary,
               labelStyle: const TextStyle(
                   fontFamily: 'Outfit',
@@ -160,6 +175,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                 Tab(text: tr ? 'Koleksiyon' : 'Collection'),
               ],
             ),
+            const AdBannerWidget(),
             Expanded(
               child: TabBarView(
                 children: [
@@ -195,74 +211,338 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
             final isPro =
                 snap.data?.isPro == true || snap.data?.role == 'admin';
 
+            // Get unique years from the catalog
+            final years = catalogEntriesNotifier.value
+                .map((e) => e.year)
+                .where((y) => y != null)
+                .cast<int>()
+                .toSet()
+                .toList();
+            years.sort((a, b) => b.compareTo(a));
+
             return Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr ? 'Katalog Filtrele' : 'Filter Catalog',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildFilterChipHelper(
-                        context: context,
-                        isSelected: _catalogSelectedType == null,
-                        label: tr ? 'Tümü' : 'All',
-                        onTap: () {
-                          setState(() {
-                            _catalogSelectedType = null;
-                          });
-                          Navigator.of(context).pop();
-                        },
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr ? 'Katalog Filtrele' : 'Filter Catalog',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      for (final type in CatalogItemType.values)
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr ? 'Öğe Türü' : 'Item Type',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
                         _buildFilterChipHelper(
                           context: context,
-                          isSelected: _catalogSelectedType == type,
-                          label: catalogTypeLabel(context, type),
+                          isSelected: _catalogSelectedType == null,
+                          label: tr ? 'Tümü' : 'All',
                           onTap: () {
-                            final isRestricted = type == CatalogItemType.set ||
-                                type == CatalogItemType.pet ||
-                                type == CatalogItemType.accessory;
-                            if (isRestricted && !isPro) {
-                              Navigator.of(context).pop();
-                              showGothicConfirmDialog(
-                                context,
-                                title: tr
-                                    ? 'Pro Filtre Özelliği'
-                                    : 'Pro Filter Feature',
-                                content: tr
-                                    ? 'Set, Pet ve Aksesuar filtreleri DollDex Pro üyelerine özeldir. Avantajları görmek ve Pro\'ya yükseltmek ister misiniz?'
-                                    : 'Set, Pet, and Accessory filters are exclusive to DollDex Pro members. Would you like to view the benefits and upgrade to Pro?',
-                                confirmText:
-                                    tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
-                                cancelText: tr ? 'Vazgeç' : 'Cancel',
-                              ).then((confirmed) {
-                                if (confirmed && context.mounted) {
-                                  showProSubscriptionModal(context);
-                                }
-                              });
-                            } else {
-                              setState(() {
-                                _catalogSelectedType = type;
-                              });
-                              Navigator.of(context).pop();
-                            }
+                            setState(() {
+                              _catalogSelectedType = null;
+                            });
+                            Navigator.of(context).pop();
                           },
                         ),
-                    ],
-                  ),
-                ],
+                        for (final type in CatalogItemType.values)
+                          _buildFilterChipHelper(
+                            context: context,
+                            isSelected: _catalogSelectedType == type,
+                            label: catalogTypeLabel(context, type),
+                            onTap: () {
+                              final isRestricted = type == CatalogItemType.set ||
+                                  type == CatalogItemType.pet ||
+                                  type == CatalogItemType.accessory;
+                              if (isRestricted && !isPro) {
+                                Navigator.of(context).pop();
+                                showProSubscriptionModal(context);
+                              } else {
+                                setState(() {
+                                  _catalogSelectedType = type;
+                                });
+                                Navigator.of(context).pop();
+                              }
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Text(
+                          tr ? 'Yıla Göre Filtrele' : 'Filter by Year',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (!isPro) ...[
+                          const SizedBox(width: 6),
+                          const Icon(Icons.lock_rounded, size: 14, color: Colors.orangeAccent),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildFilterChipHelper(
+                            context: context,
+                            isSelected: _catalogSelectedYear == null,
+                            label: tr ? 'Tümü' : 'All',
+                            onTap: () {
+                              if (!isPro) {
+                                Navigator.of(context).pop();
+                                showProSubscriptionModal(context);
+                                return;
+                              }
+                              setState(() {
+                                _catalogSelectedYear = null;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ...years.map((yr) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: _buildFilterChipHelper(
+                                context: context,
+                                isSelected: _catalogSelectedYear == yr,
+                                label: yr.toString(),
+                                onTap: () {
+                                  if (!isPro) {
+                                    Navigator.of(context).pop();
+                                    showProSubscriptionModal(context);
+                                    return;
+                                  }
+                                  setState(() {
+                                    _catalogSelectedYear = yr;
+                                  });
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showCollectionFilterSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        side: BorderSide(color: Theme.of(context).dividerColor, width: 1.0),
+      ),
+      builder: (context) {
+        final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+        final currentUser = authService.currentUser;
+
+        return StreamBuilder<ProfileSetupStatus>(
+          stream: currentUser != null
+              ? profileSetupRepository.watch(currentUser.uid)
+              : const Stream.empty(),
+          builder: (context, snap) {
+            final isPro =
+                snap.data?.isPro == true || snap.data?.role == 'admin';
+
+            // Get unique years from the catalog
+            final years = catalogEntriesNotifier.value
+                .map((e) => e.year)
+                .where((y) => y != null)
+                .cast<int>()
+                .toSet()
+                .toList();
+            years.sort((a, b) => b.compareTo(a));
+
+            return Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr ? 'Koleksiyon Filtrele' : 'Filter Collection',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr ? 'Koleksiyon Durumu' : 'Collection Status',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildFilterChipHelper(
+                          context: context,
+                          isSelected: _selectedCollectionStatus == null,
+                          label: tr ? 'Tümü' : 'All',
+                          onTap: () {
+                            setState(() {
+                              _selectedCollectionStatus = null;
+                            });
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        for (final status in CollectionStatus.values)
+                          _buildFilterChipHelper(
+                            context: context,
+                            isSelected: _selectedCollectionStatus == status,
+                            label: collectionStatusLabel(context, status),
+                            onTap: () {
+                              setState(() {
+                                _selectedCollectionStatus = status;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr ? 'Parça Durumu' : 'Item Condition',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildFilterChipHelper(
+                          context: context,
+                          isSelected: _collectionSelectedCondition == null,
+                          label: tr ? 'Tümü' : 'All',
+                          onTap: () {
+                            setState(() {
+                              _collectionSelectedCondition = null;
+                            });
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        for (final condition in CollectionCondition.values)
+                          _buildFilterChipHelper(
+                            context: context,
+                            isSelected: _collectionSelectedCondition == condition,
+                            label: conditionLabel(context, condition),
+                            onTap: () {
+                              setState(() {
+                                _collectionSelectedCondition = condition;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Text(
+                          tr ? 'Yıla Göre Filtrele' : 'Filter by Year',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (!isPro) ...[
+                          const SizedBox(width: 6),
+                          const Icon(Icons.lock_rounded, size: 14, color: Colors.orangeAccent),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildFilterChipHelper(
+                            context: context,
+                            isSelected: _collectionSelectedYear == null,
+                            label: tr ? 'Tümü' : 'All',
+                            onTap: () {
+                              if (!isPro) {
+                                Navigator.of(context).pop();
+                                showProSubscriptionModal(context);
+                                return;
+                              }
+                              setState(() {
+                                _collectionSelectedYear = null;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ...years.map((yr) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: _buildFilterChipHelper(
+                                context: context,
+                                isSelected: _collectionSelectedYear == yr,
+                                label: yr.toString(),
+                                onTap: () {
+                                  if (!isPro) {
+                                    Navigator.of(context).pop();
+                                    showProSubscriptionModal(context);
+                                    return;
+                                  }
+                                  setState(() {
+                                    _collectionSelectedYear = yr;
+                                  });
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -287,7 +567,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? finalColor.withOpacity(0.15)
+              ? finalColor.withValues(alpha: 0.15)
               : Theme.of(context).colorScheme.surface,
           border: Border.all(
             color: isSelected ? finalColor : Theme.of(context).dividerColor,
@@ -297,7 +577,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: finalColor.withOpacity(0.25),
+                    color: finalColor.withValues(alpha: 0.25),
                     blurRadius: 6,
                     spreadRadius: 0.5,
                   )
@@ -309,7 +589,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
           style: TextStyle(
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -323,7 +603,10 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
       catalogEntriesNotifier.value,
       _catalogSearchQuery,
       _catalogSelectedType,
+      year: _catalogSelectedYear,
     );
+
+    final hasActiveFilter = _catalogSelectedType != null || _catalogSelectedYear != null;
 
     return Column(
       children: [
@@ -368,9 +651,9 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _catalogSelectedType == null
-                            ? (tr ? 'Hepsi' : 'All')
-                            : catalogTypeLabel(context, _catalogSelectedType!),
+                        hasActiveFilter
+                            ? (tr ? 'Aktif' : 'Active')
+                            : (tr ? 'Hepsi' : 'All'),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -397,6 +680,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
               : ListView.builder(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  cacheExtent: 800,
                   itemCount: filteredCatalog.length,
                   itemBuilder: (context, index) {
                     final entry = filteredCatalog[index];
@@ -513,76 +797,79 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                       .contains(_collectionSearchQuery.toLowerCase()) ??
                   false);
           final matchesStatus = _selectedCollectionStatus == null ||
-              entry.status.name == _selectedCollectionStatus;
+              entry.status == _selectedCollectionStatus;
+          final matchesCondition = _collectionSelectedCondition == null ||
+              entry.condition == _collectionSelectedCondition;
+          final matchesYear = _collectionSelectedYear == null ||
+              catalogItem.year == _collectionSelectedYear;
 
-          return matchesSearch && matchesStatus;
+          return matchesSearch && matchesStatus && matchesCondition && matchesYear;
         }).toList();
 
-        final statuses = ['owned', 'wanted', 'trade', 'selling'];
+        final hasActiveCollectionFilter = _selectedCollectionStatus != null ||
+            _collectionSelectedCondition != null ||
+            _collectionSelectedYear != null;
 
         return Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-              child: TextField(
-                onChanged: (val) =>
-                    setState(() => _collectionSearchQuery = val),
-                style: const TextStyle(fontSize: 13, fontFamily: 'Outfit'),
-                decoration: InputDecoration(
-                  hintText: tr
-                      ? 'Koleksiyonunda ara...'
-                      : 'Search your collection...',
-                  prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 38,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: statuses.length + 1,
-                itemBuilder: (context, index) {
-                  final isAll = index == 0;
-                  final statusName = isAll ? null : statuses[index - 1];
-                  final statusLabel = isAll
-                      ? (tr ? 'Tümü' : 'All')
-                      : getStatusLabel(context, statusName!);
-                  final isSelected = isAll
-                      ? (_selectedCollectionStatus == null)
-                      : (_selectedCollectionStatus == statusName);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text(
-                        statusLabel,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.7),
-                        ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      onChanged: (val) =>
+                          setState(() => _collectionSearchQuery = val),
+                      style: const TextStyle(fontSize: 13, fontFamily: 'Outfit'),
+                      decoration: InputDecoration(
+                        hintText: tr
+                            ? 'Koleksiyonunda ara...'
+                            : 'Search your collection...',
+                        prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
-                      selected: isSelected,
-                      selectedColor: Theme.of(context).colorScheme.primary,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.secondaryContainer,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedCollectionStatus = isAll ? null : statusName;
-                        });
-                      },
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _showCollectionFilterSheet(context),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      height: 38,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Theme.of(context).dividerColor,
+                          width: 1.0,
+                        ),
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.tune_rounded,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            hasActiveCollectionFilter
+                                ? (tr ? 'Aktif' : 'Active')
+                                : (tr ? 'Hepsi' : 'All'),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 6),
@@ -600,6 +887,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
+                      cacheExtent: 600,
                       itemCount: filteredCollection.length,
                       itemBuilder: (context, pairIndex) {
                         final pair = filteredCollection[pairIndex];
@@ -664,7 +952,7 @@ class ShareItemSelectionModalState extends State<ShareItemSelectionModal> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .primary
-                                        .withOpacity(0.15),
+                                        .withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -770,11 +1058,11 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
       constraints: const BoxConstraints(maxWidth: 240),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.black.withOpacity(0.4)
-            : Colors.white.withOpacity(0.6),
+            ? Colors.black.withValues(alpha: 0.4)
+            : Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           width: 1.0,
         ),
       ),
@@ -862,13 +1150,13 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.15),
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color: Theme.of(context)
                                     .colorScheme
                                     .primary
-                                    .withOpacity(0.4),
+                                    .withValues(alpha: 0.4),
                                 width: 0.5,
                               ),
                             ),
@@ -951,12 +1239,15 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                   return ListView.builder(
                     key: const PageStorageKey('global_chat_scroll'),
                     reverse: true,
+                    cacheExtent: 500,
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final message = messages[index];
                       final isMe = message.senderId == widget.userId;
-                      return _buildGlobalMsgBubble(context, message, isMe);
+                      return RepaintBoundary(
+                        child: _buildGlobalMsgBubble(context, message, isMe),
+                      );
                     },
                   );
                 },
@@ -973,6 +1264,7 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     showModalBottomSheet<void>(
                       context: context,
                       isScrollControlled: true,
+    useRootNavigator: true,
                       showDragHandle: true,
                       backgroundColor: Theme.of(context).colorScheme.surface,
                       shape: RoundedRectangleBorder(
@@ -1017,7 +1309,7 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                           color: Theme.of(context)
                               .colorScheme
                               .primary
-                              .withOpacity(0.4),
+                              .withValues(alpha: 0.4),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -1076,10 +1368,10 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(16),
-                    topRight: const Radius.circular(16),
-                    bottomLeft: Radius.circular(isMe ? 16 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 16),
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isMe ? 18 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 18),
                   ),
                   color: isMe
                       ? Theme.of(context).colorScheme.primary
@@ -1159,11 +1451,11 @@ class _GlobalChatCardState extends State<_GlobalChatCard> {
                                 ? Theme.of(context)
                                     .colorScheme
                                     .onPrimary
-                                    .withOpacity(0.7)
+                                    .withValues(alpha: 0.7)
                                 : Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -1301,7 +1593,7 @@ class _PendingRequestsCard extends StatelessWidget {
                               backgroundColor: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.15),
+                                  .withValues(alpha: 0.15),
                               foregroundColor:
                                   Theme.of(context).colorScheme.primary,
                               side: BorderSide(

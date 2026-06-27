@@ -7,6 +7,7 @@ import '../../main.dart';
 import '../catalog/catalog_models.dart';
 import '../core/app_helpers.dart';
 import '../core/app_language.dart';
+import '../users/profile_setup_repository.dart';
 import '../widgets/doll_widgets.dart';
 
 class CollectionScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class CollectionScreen extends StatefulWidget {
 class _CollectionScreenState extends State<CollectionScreen> {
   CollectionStatus? _filter;
   CollectionCondition? _conditionFilter;
+  int? _yearFilter;
   String _query = '';
   final Set<String> _selectedEntryIds = {};
   bool _isSelectionMode = false;
@@ -120,9 +122,15 @@ class _CollectionScreenState extends State<CollectionScreen> {
               : visibleEntries
                   .where((entry) => entry.condition == _conditionFilter)
                   .toList(growable: false);
-          final filteredEntries = _query.isEmpty
+          final yearEntries = _yearFilter == null
               ? condEntries
               : condEntries.where((entry) {
+                  final item = findCatalogEntry(entry.itemId);
+                  return item.year == _yearFilter;
+                }).toList(growable: false);
+          final filteredEntries = _query.isEmpty
+              ? yearEntries
+              : yearEntries.where((entry) {
                   final item = findCatalogEntry(entry.itemId);
                   final name = entryName(context, item).toLowerCase();
                   return name.contains(_query.toLowerCase());
@@ -149,7 +157,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                     border: Border.all(color: DollDexTheme.line, width: 1.2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.10),
+                        color: Colors.black.withValues(alpha: 0.10),
                         blurRadius: 14,
                         offset: const Offset(0, 6),
                       ),
@@ -202,6 +210,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                 CollectionSearchPanel(
                   selectedStatus: _filter,
                   selectedCondition: _conditionFilter,
+                  selectedYear: _yearFilter,
                   onQueryChanged: (val) {
                     setState(() {
                       _query = val;
@@ -215,6 +224,11 @@ class _CollectionScreenState extends State<CollectionScreen> {
                   onConditionChanged: (val) {
                     setState(() {
                       _conditionFilter = val;
+                    });
+                  },
+                  onYearChanged: (val) {
+                    setState(() {
+                      _yearFilter = val;
                     });
                   },
                 ),
@@ -250,17 +264,21 @@ class CollectionSearchPanel extends StatelessWidget {
   const CollectionSearchPanel({
     required this.selectedStatus,
     required this.selectedCondition,
+    required this.selectedYear,
     required this.onQueryChanged,
     required this.onStatusChanged,
     required this.onConditionChanged,
+    required this.onYearChanged,
     super.key,
   });
 
   final CollectionStatus? selectedStatus;
   final CollectionCondition? selectedCondition;
+  final int? selectedYear;
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<CollectionStatus?> onStatusChanged;
   final ValueChanged<CollectionCondition?> onConditionChanged;
+  final ValueChanged<int?> onYearChanged;
 
   Widget _buildFilterChip({
     required BuildContext context,
@@ -274,24 +292,28 @@ class CollectionSearchPanel extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      splashColor: DollDexTheme.teal.withValues(alpha: 0.08),
+      highlightColor: DollDexTheme.teal.withValues(alpha: 0.04),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? finalColor.withOpacity(0.15)
+              ? finalColor.withValues(alpha: 0.15)
               : (isDark ? DollDexTheme.darkPanel : DollDexTheme.panel),
           border: Border.all(
             color: isSelected
                 ? finalColor
                 : (isDark ? DollDexTheme.darkLine : DollDexTheme.line),
-            width: 1.2,
+            width: isSelected ? 1.5 : 1.0,
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: finalColor.withOpacity(0.25),
-                    blurRadius: 6,
+                    color: finalColor.withValues(alpha: 0.20),
+                    blurRadius: 4,
                     spreadRadius: 0.5,
                   )
                 ]
@@ -303,7 +325,7 @@ class CollectionSearchPanel extends StatelessWidget {
             color: isSelected
                 ? (isDark ? Colors.white : DollDexTheme.teal)
                 : (isDark ? Colors.white60 : DollDexTheme.cocoa),
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -317,17 +339,18 @@ class CollectionSearchPanel extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
         color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+            color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
+            width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.22 : 0.09),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -379,7 +402,7 @@ class CollectionSearchPanel extends StatelessWidget {
                   buildNeonIcon(context, Icons.tune_rounded, size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    selectedStatus == null && selectedCondition == null
+                    selectedStatus == null && selectedCondition == null && selectedYear == null
                         ? (tr ? 'Filtre' : 'Filter')
                         : (tr ? 'Aktif' : 'Active'),
                     style: TextStyle(
@@ -411,94 +434,198 @@ class CollectionSearchPanel extends StatelessWidget {
       ),
       builder: (context) {
         final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tr ? 'Koleksiyon Filtrele' : 'Filter Collection',
-                style: TextStyle(
-                  color: isDark ? Colors.white : DollDexTheme.ink,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+        final currentUser = authService.currentUser;
+
+        return StreamBuilder<ProfileSetupStatus>(
+          stream: currentUser != null
+              ? profileSetupRepository.watch(currentUser.uid)
+              : const Stream.empty(),
+          builder: (context, snap) {
+            final isPro = snap.data?.isPro == true || snap.data?.role == 'admin';
+
+            // Get all unique years in the system catalog
+            final years = catalogEntriesNotifier.value
+                .map((e) => e.year)
+                .where((y) => y != null)
+                .cast<int>()
+                .toSet()
+                .toList();
+            years.sort((a, b) => b.compareTo(a));
+
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
+                borderRadius: BorderRadius.circular(28),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr ? 'Koleksiyon Filtrele' : 'Filter Collection',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : DollDexTheme.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr ? 'Koleksiyon Durumu' : 'Collection Status',
+                      style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildFilterChip(
+                          context: context,
+                          isSelected: selectedStatus == null,
+                          label: t(context, 'all'),
+                          onTap: () {
+                            onStatusChanged(null);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        for (final status in CollectionStatus.values)
+                          _buildFilterChip(
+                            context: context,
+                            isSelected: selectedStatus == status,
+                            label: collectionStatusLabel(context, status),
+                            onTap: () {
+                              onStatusChanged(status);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr ? 'Parça Durumu' : 'Item Condition',
+                      style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildFilterChip(
+                          context: context,
+                          isSelected: selectedCondition == null,
+                          label: t(context, 'allConditions'),
+                          onTap: () {
+                            onConditionChanged(null);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        for (final condition in CollectionCondition.values)
+                          _buildFilterChip(
+                            context: context,
+                            isSelected: selectedCondition == condition,
+                            label: conditionLabel(context, condition),
+                            onTap: () {
+                              onConditionChanged(condition);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Text(
+                          tr ? 'Yıla Göre Filtrele' : 'Filter by Year',
+                          style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black54,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        if (!isPro) ...[
+                          const SizedBox(width: 6),
+                          const Icon(Icons.lock_rounded, size: 14, color: Colors.orangeAccent),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildFilterChip(
+                            context: context,
+                            isSelected: selectedYear == null,
+                            label: t(context, 'all'),
+                            onTap: () {
+                              if (!isPro) {
+                                Navigator.of(context).pop();
+                                showGothicConfirmDialog(
+                                  context,
+                                  title: tr ? 'Pro Yıl Filtresi' : 'Pro Year Filter',
+                                  content: tr
+                                      ? 'Yıla göre filtreleme yapmak DollDex Pro üyelerine özeldir. Pro\'ya yükseltmek ister misiniz?'
+                                      : 'Filtering by year is exclusive to DollDex Pro members. Would you like to upgrade to Pro?',
+                                  confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                  cancelText: tr ? 'Vazgeç' : 'Cancel',
+                                ).then((confirmed) {
+                                  if (confirmed && context.mounted) {
+                                    showProSubscriptionModal(context);
+                                  }
+                                });
+                                return;
+                              }
+                              onYearChanged(null);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ...years.map((yr) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: _buildFilterChip(
+                                context: context,
+                                isSelected: selectedYear == yr,
+                                label: yr.toString(),
+                                onTap: () {
+                                  if (!isPro) {
+                                    Navigator.of(context).pop();
+                                    showGothicConfirmDialog(
+                                      context,
+                                      title: tr ? 'Pro Yıl Filtresi' : 'Pro Year Filter',
+                                      content: tr
+                                          ? 'Yıla göre filtreleme yapmak DollDex Pro üyelerine özeldir. Pro\'ya yükseltmek ister misiniz?'
+                                          : 'Filtering by year is exclusive to DollDex Pro members. Would you like to upgrade to Pro?',
+                                      confirmText: tr ? 'Pro\'ya Geç' : 'Upgrade to Pro',
+                                      cancelText: tr ? 'Vazgeç' : 'Cancel',
+                                    ).then((confirmed) {
+                                      if (confirmed && context.mounted) {
+                                        showProSubscriptionModal(context);
+                                      }
+                                    });
+                                    return;
+                                  }
+                                  onYearChanged(yr);
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                tr ? 'Koleksiyon Durumu' : 'Collection Status',
-                style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black54,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildFilterChip(
-                    context: context,
-                    isSelected: selectedStatus == null,
-                    label: t(context, 'all'),
-                    onTap: () {
-                      onStatusChanged(null);
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  for (final status in CollectionStatus.values)
-                    _buildFilterChip(
-                      context: context,
-                      isSelected: selectedStatus == status,
-                      label: collectionStatusLabel(context, status),
-                      onTap: () {
-                        onStatusChanged(status);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                tr ? 'Parça Durumu' : 'Item Condition',
-                style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black54,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildFilterChip(
-                    context: context,
-                    isSelected: selectedCondition == null,
-                    label: t(context, 'allConditions'),
-                    onTap: () {
-                      onConditionChanged(null);
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  for (final condition in CollectionCondition.values)
-                    _buildFilterChip(
-                      context: context,
-                      isSelected: selectedCondition == condition,
-                      label: conditionLabel(context, condition),
-                      onTap: () {
-                        onConditionChanged(condition);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                ],
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -557,13 +684,15 @@ class CollectionEntryList extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const columns = 4;
+        final w = constraints.maxWidth;
+        final columns = w >= 900 ? 7 : w >= 550 ? 5 : 4;
 
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          cacheExtent: 1000,
           itemCount: entries.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
             mainAxisSpacing: 6,
             crossAxisSpacing: 6,
@@ -572,20 +701,22 @@ class CollectionEntryList extends StatelessWidget {
           itemBuilder: (context, index) {
             final entry = entries[index];
             final isSelected = selectedIds.contains(entry.id);
-            return CollectionGridCard(
-              entry: entry,
-              isSelected: isSelected,
-              isSelectionMode: isSelectionMode,
-              onTap: () {
-                if (isSelectionMode) {
+            return RepaintBoundary(
+              child: CollectionGridCard(
+                entry: entry,
+                isSelected: isSelected,
+                isSelectionMode: isSelectionMode,
+                onTap: () {
+                  if (isSelectionMode) {
+                    onToggleSelect(entry.id);
+                  } else {
+                    context.go('/c/${entry.id}?from=collection');
+                  }
+                },
+                onLongPress: () {
                   onToggleSelect(entry.id);
-                } else {
-                  context.go('/c/${entry.id}?from=collection');
-                }
-              },
-              onLongPress: () {
-                onToggleSelect(entry.id);
-              },
+                },
+              ),
             );
           },
         );
@@ -614,27 +745,26 @@ class CollectionGridCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final item = findCatalogEntry(entry.itemId);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isPng = item.primaryImageUrl.toLowerCase().contains('.png');
 
-    return Card(
-      color: isPng ? Colors.transparent : null,
-      elevation: isPng ? 0 : null,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : (isPng ? Colors.transparent : Theme.of(context).dividerColor),
-          width: isSelected ? 3.0 : (isPng ? 0.0 : 1.5),
+    return PressableButton(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      scaleFactor: 0.96,
+      borderRadius: 14,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).dividerColor,
+            width: isSelected ? 2.5 : 1.0,
+          ),
         ),
-      ),
-      child: Stack(
-        children: [
-          InkWell(
-            onTap: onTap,
-            onLongPress: onLongPress,
-            child: Column(
+        child: Stack(
+          children: [
+            Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
@@ -712,19 +842,37 @@ class CollectionGridCard extends StatelessWidget {
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 1),
+                                horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .secondaryContainer,
-                              borderRadius: BorderRadius.circular(4),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.80),
+                                  Theme.of(context).colorScheme.primary,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.30),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
                               'x${entry.quantity}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
+                                color: Colors.white,
                                 fontFamily: 'Outfit',
                               ),
                             ),
@@ -736,11 +884,12 @@ class CollectionGridCard extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
 
   Widget _buildStatusIcon(BuildContext context, CollectionStatus status) {
     final icon = switch (status) {
@@ -771,7 +920,24 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color ?? (isDark ? const Color(0xFF1E152C) : Colors.white),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? const Color(0xFF2A1F3D) : const Color(0xFFEEE8F0),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: isDark ? 0.12 : 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
         child: Column(
@@ -779,15 +945,20 @@ class StatCard extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
                     color: DollDexTheme.teal,
                   ),
             ),
+            const SizedBox(height: 2),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 10,
+              ),
             ),
           ],
         ),
@@ -850,8 +1021,13 @@ Widget _buildCollectionCategoryTab(
 
   return GridView.builder(
     padding: const EdgeInsets.all(3),
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 4,
+    cacheExtent: 1000,
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: MediaQuery.of(context).size.width >= 900
+          ? 7
+          : MediaQuery.of(context).size.width >= 550
+              ? 5
+              : 4,
       crossAxisSpacing: 5,
       mainAxisSpacing: 5,
       childAspectRatio: 0.58,
@@ -860,7 +1036,6 @@ Widget _buildCollectionCategoryTab(
     itemBuilder: (context, index) {
       final entry = categoryEntries[index];
       final item = findCatalogEntry(entry.itemId);
-      final isPng = item.primaryImageUrl.toLowerCase().contains('.png');
 
       void handleTap() {
         if (from == 'public_profile' && userId != null) {
@@ -870,67 +1045,59 @@ Widget _buildCollectionCategoryTab(
         }
       }
 
-      return Card(
-        color: isPng ? Colors.transparent : null,
-        elevation: isPng ? 0 : 2,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
+      return RepaintBoundary(
+        child: PressableButton(
           onTap: handleTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: DollImage(
-                        imageUrl: item.primaryImageUrl,
-                        label: entryName(context, item),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: handleTap,
+          scaleFactor: 0.96,
+          borderRadius: 12,
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: DollImage(
+                    imageUrl: item.primaryImageUrl,
+                    label: entryName(context, item),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entryName(context, item),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          height: 1.05,
+                          fontFamily: 'Outfit',
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entryName(context, item),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        height: 1.05,
-                        fontFamily: 'Outfit',
+                      const SizedBox(height: 2),
+                      Text(
+                        '${tr ? 'Adet' : 'Qty'}: ${entry.quantity}',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontFamily: 'Outfit',
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${tr ? 'Adet' : 'Qty'}: ${entry.quantity}',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontFamily: 'Outfit',
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
     },
   );
 }
+

@@ -266,7 +266,7 @@ class SocialFeedTab extends StatelessWidget {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withOpacity(0.4),
+                                                .withValues(alpha: 0.4),
                                           ),
                                         ),
                                       ],
@@ -434,7 +434,7 @@ class CommentActivityCard extends StatelessWidget {
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
                   color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 2),
@@ -443,7 +443,7 @@ class CommentActivityCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
               ),
             ],

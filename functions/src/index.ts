@@ -269,7 +269,7 @@ export const onUnlockRequestCreated = onDocumentCreated("unlockRequests/{request
         throw new Error("User document does not exist.");
       }
       const userData = userSnap.data() || {};
-      const coins = userData.coins ?? 20;
+      const coins = userData.coins ?? 10;
 
       let cost = 0;
       let updateField = "";
@@ -346,7 +346,7 @@ export const onDailyClaimRequestCreated = onDocumentCreated("dailyClaimRequests/
         throw new Error("User document does not exist.");
       }
       const userData = userSnap.data() || {};
-      const coins = userData.coins ?? 20;
+      const coins = userData.coins ?? 10;
 
       const now = new Date();
       const todayStr = now.toISOString().substring(0, 10);
@@ -371,8 +371,62 @@ export const onDailyClaimRequestCreated = onDocumentCreated("dailyClaimRequests/
       }
 
       transaction.update(userRef, {
-        coins: coins + 5,
+        coins: coins + 2,
         lastDailyClaim: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(requestRef, {
+        status: "success",
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    });
+  } catch (e: any) {
+    await requestRef.update({
+      status: "error",
+      errorReason: e.message || "Unknown error",
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+});
+
+export const onRewardedAdRequestCreated = onDocumentCreated("rewardedAdRequests/{requestId}", async (event) => {
+  const requestRef = event.data?.ref;
+  if (!requestRef) return;
+  const requestData = event.data?.data();
+  if (!requestData || requestData.status !== "pending") return;
+
+  const userId = requestData.userId;
+  const coinsToAdd: number = requestData.coinsAmount ?? 10;
+  const userRef = db.collection("users").doc(userId);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const userSnap = await transaction.get(userRef);
+      if (!userSnap.exists) {
+        throw new Error("User document does not exist.");
+      }
+      const userData = userSnap.data() || {};
+      const coins = userData.coins ?? 10;
+
+      // Günlük max 5 kez kontrol
+      const now = new Date();
+      const todayStr = now.toISOString().substring(0, 10);
+      const lastRewardedDate: string = userData.lastRewardedAdDate || "";
+      let dailyRewardedCount: number = userData.dailyRewardedAdCount ?? 0;
+
+      if (lastRewardedDate !== todayStr) {
+        dailyRewardedCount = 0; // Yeni gün, sayacı sıfırla
+      }
+
+      if (dailyRewardedCount >= 5) {
+        throw new Error("Daily rewarded ad limit reached.");
+      }
+
+      transaction.update(userRef, {
+        coins: coins + coinsToAdd,
+        lastRewardedAdDate: todayStr,
+        dailyRewardedAdCount: dailyRewardedCount + 1,
         updatedAt: FieldValue.serverTimestamp(),
       });
 
@@ -411,7 +465,7 @@ export const onCoinPurchaseRequestCreated = onDocumentCreated("coinPurchaseReque
         throw new Error("User document does not exist.");
       }
       const userData = userSnap.data() || {};
-      const coins = userData.coins ?? 20;
+      const coins = userData.coins ?? 10;
 
       transaction.update(userRef, {
         coins: coins + coinsAmount,
@@ -454,7 +508,7 @@ export const onCommentCreated = onDocumentCreated("comments/{commentId}", async 
         if (!userSnap.exists) return;
 
         const userData = userSnap.data() || {};
-        const coins = userData.coins ?? 20;
+        const coins = userData.coins ?? 10;
         const lastClaimDate = userData.lastCommentCoinsClaimDate || "";
         let dailyCoinsClaimed = userData.dailyCommentCoinsClaimed ?? 0;
 

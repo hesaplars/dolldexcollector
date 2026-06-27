@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -177,7 +178,7 @@ Future<void> main() async {
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(8),
                     border:
-                        Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                        Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     details.stack.toString(),
@@ -261,6 +262,7 @@ class DollDexApp extends StatelessWidget {
                 themeMode:
                     themeKey == 'goth_light' ? ThemeMode.light : ThemeMode.dark,
                 routerConfig: _router,
+                scrollBehavior: const _SmoothScrollBehavior(),
                 builder: (context, child) {
                   return ValueListenableBuilder<String?>(
                     valueListenable: appErrorNotifier,
@@ -321,7 +323,7 @@ class DollDexApp extends StatelessWidget {
                                               BorderRadius.circular(8),
                                           border: Border.all(
                                               color: Colors.redAccent
-                                                  .withOpacity(0.3)),
+                                                  .withValues(alpha: 0.3)),
                                         ),
                                         child: Text(
                                           error,
@@ -376,6 +378,33 @@ class DollDexApp extends StatelessWidget {
   }
 }
 
+/// Tüm ListView/GridView'lerde yağ gibi akıcı scroll fizik
+class _SmoothScrollBehavior extends ScrollBehavior {
+  const _SmoothScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    );
+  }
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,      // Web'de fare ile scroll
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,   // Laptop trackpad
+  };
+
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    // Eski Android "glow" efektini kaldır — modern görünüm
+    return child;
+  }
+}
+
 final _router = GoRouter(
   initialLocation: '/splash',
   routes: [
@@ -388,13 +417,33 @@ final _router = GoRouter(
       routes: [
         GoRoute(
           path: '/consent',
-          builder: (context, state) => const LegalConsentScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const LegalConsentScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final query = state.uri.queryParameters['q'];
-            return CatalogScreen(initialQuery: query);
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: CatalogScreen(initialQuery: query),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 160),
+            );
           },
         ),
         GoRoute(
@@ -406,83 +455,223 @@ final _router = GoRouter(
         ),
         GoRoute(
           path: '/i/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id'] ?? '';
-            return CatalogDetailScreen(
-              item: _findCatalogEntry(id),
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: CatalogDetailScreen(
+                item: _findCatalogEntry(id),
+              ),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 160),
             );
           },
         ),
         GoRoute(
           path: '/collection',
-          builder: (context, state) => const CollectionScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const CollectionScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/profile',
-          builder: (context, state) => authService.currentUser == null
-              ? const LegalConsentScreen()
-              : const ProfileScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: authService.currentUser == null
+                ? const LegalConsentScreen()
+                : const ProfileScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/settings',
-          builder: (context, state) => const SettingsScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const SettingsScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/pro',
-          builder: (context, state) => const SettingsScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const SettingsScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/admin',
-          builder: (context, state) => const AdminScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const AdminScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/notifications',
-          builder: (context, state) => const NotificationsScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const NotificationsScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/announcement',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final title = state.uri.queryParameters['title'] ?? 'Duyuru';
             final body = state.uri.queryParameters['body'] ?? '';
-            return AnnouncementScreen(title: title, body: body);
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: AnnouncementScreen(title: title, body: body),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 160),
+            );
           },
         ),
         GoRoute(
           path: '/social',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             if (authService.currentUser == null) {
-              return const LegalConsentScreen();
+              return CustomTransitionPage(
+                key: state.pageKey,
+                child: const LegalConsentScreen(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    child: child,
+                  );
+                },
+                transitionDuration: const Duration(milliseconds: 160),
+              );
             }
             final chatUserId = state.uri.queryParameters['chatUserId'];
-            return SocialScreen(chatUserId: chatUserId);
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: SocialScreen(chatUserId: chatUserId),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 160),
+            );
           },
         ),
         GoRoute(
           path: '/messages',
-          builder: (context, state) => authService.currentUser == null
-              ? const LegalConsentScreen()
-              : const MessagesScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: authService.currentUser == null
+                ? const LegalConsentScreen()
+                : const MessagesScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/users/:id',
-          builder: (context, state) {
-            return PublicProfileScreen(
-              userId: state.pathParameters['id'] ?? '',
+          pageBuilder: (context, state) {
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: PublicProfileScreen(
+                userId: state.pathParameters['id'] ?? '',
+              ),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 160),
             );
           },
         ),
         GoRoute(
           path: '/u/:username',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final username = state.pathParameters['username'] ?? '';
-            return UsernameProfileLoader(username: username);
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: UsernameProfileLoader(username: username),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 160),
+            );
           },
         ),
         GoRoute(
           path: '/user_search',
-          builder: (context, state) => authService.currentUser == null
-              ? const LegalConsentScreen()
-              : const UserSearchScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: authService.currentUser == null
+                ? const LegalConsentScreen()
+                : const UserSearchScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
         GoRoute(
           path: '/collection/entry/:id',
@@ -493,33 +682,74 @@ final _router = GoRouter(
         ),
         GoRoute(
           path: '/c/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id'] ?? '';
-            return UserCollectionEntryDetailScreen(entryId: id);
+            return CustomTransitionPage(
+              key: state.pageKey,
+              child: UserCollectionEntryDetailScreen(entryId: id),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 160),
+            );
           },
         ),
         GoRoute(
           path: '/privacy',
-          builder: (context, state) => LegalScreen(
-            title: t(context, 'privacyPolicy'),
-            body: t(context, 'privacyBody'),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: LegalScreen(
+              title: t(context, 'privacyPolicy'),
+              body: t(context, 'privacyBody'),
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
           ),
         ),
         GoRoute(
           path: '/terms',
-          builder: (context, state) => LegalScreen(
-            title: t(context, 'termsOfUse'),
-            body: t(context, 'termsBody'),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: LegalScreen(
+              title: t(context, 'termsOfUse'),
+              body: t(context, 'termsBody'),
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
           ),
         ),
         GoRoute(
           path: '/delete-account',
-          builder: (context, state) => const AccountDeletionScreen(),
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const AccountDeletionScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 160),
+          ),
         ),
       ],
     ),
   ],
 );
+
 
 Widget _buildAvatarHelper(
     BuildContext context, String avatarId, String frameColor,
@@ -860,7 +1090,7 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.purple.withOpacity(0.3),
+                                color: Colors.purple.withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 spreadRadius: 2,
                               ),
@@ -1307,9 +1537,9 @@ void _showAvatarStudioModal(BuildContext context, String userId) {
                                   horizontal: 6, vertical: 4),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? badge.color.withOpacity(0.15)
+                                    ? badge.color.withValues(alpha: 0.15)
                                     : (isUnlocked
-                                        ? Colors.grey.shade900.withOpacity(0.5)
+                                        ? Colors.grey.shade900.withValues(alpha: 0.5)
                                         : Colors.black45),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
@@ -1363,6 +1593,11 @@ void _showProSubscriptionModal(BuildContext context) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
+    useSafeArea: true,
+    useRootNavigator: true,
+    constraints: BoxConstraints(
+      maxWidth: MediaQuery.of(context).size.width >= 600 ? 560 : double.infinity,
+    ),
     builder: (context) {
       final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
       final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1404,28 +1639,40 @@ void _showProSubscriptionModal(BuildContext context) {
                       const SizedBox(height: 10),
                       FeatureLine(
                           text: tr
-                              ? 'Reklamsız Koyu Gotik Deneyim'
-                              : 'Ad-Free Dark Gothic Experience'),
+                              ? 'Sıfır Reklam: Hem uygulamada hem de web sitesinde reklamsız deneyim'
+                              : 'Ad-Free Experience: Zero ads inside the app and website'),
                       FeatureLine(
                           text: tr
-                              ? '12 Özel Gotik Bebek Avatarı'
-                              : '12 Exclusive Gothic Doll Avatars'),
+                              ? 'Sınırsız Koleksiyon Kaydı: Kayıt sınırı tamamen kalkar'
+                              : 'Unlimited Collection Entries: Removes the standard entry limit'),
                       FeatureLine(
                           text: tr
-                              ? '12 Premium Gotik Profil Kapak Fotoğrafı'
-                              : '12 Premium Gothic Cover Photos'),
+                              ? 'Detaylı Arama Erişimi: Arama sonuçlarındaki bulanıklık (blur) kalkar'
+                              : 'Full Search Access: Removes search results blur'),
                       FeatureLine(
                           text: tr
-                              ? '12 Gotik Profil Çerçevesi (Sarmaşık, Yarasa, Örümcek Ağı)'
-                              : '12 Gothic Profile Frames (Ivy, Bats, Webs)'),
+                              ? 'Çoklu Görsel Yükleme Limiti: Koleksiyon kayıtlarınıza çok daha fazla görsel ekleyin'
+                              : 'Expanded Image Uploads: Upload more images per collection entry'),
+                      FeatureLine(
+                          text: tr
+                              ? 'Daha Geniş Profil Vitrini: Profilinizde daha fazla bebek sergileyin'
+                              : 'Expanded Profile Showcase: Display more dolls on your profile'),
+                      FeatureLine(
+                          text: tr
+                              ? 'Özel Temalar: Ayarlar panelindeki Pro üyelere özel temalar'
+                              : 'Exclusive Themes: Unlocks premium themes in settings'),
+                      FeatureLine(
+                          text: tr
+                              ? 'Özel Avatarlar, Profil Rozetleri ve Çerçeveleri'
+                              : 'Exclusive Customizations: Avatars, badges, cover photos & neon frames'),
                       FeatureLine(
                           text: tr
                               ? 'Gelişmiş Koleksiyon İstatistikleri ve Analizler'
                               : 'Advanced Collection Stats & Analytics'),
                       FeatureLine(
                           text: tr
-                              ? 'Daha Geniş Profil Vitrini'
-                              : 'Expanded Profile Showcase'),
+                              ? 'Gelecek İçeriklere Erişim: Yeni eklenecek avatar, kapak fotoğrafı, çerçeve, tema ve rozetlere erişim'
+                              : 'Access to Upcoming Content: Newly added avatars, cover photos, frames, themes & badges'),
                     ],
                   ),
                 ),
@@ -1451,8 +1698,10 @@ void _showProSubscriptionModal(BuildContext context) {
                 ],
               ),
               const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: () async {
+              GradientButton(
+                label: t(context, 'connectBilling'),
+                icon: Icons.lock_open_rounded,
+                onTap: () async {
                   try {
                     const billing = BillingService();
                     await billing
@@ -1478,10 +1727,6 @@ void _showProSubscriptionModal(BuildContext context) {
                     );
                   }
                 },
-                icon: const Icon(Icons.lock_open_rounded),
-                style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48)),
-                label: Text(t(context, 'connectBilling')),
               ),
               const SizedBox(height: 24),
               const Divider(color: DollDexTheme.line, height: 1),
@@ -1552,76 +1797,109 @@ Widget _buildCoinPackItem({
   required VoidCallback onTap,
 }) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
-  return Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: isPopular
-            ? const Color(0xFFFFCC00)
-            : (isDark
-                ? const Color(0xFFEC008C).withOpacity(0.3)
-                : Colors.black12),
-        width: isPopular ? 1.8 : 1.0,
-      ),
-      color: isPopular
-          ? (isDark ? const Color(0xFF231707) : const Color(0xFFFFFDF5))
-          : (isDark ? const Color(0xFF130820) : Colors.white),
-    ),
-    child: ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFCC00).withOpacity(0.12),
-          shape: BoxShape.circle,
+  return PressableButton(
+    onTap: onTap,
+    scaleFactor: 0.97,
+    borderRadius: 14,
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isPopular
+              ? const Color(0xFFFFCC00)
+              : (isDark
+                  ? const Color(0xFFEC008C).withValues(alpha: 0.25)
+                  : Colors.black12),
+          width: isPopular ? 2.0 : 1.0,
         ),
-        child: const Icon(Icons.monetization_on_rounded,
-            color: Color(0xFFFFCC00), size: 24),
+        color: isPopular
+            ? (isDark ? const Color(0xFF231707) : const Color(0xFFFFFDF5))
+            : (isDark ? const Color(0xFF1A1108) : Colors.white),
+        boxShadow: isPopular
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFFFCC00).withValues(alpha: 0.18),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                ),
+              ]
+            : null,
       ),
-      title: Row(
-        children: [
-          Text(
-            '$amount Jeton / Coins',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
-          ),
-          if (isPopular) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFCC00),
-                borderRadius: BorderRadius.circular(6),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFCC00), Color(0xFFFFAA00)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFFCC00).withValues(alpha: 0.35),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
-              child: Text(
-                AppLanguageScope.languageOf(context) == AppLanguage.tr
-                    ? 'POPÜLER'
-                    : 'POPULAR',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 7.5,
-                  fontWeight: FontWeight.bold,
+            ],
+          ),
+          child: const Icon(Icons.monetization_on_rounded,
+              color: Colors.white, size: 22),
+        ),
+        title: Row(
+          children: [
+            Text(
+              '$amount Jeton / Coins',
+              style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  fontFamily: 'Outfit'),
+            ),
+            if (isPopular) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFCC00), Color(0xFFFFAA00)],
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  AppLanguageScope.languageOf(context) == AppLanguage.tr
+                      ? 'POPÜLER'
+                      : 'POPULAR',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 7.5,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Outfit',
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
-      ),
-      subtitle: Text(
-        description,
-        style: TextStyle(
-          fontSize: 11,
-          fontFamily: 'Outfit',
-          color: isDark ? Colors.white70 : Colors.black54,
         ),
-      ),
-      trailing: Text(
-        price,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-          fontSize: 13,
+        subtitle: Text(
+          description,
+          style: TextStyle(
+            fontSize: 11,
+            fontFamily: 'Outfit',
+            color: isDark ? Colors.white60 : Colors.black54,
+          ),
+        ),
+        trailing: Text(
+          price,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: Theme.of(context).colorScheme.primary,
+            fontSize: 14,
+            fontFamily: 'Outfit',
+          ),
         ),
       ),
     ),
@@ -2111,12 +2389,18 @@ CatalogEntry _findCatalogEntry(String id) {
 List<CatalogEntry> _filterCatalogEntries(
   List<CatalogEntry> entries,
   String query,
-  CatalogItemType? type,
-) {
+  CatalogItemType? type, {
+  int? year,
+}) {
   final normalizedQuery = query.trim().toLowerCase();
   return entries.where((entry) {
     final matchesType = type == null || entry.type == type;
     if (!matchesType) {
+      return false;
+    }
+
+    final matchesYear = year == null || entry.year == year;
+    if (!matchesYear) {
       return false;
     }
 
@@ -2914,7 +3198,7 @@ Widget _buildFilterChip({
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: isSelected
-            ? finalColor.withOpacity(0.15)
+            ? finalColor.withValues(alpha: 0.15)
             : Theme.of(context).colorScheme.surface,
         border: Border.all(
           color: isSelected ? finalColor : Theme.of(context).dividerColor,
@@ -2923,14 +3207,14 @@ Widget _buildFilterChip({
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: finalColor.withOpacity(0.2),
+                  color: finalColor.withValues(alpha: 0.2),
                   blurRadius: 6,
                   spreadRadius: 1,
                 )
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 )
@@ -2941,7 +3225,7 @@ Widget _buildFilterChip({
         style: TextStyle(
           color: isSelected
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
@@ -2986,12 +3270,12 @@ Widget _buildGothicNeonIconButton({
       shape: BoxShape.circle,
       color: Theme.of(context).colorScheme.surface,
       border: Border.all(
-        color: finalColor.withOpacity(0.8),
+        color: finalColor.withValues(alpha: 0.8),
         width: 1.5,
       ),
       boxShadow: [
         BoxShadow(
-          color: finalColor.withOpacity(0.15),
+          color: finalColor.withValues(alpha: 0.15),
           blurRadius: 4,
           spreadRadius: 0.5,
         ),
@@ -3039,63 +3323,79 @@ void _showChangeUsernameDialog(BuildContext context, String userId) {
             builder: (context, setState) {
               return AlertDialog(
                 title: Text(tr ? 'Kullanıcı Adı Değiştir' : 'Change Username'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr
-                          ? 'Kullanıcı adını 6 ayda bir kez değiştirebilirsin.'
-                          : 'You can change your username once every 6 months.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: controller,
-                      maxLength: 15,
-                      style: const TextStyle(fontFamily: 'Outfit'),
-                      decoration: InputDecoration(
-                        labelText: t(context, 'username'),
-                        prefixText: '@',
-                        helperText: t(context, 'usernameRules'),
-                        errorText: errorText,
-                        labelStyle: const TextStyle(fontFamily: 'Cinzel'),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFF2C1F45)
-                                    : const Color(0xFFE9D8FA),
-                            width: 1.5,
-                          ),
+                insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tr
+                            ? 'Kullanıcı adını 6 ayda bir kez değiştirebilirsin. Sadece harf, rakam ve alt çizgi (_) kullanabilirsin, en fazla 15 karakter.'
+                            : 'You can change your username once every 6 months. Only letters, numbers and underscores (_) are allowed, max 15 characters.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          height: 1.55,
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFEC008C),
-                            width: 2.0,
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: controller,
+                        maxLength: 15,
+                        style: const TextStyle(fontFamily: 'Outfit'),
+                        decoration: InputDecoration(
+                          labelText: t(context, 'username'),
+                          prefixText: '@',
+                          errorText: errorText,
+                          labelStyle: const TextStyle(fontFamily: 'Cinzel'),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color:
+                                  Theme.of(context).brightness == Brightness.dark
+                                      ? const Color(0xFF2C1F45)
+                                      : const Color(0xFFE9D8FA),
+                              width: 1.5,
+                            ),
                           ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.red.shade800,
-                            width: 1.5,
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFEC008C),
+                              width: 2.0,
+                            ),
                           ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.red.shade800,
-                            width: 2.0,
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.red.shade800,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.red.shade800,
+                              width: 2.0,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        t(context, 'usernameRules'),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.55),
+                          height: 1.4,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 actions: [
                   TextButton(
@@ -3406,7 +3706,7 @@ Widget _buildStatItem(BuildContext context,
         style: TextStyle(
           color: isDark
               ? Colors.white60
-              : const Color(0xFF1C0D2B).withOpacity(0.6),
+              : const Color(0xFF1C0D2B).withValues(alpha: 0.6),
           fontSize: 11,
           fontWeight: FontWeight.w500,
           fontFamily: 'Cinzel',
@@ -3430,7 +3730,7 @@ void _showConnectionsModal(BuildContext parentContext, String userId) {
     shape: RoundedRectangleBorder(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       side: BorderSide(
-          color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+          color: const Color(0xFFEC008C).withValues(alpha: 0.25), width: 1.0),
     ),
     builder: (context) {
       final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
@@ -3960,7 +4260,7 @@ void _showReportsModal(BuildContext context, String userId) {
     shape: RoundedRectangleBorder(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       side: BorderSide(
-          color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+          color: const Color(0xFFEC008C).withValues(alpha: 0.25), width: 1.0),
     ),
     builder: (modalContext) {
       final tr = AppLanguageScope.languageOf(modalContext) == AppLanguage.tr;
@@ -4053,7 +4353,7 @@ void _showReportsModal(BuildContext context, String userId) {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withOpacity(0.15),
+                                    color: statusColor.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                         color: statusColor, width: 1),
@@ -4103,7 +4403,7 @@ void _showCommentsSheet(BuildContext context, String targetId,
     shape: RoundedRectangleBorder(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       side: BorderSide(
-          color: const Color(0xFFEC008C).withOpacity(0.25), width: 1.0),
+          color: const Color(0xFFEC008C).withValues(alpha: 0.25), width: 1.0),
     ),
     builder: (context) {
       return Padding(
@@ -4476,7 +4776,7 @@ void _showPhotoGalleryDialog(
   if (imageUrls.isEmpty) return;
   showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.9),
+    barrierColor: Colors.black.withValues(alpha: 0.9),
     builder: (context) {
       return Dialog(
         backgroundColor: Colors.transparent,
@@ -4565,8 +4865,8 @@ void showReportSheet(
     _showReportSheet(context, targetType, targetId);
 CatalogEntry findCatalogEntry(String id) => _findCatalogEntry(id);
 List<CatalogEntry> filterCatalogEntries(
-        List<CatalogEntry> entries, String query, CatalogItemType? type) =>
-    _filterCatalogEntries(entries, query, type);
+        List<CatalogEntry> entries, String query, CatalogItemType? type, {int? year}) =>
+    _filterCatalogEntries(entries, query, type, year: year);
 void openDirectMessagesModal(BuildContext context,
         {String? initialChatUserId}) =>
     _openDirectMessagesModal(context, initialChatUserId: initialChatUserId);

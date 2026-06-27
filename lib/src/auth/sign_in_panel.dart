@@ -39,7 +39,7 @@ class _SignInPanelState extends State<SignInPanel> {
           elevation: 8,
           color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(24),
             side: BorderSide(
               color: isDark ? DollDexTheme.darkLine : DollDexTheme.line,
               width: 1.2,
@@ -57,12 +57,13 @@ class _SignInPanelState extends State<SignInPanel> {
                     borderRadius: BorderRadius.circular(20),
                     color: DollDexTheme.mist,
                     border: Border.all(
-                        color:
-                            isDark ? DollDexTheme.darkLine : DollDexTheme.line),
+                        color: isDark
+                            ? DollDexTheme.darkLine.withValues(alpha: 0.7)
+                            : DollDexTheme.line.withValues(alpha: 0.7)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.18 : 0.08),
-                        blurRadius: 14,
+                        color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.12),
+                        blurRadius: 20,
                         offset: const Offset(0, 6),
                       ),
                     ],
@@ -175,65 +176,71 @@ class _SignInPanelState extends State<SignInPanel> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
-                    gradient: _canContinue
-                        ? const LinearGradient(
-                            colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          )
-                        : LinearGradient(
-                            colors: [
-                              isDark
-                                  ? Colors.grey.shade800
-                                  : Colors.grey.shade300,
-                              isDark
-                                  ? Colors.grey.shade900
-                                  : Colors.grey.shade400,
-                            ],
-                          ),
-                    boxShadow: _canContinue
-                        ? [
-                            BoxShadow(
-                              color: DollDexTheme.teal.withOpacity(0.28),
-                              blurRadius: 12,
-                              offset: const Offset(0, 5),
+                PressableButton(
+                  onTap: _canContinue ? widget.onGooglePressed : null,
+                  scaleFactor: 0.96,
+                  borderRadius: 24,
+                  child: Container(
+                    width: double.infinity,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: _canContinue
+                          ? const LinearGradient(
+                              colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [
+                                isDark
+                                    ? Colors.grey.shade800
+                                    : Colors.grey.shade300,
+                                isDark
+                                    ? Colors.grey.shade900
+                                    : Colors.grey.shade400,
+                              ],
                             ),
-                          ]
-                        : null,
-                  ),
-                  child: ElevatedButton.icon(
-                    onPressed: _canContinue ? widget.onGooglePressed : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22)),
+                      boxShadow: _canContinue
+                          ? [
+                              BoxShadow(
+                                color: DollDexTheme.teal.withValues(alpha: 0.38),
+                                blurRadius: 18,
+                                spreadRadius: -2,
+                                offset: const Offset(0, 7),
+                              ),
+                            ]
+                          : null,
                     ),
-                    icon: widget.isLoading
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 1.2, color: Colors.white),
-                          )
-                        : const Icon(Icons.login_rounded,
-                            color: Colors.white, size: 20),
-                    label: Text(
-                      t(context, 'continueGoogle'),
-                      style: TextStyle(
-                        color: _canContinue
-                            ? Colors.white
-                            : (isDark ? Colors.white30 : Colors.black26),
-                        fontWeight: FontWeight.w900,
-                        fontSize: 15,
-                        letterSpacing: 0,
-                        fontFamily: 'Outfit',
-                      ),
+                    child: Center(
+                      child: widget.isLoading
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.login_rounded,
+                                    color: Colors.white, size: 20),
+                                const SizedBox(width: 10),
+                                Text(
+                                  t(context, 'continueGoogle'),
+                                  style: TextStyle(
+                                    color: _canContinue
+                                        ? Colors.white
+                                        : (isDark
+                                            ? Colors.white30
+                                            : Colors.black26),
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 15,
+                                    letterSpacing: 0.2,
+                                    fontFamily: 'Outfit',
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                 ),

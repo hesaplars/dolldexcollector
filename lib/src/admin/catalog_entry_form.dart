@@ -152,7 +152,7 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -737,12 +737,12 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -800,7 +800,7 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                             shape: BoxShape.circle,
                             color: _previewPageIndex == index
                                 ? Theme.of(context).colorScheme.secondary
-                                : Colors.white.withOpacity(0.5),
+                                : Colors.white.withValues(alpha: 0.5),
                           ),
                         );
                       }),
@@ -813,7 +813,7 @@ class _CatalogEntryFormState extends State<CatalogEntryForm> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

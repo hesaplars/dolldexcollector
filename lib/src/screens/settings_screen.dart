@@ -21,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
     Widget buildGothicCard(
         {required String title, required List<Widget> children}) {
       return Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
@@ -32,14 +32,14 @@ class SettingsScreen extends StatelessWidget {
               (isDark ? DollDexTheme.darkPanel : DollDexTheme.panel),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.24 : 0.10),
+              color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -47,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 17,
+                  fontSize: 16,
                   letterSpacing: 0,
                   fontFamily: 'Outfit',
                   color: isDark ? Colors.white : DollDexTheme.ink,
@@ -68,14 +68,15 @@ class SettingsScreen extends StatelessWidget {
       required String subtitle,
       required VoidCallback onTap,
     }) {
-      return InkWell(
+      return PressableButton(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        scaleFactor: 0.97,
+        borderRadius: 14,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
           child: Row(
             children: [
-              buildNeonIcon(context, icon, size: 24),
+              buildNeonIcon(context, icon, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -200,7 +201,7 @@ class SettingsScreen extends StatelessWidget {
                       collapsedIconColor: Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.7),
+                          .withValues(alpha: 0.7),
                       children: [
                         ValueListenableBuilder<String>(
                           valueListenable: appThemeKeyController,
@@ -298,7 +299,7 @@ class SettingsScreen extends StatelessWidget {
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: primaryColor
-                                                      .withOpacity(0.4),
+                                                      .withValues(alpha: 0.4),
                                                   blurRadius: 4,
                                                   spreadRadius: 1,
                                                 )
@@ -341,7 +342,7 @@ class SettingsScreen extends StatelessWidget {
                                                     .radio_button_off_rounded,
                                             color: isSelected
                                                 ? primaryColor
-                                                : Colors.grey.withOpacity(0.5),
+                                                : Colors.grey.withValues(alpha: 0.5),
                                             size: 20,
                                           ),
                                         ],

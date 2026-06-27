@@ -98,33 +98,16 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        icon: Icon(icon, size: 18, color: Colors.white),
-        label: Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            fontFamily: 'Outfit',
-            fontSize: 14,
-            letterSpacing: 1.0,
-          ),
-        ),
+      child: GradientButton(
+        label: label,
+        icon: icon,
+        onTap: onPressed,
       ),
     );
   }
@@ -171,12 +154,8 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
                     TextStyle(color: Theme.of(context).colorScheme.secondary),
               ),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () => Navigator.of(dialogCtx).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-              ),
               child: Text(tr ? 'Yayınla' : 'Publish'),
             ),
           ],
@@ -417,17 +396,17 @@ class AnnouncementScreen extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: Theme.of(context).colorScheme.primary,
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -470,23 +449,28 @@ class AnnouncementScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                      foregroundColor: Theme.of(context).colorScheme.secondary,
-                      side: BorderSide(
-                          color: Theme.of(context).colorScheme.secondary,
-                          width: 1.2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                  child: PressableButton(
+                    onTap: () => Navigator.of(context).pop(),
+                    scaleFactor: 0.95,
+                    borderRadius: 20,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                    ),
-                    child: Text(
-                      tr ? 'Anladım' : 'Got it',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                          horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.secondary,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Text(
+                        tr ? 'Anladım' : 'Got it',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontFamily: 'Outfit',
+                        ),
+                      ),
                     ),
                   ),
                 ),

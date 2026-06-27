@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +13,7 @@ import '../core/app_helpers.dart';
 import '../core/app_language.dart';
 import '../moderation/report_models.dart';
 import '../widgets/doll_widgets.dart';
+import '../ads/ad_banner_widget.dart';
 import '../users/profile_setup_repository.dart';
 
 class CatalogDetailScreen extends StatefulWidget {
@@ -121,9 +122,9 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
                   ),
                 ),
                 backgroundColor:
-                    Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                 side: BorderSide(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
                   width: 1.2,
                 ),
                 shape: RoundedRectangleBorder(
@@ -190,6 +191,8 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    AdBannerWidget(),
+                    const SizedBox(height: 8),
                     SetPartsWidget(item: item),
                     const SizedBox(height: 16),
                     ValueListenableBuilder<Map<String, List<AppComment>>>(
@@ -217,7 +220,9 @@ class _CatalogDetailScreenState extends State<CatalogDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   infoPanel,
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  AdBannerWidget(),
+                  const SizedBox(height: 12),
                   SetPartsWidget(item: item),
                   const SizedBox(height: 16),
                   ValueListenableBuilder<Map<String, List<AppComment>>>(
@@ -411,9 +416,11 @@ class _CommentsPanel extends StatelessWidget {
                           ? DollDexTheme.darkLine
                           : DollDexTheme.line,
                     ),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     leading: GestureDetector(
                       onTap: () {
                         if (comment.senderUsername.isNotEmpty) {
@@ -590,7 +597,7 @@ class SetPartsWidget extends StatelessWidget {
                             children: [
                               Text(
                                 tr
-                                    ? 'Set Parçaları & Aksesuarlar'
+                                    ? 'Set ParÃ§alarÄ± & Aksesuarlar'
                                     : 'Set Parts & Accessories',
                                 style: const TextStyle(
                                   fontSize: 16,
@@ -601,7 +608,7 @@ class SetPartsWidget extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 tr
-                                    ? 'Bu bebeğe ait diğer aksesuarları ve parçaları topla.'
+                                    ? 'Bu bebeÄŸe ait diÄŸer aksesuarlarÄ± ve parÃ§alarÄ± topla.'
                                     : 'Collect other accessories and parts belonging to this doll.',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -628,7 +635,7 @@ class SetPartsWidget extends StatelessWidget {
                                     color: colorScheme.primary, size: 16),
                                 const SizedBox(width: 4),
                                 Text(
-                                  tr ? 'Set Tamamlandı!' : 'Set Complete!',
+                                  tr ? 'Set TamamlandÄ±!' : 'Set Complete!',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
@@ -750,7 +757,7 @@ class SetPartsWidget extends StatelessWidget {
                                     color: Colors.pink, size: 14),
                                 const SizedBox(width: 4),
                                 Text(
-                                  tr ? 'İstek Listesinde' : 'Wishlist',
+                                  tr ? 'Ä°stek Listesinde' : 'Wishlist',
                                   style: const TextStyle(
                                     color: Colors.pink,
                                     fontSize: 11,
@@ -826,3 +833,5 @@ class SetPartsWidget extends StatelessWidget {
     );
   }
 }
+
+

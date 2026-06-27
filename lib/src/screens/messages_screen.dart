@@ -11,6 +11,7 @@ import '../core/app_helpers.dart';
 import '../core/app_language.dart';
 import '../core/local_storage_helper.dart';
 import '../widgets/doll_widgets.dart';
+import '../ads/ad_banner_widget.dart';
 import '../social/social_models.dart';
 import '../users/user_models.dart';
 import '../users/profile_setup_repository.dart';
@@ -293,9 +294,9 @@ class _DirectMessagesModalContentState
                   }
                   final uName = snap.data?.username ?? '';
                   if (uName.isNotEmpty) {
-                    context.go('/u/$uName');
+                    context.push('/u/$uName?from=${Uri.encodeComponent('/messages')}');
                   } else {
-                    context.go('/users/${_activeChatUserId}');
+                    context.push('/users/${_activeChatUserId}?from=${Uri.encodeComponent('/messages')}');
                   }
                 },
                 child: MouseRegion(
@@ -542,6 +543,7 @@ class _DirectMessagesModalContentState
             const SizedBox(height: 8),
           header,
           Divider(color: Theme.of(context).dividerColor, height: 1),
+          const AdBannerWidget(),
           body,
         ],
       ),
@@ -592,7 +594,7 @@ class ThreadListTile extends StatelessWidget {
 
         return ListTile(
           onTap: onTap,
-          leading: buildAvatarHelper(context, avatarId, frameColor, size: 40),
+          leading: buildAvatarHelper(context, avatarId, frameColor, size: 46),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -638,7 +640,7 @@ class ThreadListTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Outfit',
                     color: isDark ? Colors.white54 : Colors.black54,
-                    fontSize: 13,
+                    fontSize: 12.5,
                   ),
                 ),
               ),
@@ -783,13 +785,16 @@ class _DirectChatConversationViewState
                 key: const PageStorageKey('messages_chat_scroll'),
                 reverse: true,
                 controller: _scrollController,
+                cacheExtent: 500,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 itemCount: messages.length,
                 itemBuilder: (context, idx) {
                   final msg = messages[idx];
                   final isMe = msg.senderId == widget.myUid;
-                  return _buildDirectMsgBubble(context, msg, isMe);
+                  return RepaintBoundary(
+                    child: _buildDirectMsgBubble(context, msg, isMe),
+                  );
                 },
               );
             },
@@ -814,6 +819,7 @@ class _DirectChatConversationViewState
                   showModalBottomSheet<void>(
                     context: context,
                     isScrollControlled: true,
+    useRootNavigator: true,
                     showDragHandle: true,
                     backgroundColor: Theme.of(context).colorScheme.surface,
                     shape: RoundedRectangleBorder(
@@ -885,131 +891,151 @@ class _DirectChatConversationViewState
       BuildContext context, ChatMessage msg, bool isMe) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Row(
-        mainAxisAlignment:
-            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!isMe) ...[
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              tooltip: tr ? 'Bildir' : 'Report',
-              onPressed: () => showReportSheet(
-                context,
-                ReportTargetType.comment,
-                msg.id,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Row(
+          mainAxisAlignment:
+              isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Sol avatar (sadece karşı tarafın mesajında)
+            if (!isMe) ...[
+              StreamBuilder<ProfileSetupStatus>(
+                stream: profileSetupRepository.watch(msg.senderId),
+                builder: (context, snap) {
+                  final avatarId = snap.data?.avatarId ?? '';
+                  final frameColor = snap.data?.avatarFrameColor ?? '';
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6, bottom: 2),
+                    child: buildAvatarHelper(context, avatarId, frameColor,
+                        size: 30),
+                  );
+                },
               ),
-              icon: buildNeonFlagIcon(context, size: 16),
-            ),
-            const SizedBox(width: 4),
-          ],
-          Flexible(
-            child: IntrinsicWidth(
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 6),
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.72,
-                  minWidth: 50,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(16),
-                    topRight: const Radius.circular(16),
-                    bottomLeft: Radius.circular(isMe ? 16 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 16),
+            ],
+            // Balon
+            Flexible(
+              child: IntrinsicWidth(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.65,
+                    minWidth: 50,
                   ),
-                  color: isMe
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.secondaryContainer,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    StreamBuilder<ProfileSetupStatus>(
-                      stream: profileSetupRepository.watch(msg.senderId),
-                      builder: (context, snapshot) {
-                        final badge = snapshot.data?.selectedBadge ?? '';
-                        final username =
-                            snapshot.data?.username ?? msg.senderUsername;
-                        final displayUsername = username.isNotEmpty
-                            ? '@$username'
-                            : (isMe ? 'Ben' : 'Collector');
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (badge.isNotEmpty) ...[
-                              ProfileBadgeWidget(badgeId: badge, size: 7),
-                              const SizedBox(height: 2),
-                            ],
-                            Text(
-                              displayUsername,
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                color: isMe
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary
-                                        .withOpacity(0.9)
-                                    : Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                          ],
-                        );
-                      },
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(18),
+                      topRight: const Radius.circular(18),
+                      bottomLeft: Radius.circular(isMe ? 18 : 4),
+                      bottomRight: Radius.circular(isMe ? 4 : 18),
                     ),
-                    if (msg.text.isNotEmpty) ...[
-                      Text(
-                        msg.text,
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: isMe
-                              ? Theme.of(context).colorScheme.onPrimary
-                              : Theme.of(context).colorScheme.onSurface,
-                          fontSize: 13.5,
-                        ),
+                    color: isMe
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.secondaryContainer,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      StreamBuilder<ProfileSetupStatus>(
+                        stream: profileSetupRepository.watch(msg.senderId),
+                        builder: (context, snapshot) {
+                          final badge = snapshot.data?.selectedBadge ?? '';
+                          final username =
+                              snapshot.data?.username ?? msg.senderUsername;
+                          final displayUsername = username.isNotEmpty
+                              ? '@$username'
+                              : (isMe ? 'Ben' : 'Collector');
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (badge.isNotEmpty) ...[
+                                ProfileBadgeWidget(badgeId: badge, size: 7),
+                                const SizedBox(height: 2),
+                              ],
+                              Text(
+                                displayUsername,
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: isMe
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary
+                                          .withValues(alpha: 0.9)
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                            ],
+                          );
+                        },
                       ),
-                    ],
-                    if (msg.sharedSource.isNotEmpty) ...[
-                      _buildSharedItemCard(context, msg, isMe),
-                    ],
-                    if (msg.createdAt != null) ...[
-                      const SizedBox(height: 2),
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: Text(
-                          formatMessageTime(msg.createdAt!),
+                      if (msg.text.isNotEmpty) ...[
+                        Text(
+                          msg.text,
                           style: TextStyle(
                             fontFamily: 'Outfit',
-                            fontSize: 8.5,
                             color: isMe
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .onPrimary
-                                    .withOpacity(0.7)
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.5),
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                            fontSize: 13.5,
                           ),
                         ),
-                      ),
+                      ],
+                      if (msg.sharedSource.isNotEmpty) ...[
+                        _buildSharedItemCard(context, msg, isMe),
+                      ],
+                      if (msg.createdAt != null) ...[
+                        const SizedBox(height: 2),
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: Text(
+                            formatMessageTime(msg.createdAt!),
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              fontSize: 8.5,
+                              color: isMe
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .onPrimary
+                                      .withValues(alpha: 0.7)
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            // Sağ bayrak (sadece karşı tarafın mesajında)
+            if (!isMe) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: tr ? 'Bildir' : 'Report',
+                onPressed: () => showReportSheet(
+                  context,
+                  ReportTargetType.comment,
+                  msg.id,
+                ),
+                icon: buildNeonFlagIcon(context, size: 15),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -1055,11 +1081,11 @@ class _DirectChatConversationViewState
       constraints: const BoxConstraints(maxWidth: 240),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.black.withOpacity(0.4)
-            : Colors.white.withOpacity(0.6),
+            ? Colors.black.withValues(alpha: 0.4)
+            : Colors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           width: 1.0,
         ),
       ),
@@ -1147,13 +1173,13 @@ class _DirectChatConversationViewState
                               color: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.15),
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color: Theme.of(context)
                                     .colorScheme
                                     .primary
-                                    .withOpacity(0.4),
+                                    .withValues(alpha: 0.4),
                                 width: 0.5,
                               ),
                             ),

@@ -162,6 +162,7 @@ class _AdminScreenState extends State<AdminScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+    useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
@@ -721,6 +722,8 @@ class _AdminScreenState extends State<AdminScreen> {
                           userManagementCard,
                           const SizedBox(height: 16),
                           const AdminMonetizationCard(),
+                          const SizedBox(height: 16),
+                          const AdminLegalAndInfoCard(),
                         ],
                       ),
                     ),
@@ -745,6 +748,8 @@ class _AdminScreenState extends State<AdminScreen> {
                   userManagementCard,
                   const SizedBox(height: 16),
                   const AdminMonetizationCard(),
+                  const SizedBox(height: 16),
+                  const AdminLegalAndInfoCard(),
                 ],
               );
             },
@@ -875,6 +880,7 @@ void _showAdminCatalogModal(
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
     showDragHandle: true,
     builder: (context) {
       return DraggableScrollableSheet(
@@ -1067,7 +1073,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? finalColor.withOpacity(0.15)
+              ? finalColor.withValues(alpha: 0.15)
               : (isDark ? DollDexTheme.darkPanel : DollDexTheme.panel),
           border: Border.all(
             color: isSelected
@@ -1079,7 +1085,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: finalColor.withOpacity(0.25),
+                    color: finalColor.withValues(alpha: 0.25),
                     blurRadius: 6,
                     spreadRadius: 0.5,
                   )
@@ -1132,7 +1138,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                     color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.22 : 0.09),
+                    color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.09),
                     blurRadius: 14,
                     offset: const Offset(0, 6),
                   ),
@@ -1333,7 +1339,7 @@ class _AdminCatalogModalBodyState extends State<_AdminCatalogModalBody> {
                                         child: DollImage(
                                           imageUrl: entry.primaryImageUrl,
                                           label: entry.name,
-                                          fit: BoxFit.cover,
+                                          fit: BoxFit.contain,
                                         ),
                                       ),
                                     ),
@@ -2010,7 +2016,7 @@ class ModerationReportCard extends StatelessWidget {
                       label: Text(reportStatusLabel(context, report.status)),
                       visualDensity: VisualDensity.compact,
                       side: BorderSide(
-                          color: theme.colorScheme.primary.withOpacity(0.3)),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                     ),
                     const SizedBox(height: 8),
                     PopupMenuButton<String>(
@@ -3575,6 +3581,222 @@ class _AdminPopupAnnouncementCardState extends State<AdminPopupAnnouncementCard>
                               fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AdminLegalAndInfoCard extends StatefulWidget {
+  const AdminLegalAndInfoCard({super.key});
+
+  @override
+  State<AdminLegalAndInfoCard> createState() => _AdminLegalAndInfoCardState();
+}
+
+class _AdminLegalAndInfoCardState extends State<AdminLegalAndInfoCard> {
+  final _formKey = GlobalKey<FormState>();
+  final _termsTrController = TextEditingController();
+  final _termsEnController = TextEditingController();
+  final _privacyTrController = TextEditingController();
+  final _privacyEnController = TextEditingController();
+  final _guideTrController = TextEditingController();
+  final _guideEnController = TextEditingController();
+  bool _isLoading = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTexts();
+  }
+
+  Future<void> _loadTexts() async {
+    setState(() => _isLoading = true);
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('configs')
+          .doc('legal_and_info')
+          .get();
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          _termsTrController.text = data['termsBody_tr'] as String? ?? '';
+          _termsEnController.text = data['termsBody_en'] as String? ?? '';
+          _privacyTrController.text = data['privacyBody_tr'] as String? ?? '';
+          _privacyEnController.text = data['privacyBody_en'] as String? ?? '';
+          _guideTrController.text = data['guideBody_tr'] as String? ?? '';
+          _guideEnController.text = data['guideBody_en'] as String? ?? '';
+        }
+      }
+    } catch (e) {
+      print('AdminLegalAndInfoCard: Error loading texts: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveTexts() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('configs')
+          .doc('legal_and_info')
+          .set({
+        'termsBody_tr': _termsTrController.text,
+        'termsBody_en': _termsEnController.text,
+        'privacyBody_tr': _privacyTrController.text,
+        'privacyBody_en': _privacyEnController.text,
+        'guideBody_tr': _guideTrController.text,
+        'guideBody_en': _guideEnController.text,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Metinler başarıyla kaydedildi.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kaydetme hatası: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _termsTrController.dispose();
+    _termsEnController.dispose();
+    _privacyTrController.dispose();
+    _privacyEnController.dispose();
+    _guideTrController.dispose();
+    _guideEnController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
+    final theme = Theme.of(context);
+
+    if (_isLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: ExpansionTile(
+        leading: const Icon(Icons.gavel_rounded, color: DollDexTheme.teal),
+        title: Text(
+          tr ? 'Hukuki & Bilgi Metinleri' : 'Legal & Info Texts',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          tr ? 'Kullanım Koşulları, Gizlilik Politikası ve Rehberi düzenleyin' : 'Edit Terms of Use, Privacy Policy, and Guide texts',
+          style: const TextStyle(fontSize: 11),
+        ),
+        childrenPadding: const EdgeInsets.all(16),
+        children: [
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  tr ? 'TÜRKÇE SÖZLEŞMELER' : 'TURKISH AGREEMENTS',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _termsTrController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    labelText: tr ? 'Kullanım Koşulları (TR)' : 'Terms of Use (TR)',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _privacyTrController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    labelText: tr ? 'Gizlilik Politikası (TR)' : 'Privacy Policy (TR)',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _guideTrController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    labelText: tr ? 'Kullanım Rehberi (TR)' : 'User Guide (TR)',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  tr ? 'İNGİLİZCE SÖZLEŞMELER' : 'ENGLISH AGREEMENTS',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _termsEnController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    labelText: tr ? 'Kullanım Koşulları (EN)' : 'Terms of Use (EN)',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _privacyEnController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    labelText: tr ? 'Gizlilik Politikası (EN)' : 'Privacy Policy (EN)',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _guideEnController,
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    labelText: tr ? 'Kullanım Rehberi (EN)' : 'User Guide (EN)',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: _isSaving ? null : _saveTexts,
+                  icon: _isSaving
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.save_rounded),
+                  label: Text(tr ? 'Metinleri Kaydet' : 'Save Texts'),
                 ),
               ],
             ),

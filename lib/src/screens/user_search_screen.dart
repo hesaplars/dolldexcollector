@@ -9,6 +9,7 @@ import '../core/app_language.dart';
 import '../users/user_models.dart';
 import '../users/profile_setup_repository.dart';
 import '../widgets/doll_widgets.dart';
+import '../ads/ad_banner_widget.dart';
 import '../auth/sign_in_panel.dart';
 
 class UserSearchScreen extends StatefulWidget {
@@ -228,12 +229,12 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               ? Theme.of(context)
                   .colorScheme
                   .primary
-                  .withOpacity(isDark ? 0.15 : 0.08)
+                  .withValues(alpha: isDark ? 0.15 : 0.08)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
                 : Theme.of(context).dividerColor,
           ),
         ),
@@ -248,7 +249,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       : Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.6),
+                          .withValues(alpha: 0.6),
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -298,12 +299,12 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               color: isDark ? DollDexTheme.darkPanel : DollDexTheme.panel,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                   color: isDark ? DollDexTheme.darkLine : DollDexTheme.line),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.22 : 0.09),
+                  color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.09),
                   blurRadius: 14,
                   offset: const Offset(0, 6),
                 ),
@@ -384,7 +385,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          const AdBannerWidget(),
+          const SizedBox(height: 8),
           if (_isSearching)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 32),
@@ -411,7 +414,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .primary
-                            .withOpacity(0.04),
+                            .withValues(alpha: 0.04),
                         blurRadius: 6,
                         spreadRadius: 1,
                       ),
@@ -426,10 +429,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       }
                     },
                     contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     leading: buildAvatarHelper(
                         context, target.avatarId, target.avatarFrameColor,
-                        size: 40),
+                        size: 44),
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,

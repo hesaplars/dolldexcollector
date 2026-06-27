@@ -47,6 +47,67 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
     super.dispose();
   }
 
+  Widget _buildStatusSelectionCard(CollectionStatus status, IconData icon, String label) {
+    final isSelected = _status == status;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
+    final panelColor = isDark ? DollDexTheme.darkPanel : const Color(0xFFFFF4DC);
+    final lineColor = isDark ? DollDexTheme.darkLine : DollDexTheme.line;
+    final textColor = isSelected ? accent : (isDark ? Colors.white70 : DollDexTheme.cocoa);
+
+    return InkWell(
+      onTap: () => setState(() => _status = status),
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? accent.withOpacity(0.12) : panelColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? accent : lineColor,
+            width: isSelected ? 1.6 : 1.0,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: accent.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? accent : (isDark ? Colors.white54 : DollDexTheme.cocoa.withOpacity(0.7)),
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  fontSize: 12.5,
+                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -74,33 +135,19 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
                   ),
             ),
             const SizedBox(height: 12),
-            SegmentedButton<CollectionStatus>(
-              segments: [
-                ButtonSegment(
-                  value: CollectionStatus.owned,
-                  icon: const Icon(Icons.check_rounded),
-                  label: Text(t(context, 'owned')),
-                ),
-                ButtonSegment(
-                  value: CollectionStatus.wanted,
-                  icon: const Icon(Icons.favorite_border_rounded),
-                  label: Text(t(context, 'wanted')),
-                ),
-                ButtonSegment(
-                  value: CollectionStatus.trade,
-                  icon: const Icon(Icons.swap_horiz_rounded),
-                  label: Text(t(context, 'trade')),
-                ),
-                ButtonSegment(
-                  value: CollectionStatus.selling,
-                  icon: const Icon(Icons.sell_outlined),
-                  label: Text(t(context, 'selling')),
-                ),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 2.8,
+              children: [
+                _buildStatusSelectionCard(CollectionStatus.owned, Icons.check_circle_outline_rounded, t(context, 'owned')),
+                _buildStatusSelectionCard(CollectionStatus.wanted, Icons.favorite_border_rounded, t(context, 'wanted')),
+                _buildStatusSelectionCard(CollectionStatus.trade, Icons.swap_horiz_rounded, t(context, 'trade')),
+                _buildStatusSelectionCard(CollectionStatus.selling, Icons.sell_outlined, t(context, 'selling')),
               ],
-              selected: {_status},
-              onSelectionChanged: (value) {
-                setState(() => _status = value.first);
-              },
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<CollectionCondition>(
@@ -175,7 +222,7 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
                 prefixIcon: const Icon(Icons.notes_rounded),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
             Row(
               children: [
                 if (widget.initialEntry != null && widget.onDelete != null) ...[
@@ -188,14 +235,14 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
                           Navigator.of(context).pop();
                         }
                       },
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                           border:
                               Border.all(color: Colors.redAccent, width: 1.5),
-                          color: Colors.redAccent.withOpacity(0.08),
+                          color: Colors.redAccent.withValues(alpha: 0.08),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -239,11 +286,11 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
                         Navigator.of(context).pop();
                       }
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         gradient: const LinearGradient(
                           colors: [DollDexTheme.teal, Color(0xFFFF7A1F)],
                           begin: Alignment.topCenter,
@@ -251,7 +298,7 @@ class _CollectionActionSheetState extends State<CollectionActionSheet> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: DollDexTheme.teal.withOpacity(0.28),
+                            color: DollDexTheme.teal.withValues(alpha: 0.28),
                             blurRadius: 12,
                             offset: const Offset(0, 5),
                           ),

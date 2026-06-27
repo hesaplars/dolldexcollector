@@ -13,6 +13,7 @@ import '../moderation/report_models.dart';
 import '../users/profile_setup_repository.dart';
 import '../users/user_models.dart';
 import '../widgets/doll_widgets.dart';
+import '../ads/ad_banner_widget.dart';
 import 'collection_screen.dart';
 import 'profile_screen.dart';
 
@@ -111,15 +112,30 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                     Positioned(
                       top: 80,
                       left: 16,
-                      child: buildAvatarHelper(context, avatarId, frameColor,
-                          size: 76),
+                      child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              width: 3.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.20),
+                                blurRadius: 12,
+                              ),
+                            ],
+                          ),
+                          child: buildAvatarHelper(context, avatarId, frameColor,
+                              size: 76),
+                        ),
                     ),
                     Positioned(
                       top: 10,
                       right: 10,
                       child: IconButton(
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.black.withOpacity(0.4),
+                          backgroundColor: Colors.black.withValues(alpha: 0.4),
                           foregroundColor: Colors.white,
                         ),
                         icon: const Icon(Icons.more_vert_rounded),
@@ -162,7 +178,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
-                          backgroundColor: Colors.black.withOpacity(0.75),
+                          backgroundColor: Colors.black.withValues(alpha: 0.75),
                         ),
                       ),
                     ),
@@ -223,7 +239,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                     if (!isFriend)
                                       return const SizedBox.shrink();
                                     return Padding(
-                                      padding: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.only(right: 10),
                                       child: InkWell(
                                         onTap: () {
                                           openDirectChatWithUser(
@@ -253,7 +269,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(0.2),
+                                                    .withValues(alpha: 0.2),
                                                 blurRadius: 6,
                                               ),
                                             ],
@@ -381,7 +397,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                                     color: Theme.of(context)
                                                         .colorScheme
                                                         .primary
-                                                        .withOpacity(0.3),
+                                                        .withValues(alpha: 0.3),
                                                     blurRadius: 6,
                                                   ),
                                                 ],
@@ -466,7 +482,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .primary
-                                                  .withOpacity(0.4),
+                                                  .withValues(alpha: 0.4),
                                               width: 1.2),
                                           color: Theme.of(context)
                                               .colorScheme
@@ -487,7 +503,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(0.4)),
+                                                    .withValues(alpha: 0.4)),
                                             _buildStatItem(
                                               context,
                                               label: tr ? 'Takip' : 'Following',
@@ -499,7 +515,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(0.4)),
+                                                    .withValues(alpha: 0.4)),
                                             _buildStatItem(
                                               context,
                                               label:
@@ -521,6 +537,8 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                         const SizedBox(height: 12),
                         CollectionAnalyticsCard(userId: widget.userId),
                       ],
+                      const SizedBox(height: 12),
+                      const AdBannerWidget(),
                       const SizedBox(height: 12),
                       FeaturedShowcaseCard(userId: widget.userId),
                       const SizedBox(height: 12),
@@ -579,7 +597,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                                       unselectedLabelColor: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.6),
+                                          .withValues(alpha: 0.6),
                                       tabs: [
                                         Tab(text: t(context, 'owned')),
                                         Tab(text: t(context, 'wanted')),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../main.dart';
 import '../core/app_helpers.dart';
@@ -68,11 +69,7 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(t(context, 'signInSuccess'))),
         );
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/');
-        }
+        context.go('/');
       }
     } on AuthCancelledException {
       if (context.mounted) {
@@ -97,6 +94,19 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (authService.currentUser != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go('/');
+        }
+      });
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     final theme = Theme.of(context);
     final tr = AppLanguageScope.languageOf(context) == AppLanguage.tr;
     final isDark = theme.brightness == Brightness.dark;
@@ -108,7 +118,7 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
     final textColor = theme.textTheme.bodyMedium?.color ??
         (isDark ? Colors.white70 : Colors.black87);
 
-    Color borderColor = secondaryColor.withOpacity(0.3);
+    Color borderColor = secondaryColor.withValues(alpha: 0.3);
     if (theme.cardTheme.shape is RoundedRectangleBorder) {
       final borderSide = (theme.cardTheme.shape as RoundedRectangleBorder).side;
       if (borderSide.color != Colors.transparent &&
@@ -148,18 +158,18 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.4,
-                        color: textColor.withOpacity(0.85),
+                        color: textColor.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 16),
                     TabBar(
                       labelColor: primaryColor,
-                      unselectedLabelColor: textColor.withOpacity(0.5),
+                      unselectedLabelColor: textColor.withValues(alpha: 0.5),
                       indicatorColor: secondaryColor,
                       indicatorSize: TabBarIndicatorSize.tab,
                       indicator: BoxDecoration(
-                        color: primaryColor.withOpacity(0.10),
+                        color: primaryColor.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       tabs: [
@@ -170,13 +180,41 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                     const SizedBox(height: 16),
                     SizedBox(
                       height: 270,
-                      child: TabBarView(
-                        children: [
-                          _buildScrollableText(
-                              context, t(context, 'termsBody')),
-                          _buildScrollableText(
-                              context, t(context, 'privacyBody')),
-                        ],
+                      child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('configs')
+                            .doc('legal_and_info')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          String terms = t(context, 'termsBody');
+                          String privacy = t(context, 'privacyBody');
+
+                          if (snapshot.hasData && snapshot.data!.exists) {
+                            final data = snapshot.data!.data();
+                            if (data != null) {
+                              final dbTerms = tr
+                                  ? data['termsBody_tr'] as String?
+                                  : data['termsBody_en'] as String?;
+                              final dbPrivacy = tr
+                                  ? data['privacyBody_tr'] as String?
+                                  : data['privacyBody_en'] as String?;
+
+                              if (dbTerms != null && dbTerms.trim().isNotEmpty) {
+                                terms = dbTerms;
+                              }
+                              if (dbPrivacy != null && dbPrivacy.trim().isNotEmpty) {
+                                privacy = dbPrivacy;
+                              }
+                            }
+                          }
+
+                          return TabBarView(
+                            children: [
+                              _buildScrollableText(context, terms),
+                              _buildScrollableText(context, privacy),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -213,7 +251,7 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: textColor.withOpacity(0.85),
+                                  color: textColor.withValues(alpha: 0.85),
                                 ),
                               ),
                             ),
@@ -223,9 +261,9 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                     ),
                     const SizedBox(height: 20),
                     Container(
-                      height: 54,
+                      height: 48,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(24),
                         gradient: _accepted && !_isLoading
                             ? LinearGradient(
                                 colors: [primaryColor, const Color(0xFFFF7A1F)],
@@ -245,7 +283,7 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                         boxShadow: _accepted && !_isLoading
                             ? [
                                 BoxShadow(
-                                  color: primaryColor.withOpacity(0.28),
+                                  color: primaryColor.withValues(alpha: 0.28),
                                   blurRadius: 12,
                                   offset: const Offset(0, 5),
                                 ),
@@ -260,7 +298,7 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                         ),
                         icon: _isLoading
@@ -301,12 +339,12 @@ class _LegalConsentScreenState extends State<LegalConsentScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     final boxColor = isDark
-        ? theme.scaffoldBackgroundColor.withOpacity(0.6)
+        ? theme.scaffoldBackgroundColor.withValues(alpha: 0.6)
         : DollDexTheme.mist;
 
     final textColor = (theme.textTheme.bodyMedium?.color ??
             (isDark ? Colors.white70 : Colors.black87))
-        .withOpacity(0.7);
+        .withValues(alpha: 0.7);
     final borderColor = isDark ? Colors.white10 : Colors.black12;
 
     return Container(

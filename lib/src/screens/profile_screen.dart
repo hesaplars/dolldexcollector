@@ -61,9 +61,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       left: 16,
                       child: InkWell(
                         onTap: () => showAvatarStudioModal(context, user.uid),
-                        borderRadius: BorderRadius.circular(38),
-                        child: buildAvatarHelper(context, avatarId, frameColor,
-                            size: 76),
+                        borderRadius: BorderRadius.circular(40),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              width: 3.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.20),
+                                blurRadius: 12,
+                              ),
+                            ],
+                          ),
+                          child: buildAvatarHelper(context, avatarId, frameColor,
+                              size: 76),
+                        ),
                       ),
                     ),
                     Positioned(
@@ -102,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundColor: Theme.of(context)
                               .colorScheme
                               .surface
-                              .withOpacity(0.9),
+                              .withValues(alpha: 0.9),
                         ),
                       ),
                     ),
@@ -158,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .primary
-                                                  .withOpacity(0.4),
+                                                  .withValues(alpha: 0.4),
                                               width: 1.2),
                                           color: Theme.of(context)
                                               .colorScheme
@@ -179,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(0.4)),
+                                                    .withValues(alpha: 0.4)),
                                             _buildStatItem(
                                               context,
                                               label: tr ? 'Takip' : 'Following',
@@ -191,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(0.4)),
+                                                    .withValues(alpha: 0.4)),
                                             _buildStatItem(
                                               context,
                                               label:
@@ -289,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: isDark ? const Color(0xFF1E1230) : const Color(0xFFFAF2FF),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: const Color(0xFFFFCC00).withOpacity(0.4), width: 1.2),
+              color: const Color(0xFFFFCC00).withValues(alpha: 0.4), width: 1.2),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -411,7 +426,7 @@ class AccountSummaryCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Tooltip(
               message: AppLanguageScope.languageOf(context) == AppLanguage.tr
                   ? 'Ayarlar'
@@ -424,7 +439,7 @@ class AccountSummaryCard extends StatelessWidget {
                 padding: const EdgeInsets.all(6),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Tooltip(
               message: t(context, 'signOut'),
               child: buildGothicNeonIconButton(
@@ -786,7 +801,7 @@ class ProfileShowcaseCard extends StatelessWidget {
                     unselectedLabelColor: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.6),
+                        .withValues(alpha: 0.6),
                     tabs: [
                       Tab(text: t(context, 'owned')),
                       Tab(text: t(context, 'wanted')),
@@ -960,7 +975,7 @@ class FeaturedShowcaseCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color:
-                                      const Color(0xFFFFCC00).withOpacity(0.4),
+                                      const Color(0xFFFFCC00).withValues(alpha: 0.4),
                                   width: 1.5,
                                 ),
                               ),
@@ -1071,7 +1086,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -1079,7 +1094,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
           children: [
             Icon(
               Icons.lock_outline_rounded,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
               size: 32,
             ),
             const SizedBox(height: 12),
@@ -1107,22 +1122,10 @@ class CollectionAnalyticsCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => showProSubscriptionModal(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ),
-              child: Text(
-                tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
+            GradientButton(
+              label: tr ? 'Pro Avantajlarını Gör' : 'View Pro Benefits',
+              icon: Icons.star_rounded,
+              onTap: () => showProSubscriptionModal(context),
             ),
           ],
         ),
@@ -1359,13 +1362,13 @@ class CollectionAnalyticsCard extends StatelessWidget {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -1398,7 +1401,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
                           color: Theme.of(context)
                               .colorScheme
                               .primary
-                              .withOpacity(0.5),
+                              .withValues(alpha: 0.5),
                           blurRadius: 4,
                         ),
                       ],
@@ -1455,7 +1458,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
                     value:
                         '${(totalCount * 0.15).ceil()} ${tr ? 'Parça' : 'Pcs'}',
                     color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.85),
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1470,7 +1473,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .secondary
-                        .withOpacity(0.85),
+                        .withValues(alpha: 0.85),
                   ),
                 ),
               ],
@@ -1504,7 +1507,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
                       ? (totalCount / totalCatalog.length).clamp(0.0, 1.0)
                       : 0.0,
                   label: tr ? 'Katalog Oranı' : 'Catalog Comp.',
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                 ),
               ],
             ),
@@ -1533,7 +1536,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
               label: tr ? 'Aksesuarlar (Accs)' : 'Accessories',
               count: accCount,
               total: totalCount,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
             ),
             if (topChars.isNotEmpty) ...[
               const Divider(height: 28),
@@ -1591,10 +1594,10 @@ class CollectionAnalyticsCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.04),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -1638,7 +1641,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
         color: isDark ? const Color(0xFF160E22) : const Color(0xFFFAF6FC),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: color.withOpacity(0.25),
+          color: color.withValues(alpha: 0.25),
           width: 1,
         ),
       ),
@@ -1647,7 +1650,7 @@ class CollectionAnalyticsCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 16),
